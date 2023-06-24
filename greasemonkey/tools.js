@@ -429,7 +429,7 @@
   ];
 
   let default_values = {
-    btn_top: "10%",
+    btn_top: "15%",
     btn_left: "10px",
     show_button: true,
     btn_text: "◯",
@@ -520,11 +520,11 @@
     menuItem.style.textAlign = "left";
 
     menuItem.addEventListener("mouseenter", function () {
-      menuItem.style.color = "blue"; // 在鼠标悬停时将文本颜色设置为红色
+      menuItem.style.color = "blue"; // 在鼠标悬停时
     });
 
     menuItem.addEventListener("mouseleave", function () {
-      menuItem.style.color = "grey"; // 在鼠标离开时恢复文本颜色为默认值
+      menuItem.style.color = "grey"; // 在鼠标离开时
     });
 
     menuItem.addEventListener("mousedown", function (event) {
@@ -538,7 +538,8 @@
 
   // 创建按钮
   var button = document.createElement("button");
-  button.innerHTML = GM_getValue("btn_text", default_values.btn_text);
+  //button.innerHTML = GM_getValue("btn_text", default_values.btn_text);
+  button.innerHTML = "◯";
   Object.assign(button.style, {
     padding: "5px",
     backgroundColor: "grey",
