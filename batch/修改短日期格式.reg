@@ -1,0 +1,5 @@
+﻿Windows Registry Editor Version 5.00
+
+; 修改短日期格式
+[HKEY_USERS\S-1-5-21-2309956371-82819108-2608054290-1001\Control Panel\International]
+"sShortDate"="yy/M/d"
