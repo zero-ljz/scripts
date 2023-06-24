@@ -1,0 +1,46 @@
+﻿Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\*\shell\certutil]
+"MUIVerb"="Certutil"
+"SubCommands"=""
+"Icon"="PowerShell.exe"
+
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\md5]
+@="MD5"
+
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\md5\command]
+@="powershell -noexit \"certutil -certutilfile '%1' MD5\""
+
+
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\sha1]
+@="SHA1"
+
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\sha1\command]
+@="powershell -noexit \"certutil -certutilfile '%1' SHA1\""
+
+
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\sha256]
+@="SHA256"
+
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\sha256\command]
+@="powershell -noexit \"certutil -certutilfile '%1' SHA256\""
+
+; 编码后体积增加 37.5%
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\encode]
+@="Base64-EnCode"
+
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\encode\command]
+@="powershell -noexit \"certutil -encode '%1' '%1.txt'\""
+
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\decode]
+@="Base64 DeCode"
+
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\decode\command]
+@="powershell -noexit \"certutil -decode '%1' '%1.file'\""
+
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\all]
+"CommandFlags"=dword:00000020
+@="All"
+
+[HKEY_CLASSES_ROOT\*\shell\certutil\shell\all\command]
+@="powershell -noexit get-filehash -literalpath '%1' -algorithm SHA1 | format-list;get-filehash -literalpath '%1' -algorithm SHA256 | format-list;get-filehash -literalpath '%1' -algorithm SHA384 | format-list;get-filehash -literalpath '%1' -algorithm SHA512 | format-list;get-filehash -literalpath '%1' -algorithm MACTripleDES | format-list;get-filehash -literalpath '%1' -algorithm MD5 | format-list;get-filehash -literalpath '%1' -algorithm RIPEMD160 | format-list"
