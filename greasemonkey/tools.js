@@ -140,7 +140,7 @@
       action: function () {
         let q = window.getSelection().toString();
         if (q == "") {
-          q = prompt("输入内容", "");
+          q = prompt("你没有选中任何文本，请输入", "");
         }
         if (q != null) {
           // 发送翻译请求
@@ -267,7 +267,7 @@
       name: "生成二维码",
       action: function () {
         let q = window.getSelection().toString();
-        if (!q) q = prompt("请输入内容", "");
+        if (!q) q = prompt("你没有选中任何文本，请输入", "");
         if (q != null)
           window.open(
             "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
