@@ -1296,7 +1296,7 @@ fi
   url=$1
   p=$2
 
-  # bash /root/fast.sh run_from_git https://github.com/zero-ljz/iapp.git 556:8000
+  # bash /root/fast.sh run_from_git https://github.com/zero-ljz/iapp.git 777:8000
   # 请在repos目录使用此函数
   repo=$(echo "$url" | sed 's|.*/\([^/]*\)\.git|\1|')
   docker rm -f ${repo}1
