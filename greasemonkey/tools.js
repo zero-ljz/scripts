@@ -325,6 +325,7 @@
   border: 1px solid black;
   z-index: 9999;
   display: none;
+  border-radius: 7px;
 `;
 
   // 创建菜单项
@@ -333,6 +334,19 @@
     menuItem.innerHTML = item.name;
     menuItem.style.cursor = "pointer";
     menuItem.style.marginBottom = "5px";
+    menuItem.style.fontSize = '16px';
+    menuItem.style.lineHeight = '1.2';
+    menuItem.style.color = "black";
+    menuItem.style.textAlign = "left";
+
+
+    menuItem.addEventListener("mouseenter", function() {
+      menuItem.style.color = "blue"; // 在鼠标悬停时将文本颜色设置为红色
+    });
+    
+    menuItem.addEventListener("mouseleave", function() {
+      menuItem.style.color = "black"; // 在鼠标离开时恢复文本颜色为默认值
+    });
 
     menuItem.addEventListener("mousedown", function (event) {
       event.preventDefault(); // 阻止获取焦点
