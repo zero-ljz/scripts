@@ -538,8 +538,8 @@
 
   // 创建按钮
   var button = document.createElement("button");
-  //button.innerHTML = GM_getValue("btn_text", default_values.btn_text);
-  button.innerHTML = "◯";
+  button.innerHTML = GM_getValue("btn_text", default_values.btn_text);
+
   Object.assign(button.style, {
     padding: "5px",
     backgroundColor: "grey",
@@ -547,10 +547,10 @@
     border: "0",
     color: "white",
     position: "fixed",
-    top: GM_getValue("btn_top"),
-    left: GM_getValue("btn_left"),
+    top: GM_getValue("btn_top", default_values.btn_top),
+    left: GM_getValue("btn_left", default_values.btn_left),
   });
-  button.style.display = GM_getValue("show_button") ? "block" : "none";
+  button.style.display = GM_getValue("show_button", default_values.show_button) ? "block" : "none";
 
   // 添加按钮点击事件
   button.addEventListener("mousedown", function (event) {
