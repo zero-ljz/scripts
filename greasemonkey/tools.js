@@ -29,7 +29,7 @@
     {
       name: "打印调试信息",
       action: function () {
-          console.log(`
+        console.log(`
           script.name: ${GM_info.script.name}
           script.version: ${GM_info.script.name} ${GM_info.script.version}
           script.description: ${GM_info.script.description}
