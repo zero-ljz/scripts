@@ -307,8 +307,8 @@
           window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(q));
       }
     },
-    { name: "2", action: function () {} },
-    { name: "3", action: function () {} }
+    { name: "菜单项1", action: function () {} },
+    { name: "菜单项2", action: function () {} }
   ];
 
   // 注册菜单项
@@ -336,7 +336,7 @@
     menuItem.style.marginBottom = "5px";
     menuItem.style.fontSize = '16px';
     menuItem.style.lineHeight = '1.2';
-    menuItem.style.color = "black";
+    menuItem.style.color = "grey";
     menuItem.style.textAlign = "left";
 
 
@@ -345,7 +345,7 @@
     });
     
     menuItem.addEventListener("mouseleave", function() {
-      menuItem.style.color = "black"; // 在鼠标离开时恢复文本颜色为默认值
+      menuItem.style.color = "grey"; // 在鼠标离开时恢复文本颜色为默认值
     });
 
     menuItem.addEventListener("mousedown", function (event) {
