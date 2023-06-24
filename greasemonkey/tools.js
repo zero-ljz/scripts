@@ -23,7 +23,7 @@
         location.href =
           "https://greasyfork.org/zh-CN/scripts/469339-" +
           encodeURIComponent(GM_info.script.name);
-      }
+      },
     },
 
     {
@@ -59,7 +59,7 @@
           readyState: ${window.document.readyState}
           lastModified: ${window.document.lastModified}
         `);
-      }
+      },
     },
     {
       name: "屏蔽焦点元素",
@@ -67,7 +67,7 @@
         // document.activeElement.style.pointerEvents = "none";
         // document.activeElement.style.opacity = "0.5";
         document.activeElement.style.display = "none";
-      }
+      },
     },
     {
       name: "倒计时刷新",
@@ -78,18 +78,18 @@
             location.reload();
           }, parseInt(q));
         }
-      }
+      },
     },
     {
-      name: "执行JS表达式并显示结果",
+      name: "执行JS表达式",
       action: function () {
         let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
-        if (q != null) alert(eval(q));
-      }
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "alert()");
+        if (q != null) eval(q);
+      },
     },
     {
-      name: "显示密码框的密码",
+      name: "显示密码框",
       action: function () {
         /*window.top.document.activeElement.type = "text"; */ !(function () {
           for (
@@ -100,8 +100,103 @@
             "password" === t[e].getAttribute("type") &&
               t[e].setAttribute("type", "text");
         })();
-      }
+      },
     },
+    {
+      name: "解除网页限制",
+      action: function () {
+        !(function () {
+          function t(e) {
+            e.stopPropagation(),
+              e.stopImmediatePropagation && e.stopImmediatePropagation();
+          }
+          document.querySelectorAll("*").forEach((e) => {
+            "none" ===
+              window
+                .getComputedStyle(e, null)
+                .getPropertyValue("user-select") &&
+              e.style.setProperty("user-select", "text", "important");
+          }),
+            [
+              "copy",
+              "cut",
+              "contextmenu",
+              "selectstart",
+              "mousedown",
+              "mouseup",
+              "mousemove",
+              "keydown",
+              "keypress",
+              "keyup",
+            ].forEach(function (e) {
+              document.documentElement.addEventListener(e, t, { capture: !0 });
+            }),
+            alert("解除限制成功啦！");
+        })();
+      },
+    },
+    {
+      name: "正则查找文本",
+      action: function () {
+        (function () {
+          var count = 0,
+            text,
+            regexp;
+          text = prompt("Search regexp:", "");
+          if (text == null || text.length == 0) return;
+          try {
+            regexp = new RegExp("(" + text + ")", "i");
+          } catch (er) {
+            alert(
+              "Unable to create regular expression using text '" +
+                text +
+                "'.\n\n" +
+                er
+            );
+            return;
+          }
+          function searchWithinNode(node, re) {
+            var pos, skip, spannode, middlebit, endbit, middleclone;
+            skip = 0;
+            if (node.nodeType == 3) {
+              pos = node.data.search(re);
+              if (pos >= 0) {
+                spannode = document.createElement("SPAN");
+                spannode.style.backgroundColor = "yellow";
+                middlebit = node.splitText(pos);
+                endbit = middlebit.splitText(RegExp.$1.length);
+                middleclone = middlebit.cloneNode(true);
+                spannode.appendChild(middleclone);
+                middlebit.parentNode.replaceChild(spannode, middlebit);
+                ++count;
+                skip = 1;
+              }
+            } else if (
+              node.nodeType == 1 &&
+              node.childNodes &&
+              node.tagName.toUpperCase() != "SCRIPT" &&
+              node.tagName.toUpperCase != "STYLE"
+            ) {
+              for (var child = 0; child < node.childNodes.length; ++child) {
+                child = child + searchWithinNode(node.childNodes[child], re);
+              }
+            }
+            return skip;
+          }
+          window.status = "Searching for " + regexp + "...";
+          searchWithinNode(document.body, regexp);
+          window.status =
+            "Found " +
+            count +
+            " match" +
+            (count == 1 ? "" : "es") +
+            " for " +
+            regexp +
+            ".";
+        })();
+      },
+    },
+
     {
       name: "自由编辑页面",
       action: function () {
@@ -112,7 +207,7 @@
             : (document.body.setAttribute("contenteditable", !0),
               alert("网页可以编辑啦！"));
         })();
-      }
+      },
     },
 
     {
@@ -121,7 +216,7 @@
         location.href =
           "https://translate.google.com/translate?sl=auto&tl=zh-CN&u=" +
           encodeURIComponent(location.href);
-      }
+      },
     },
 
     {
@@ -130,9 +225,23 @@
         location.href =
           "http://webtrans.yodao.com/webTransPc/index.html#/?from=auto&to=auto&type=1&url=" +
           encodeURIComponent(location.href);
-      }
+      },
     },
-
+    {
+      name: "有道词典",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (q == "") {
+          q = prompt("你没有选中任何文本，请输入", "");
+        }
+        if (q != null)
+          window.open(
+            "http://dict.youdao.com/w/eng/" + encodeURIComponent(q),
+            "new",
+            "location=no, toolbar=no"
+          );
+      },
+    },
     {
       name: "谷歌翻译文本",
       action: function () {
@@ -159,10 +268,10 @@
                 res += value.trans + "\r\n";
               }
               alert(res);
-            }
+            },
           });
         }
-      }
+      },
     },
 
     {
@@ -171,10 +280,10 @@
         document.location.href =
           "http://www.google.com/search?q=cache:" +
           escape(document.location.href);
-      }
+      },
     },
     {
-      name: "谷歌新牛津词典",
+      name: "谷歌牛津词典",
       action: function () {
         let q = window.getSelection().toString();
         if (!q) q = prompt("你没有选中任何文本，请输入：", "");
@@ -184,10 +293,10 @@
             "new",
             "location=no, toolbar=no"
           );
-      }
+      },
     },
     {
-      name: "谷歌搜中文",
+      name: "谷歌搜索中文",
       action: function () {
         let q = window.getSelection().toString();
         if (!q) q = prompt("你没有选中任何文本，请输入：", "");
@@ -196,7 +305,7 @@
             "https://www.google.com/search?lr=lang_zh-CN&q=" +
               encodeURIComponent(q).replace(/ /g, "+")
           );
-      }
+      },
     },
 
     {
@@ -209,7 +318,7 @@
             "http://www.baidu.com/s?wd=" +
               encodeURIComponent(q).replace(/ /g, "+")
           );
-      }
+      },
     },
 
     {
@@ -219,7 +328,7 @@
         if (!q) q = prompt("你没有选中任何文本，请输入：", "");
         if (q != null)
           window.open("https://zh.wikipedia.org/wiki/" + encodeURIComponent(q));
-      }
+      },
     },
 
     {
@@ -235,7 +344,7 @@
             encodeURIComponent(q.replace(/\"/g, "")) +
             '"'
           ).replace(/ /g, "+");
-      }
+      },
     },
 
     {
@@ -249,17 +358,18 @@
             "new",
             "location=no, toolbar=no"
           );
-      }
+      },
     },
     {
-      name: "网页标注（按住alt）",
+      name: "网页标注",
       action: function () {
         !(function () {
           fetch("https://unpkg.com/spacingjs").then(async (res) =>
             eval(await res.text())
           );
         })();
-      }
+        alert("按住Alt即可使用");
+      },
     },
     {
       name: "生成二维码",
@@ -273,7 +383,7 @@
             "new",
             "location=no, toolbar=no"
           );
-      }
+      },
     },
     {
       name: "站点替代品",
@@ -285,14 +395,14 @@
           "new",
           "location=no, toolbar=no"
         );
-      }
+      },
     },
     {
       name: "页面存档",
       action: function () {
         document.location.href =
           "http://web.archive.org/" + escape(document.location.href);
-      }
+      },
     },
     {
       name: "朗读文本",
@@ -305,10 +415,10 @@
           );
         if (q != null)
           window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(q));
-      }
+      },
     },
     { name: "菜单项1", action: function () {} },
-    { name: "菜单项2", action: function () {} }
+    { name: "菜单项2", action: function () {} },
   ];
 
   // 注册菜单项
@@ -334,17 +444,16 @@
     menuItem.innerHTML = item.name;
     menuItem.style.cursor = "pointer";
     menuItem.style.marginBottom = "5px";
-    menuItem.style.fontSize = '16px';
-    menuItem.style.lineHeight = '1.2';
+    menuItem.style.fontSize = "16px";
+    menuItem.style.lineHeight = "1.2";
     menuItem.style.color = "grey";
     menuItem.style.textAlign = "left";
 
-
-    menuItem.addEventListener("mouseenter", function() {
+    menuItem.addEventListener("mouseenter", function () {
       menuItem.style.color = "blue"; // 在鼠标悬停时将文本颜色设置为红色
     });
-    
-    menuItem.addEventListener("mouseleave", function() {
+
+    menuItem.addEventListener("mouseleave", function () {
       menuItem.style.color = "grey"; // 在鼠标离开时恢复文本颜色为默认值
     });
 
@@ -366,7 +475,7 @@
     color: "white",
     position: "fixed",
     top: "10%",
-    left: "10px"
+    left: "10px",
   });
 
   // 添加按钮点击事件
