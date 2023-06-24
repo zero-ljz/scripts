@@ -43,8 +43,6 @@
           activeElement name: ${document.activeElement.name}
           activeElement id: ${document.activeElement.id}
           activeElement className: ${document.activeElement.className}
-          activeElement innerText: ${document.activeElement.innerText}
-          activeElement innerHTML: ${document.activeElement.innerHTML}
 
           selectedText: ${window.getSelection().toString()}
 
