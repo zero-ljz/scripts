@@ -7,6 +7,7 @@
 // @license MIT
 // @match        *://*/*
 // @grant        GM_registerMenuCommand
+// @grant        GM_info
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
@@ -15,52 +16,51 @@
 
   var menuItems = [
     { name: "显示/隐藏按钮", action: toggleButton },
+
     {
-      name: "输出调试信息",
+      name: "打开脚本主页",
       action: function () {
-        // 获取当前活动元素
-        var activeElement = document.activeElement;
-        // 获取页面中的选中文本内容
-        var selectedText = window.getSelection().toString();
+        location.href =
+          "https://greasyfork.org/zh-CN/scripts/469339-" +
+          encodeURIComponent(GM_info.script.name);
+      }
+    },
 
-        console.log("Selected Text:", selectedText);
-        console.log("activeElement tagName:", activeElement.tagName);
+    {
+      name: "打印调试信息",
+      action: function () {
+          console.log(`
+          script.name: ${GM_info.script.name}
+          script.version: ${GM_info.script.name} ${GM_info.script.version}
+          script.description: ${GM_info.script.description}
+          script.homepage: ${GM_info.script.homepage}
+          script.author: ${GM_info.script.author}
 
-        // 获取剪贴板的文本
-        navigator.clipboard
-          .readText()
-          .then(function (text) {
-            // 打印剪贴板的内容
-            console.log("ClipboardText:", text);
-          })
-          .catch(function (error) {
-            console.error("Error reading clipboard:", error);
-          });
+          activeElement: ${document.activeElement}
+          activeElement tagName: ${document.activeElement.tagName}
+          activeElement type: ${document.activeElement.type}
+          activeElement value: ${document.activeElement.value}
+          activeElement name: ${document.activeElement.name}
+          activeElement id: ${document.activeElement.id}
+          activeElement className: ${document.activeElement.className}
+          activeElement innerText: ${document.activeElement.innerText}
+          activeElement innerHTML: ${document.activeElement.innerHTML}
 
-        console.log(
-          "location.href: " +
-            window.document.location.href +
-            "\nlocation.host: " +
-            window.document.location.host +
-            "\nlocation.pathname: " +
-            window.document.location.pathname +
-            "\nlocation.search: " +
-            window.document.location.search +
-            "\nreferrer: " +
-            window.document.referrer +
-            "\ntitle: " +
-            window.document.title +
-            "\ncharacterSet: " +
-            window.document.characterSet +
-            "\ncontentType: " +
-            window.document.contentType +
-            "\ndoctype: " +
-            window.document.doctype +
-            "\nreadyState: " +
-            window.document.readyState +
-            "\nlastModified: " +
-            window.document.lastModified
-        );
+          selectedText: ${window.getSelection().toString()}
+
+          URL: ${window.document.URL}
+          location.href: ${window.document.location.href}
+          location.host: ${window.document.location.host}
+          location.pathname: ${window.document.location.pathname}
+          location.search: ${window.document.location.search}
+          referrer: ${window.document.referrer}
+          title: ${window.document.title}
+          characterSet: ${window.document.characterSet}
+          contentType: ${window.document.contentType}
+          doctype: ${window.document.doctype}
+          readyState: ${window.document.readyState}
+          lastModified: ${window.document.lastModified}
+        `);
       }
     },
     {
