@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         全局工具箱
 // @namespace    http://iapp.run
-// @version      1.0
-// @description  Tools Menu：添加一个菜单按钮到网页左侧，里面有很多小工具
+// @version      0.1
+// @description  添加一个按钮到每个网页左上方的位置，点击后显示工具箱的菜单\n
 // @author       zero-ljz
+// @homepage     https://github.com/zero-ljz/scripts/blob/main/greasemonkey/tools.js
 // @license MIT
 // @match        *://*/*
 // @grant        GM_registerMenuCommand
