@@ -21,7 +21,7 @@
   "use strict";
 
   var menuItems = [
-    { name: "临时隐藏按钮", action: toggleButton },
+    { name: "临时显隐按钮", action: toggleButton },
     {
       name: "打开脚本设置",
       action: function () {
@@ -500,6 +500,8 @@
   z-index: 9999;
   display: none;
   border-radius: 7px;
+  max-height: 80%; /* 设置最大高度为父元素高度的50% */
+  overflow-y: auto; /* 显示滚动条，仅在内容溢出时显示 */
 
   box-shadow: inset 1px 1px rgb(255 255 255 / 20%), inset -1px -1px rgb(255 255 255 / 10%), 1px 3px 24px -1px rgb(0 0 0 / 15%);
   background-color: transparent;
@@ -516,7 +518,7 @@
     menuItem.style.marginBottom = "5px";
     menuItem.style.fontSize = "16px";
     menuItem.style.lineHeight = "1.2";
-    menuItem.style.color = "grey";
+    menuItem.style.color = "#ADADAD";
     menuItem.style.textAlign = "left";
 
     menuItem.addEventListener("mouseenter", function () {
@@ -524,7 +526,7 @@
     });
 
     menuItem.addEventListener("mouseleave", function () {
-      menuItem.style.color = "grey"; // 在鼠标离开时
+      menuItem.style.color = "#ADADAD"; // 在鼠标离开时
     });
 
     menuItem.addEventListener("mousedown", function (event) {
