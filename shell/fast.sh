@@ -21,7 +21,7 @@ elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
     declare -f ${FUNCNAME}
     exit 0
 fi
-bash -c 'wget -O fast.sh http://47.87.214.106:666/php-proxy/index.php?q=https://bo5vwq.dm.files.1drv.com/y4mNQeG92qK3uD8O9qDsAdIoKU2iycKjKjoE9oDWQU32ua6BaJIBcS22GtQkIS_XwnykpdiKXbX0osyLbHku0L8tohkIZPuovXJJt3qMJjUy2pAjH-E-0NO5Kw_vCm7O-xX2ewMRk_UAmbdfrEhYUfbhyb9qVEiqfIB5VHI-juZ5YQe6BvIjUnupzvfWU3y7QlQ2hiMDHJ3x1ah6PLgYsSfSA && bash fast.sh'
+bash -c 'wget -O fast.sh http://47.87.214.106:666/php-proxy/index.php?q=https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
 }
 
 system_init(){
@@ -1296,7 +1296,7 @@ fi
   url=$1
   p=$2
 
-  # bash /root/fast.sh run_from_git https://github.com/zero-ljz/iapp.git 555:8080
+  # bash /root/fast.sh run_from_git https://github.com/zero-ljz/iapp.git 556:8000
   # 请在repos目录使用此函数
   repo=$(echo "$url" | sed 's|.*/\([^/]*\)\.git|\1|')
   docker rm -f ${repo}1
