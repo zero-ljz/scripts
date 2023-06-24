@@ -2,7 +2,7 @@
 // @name         全局工具箱
 // @namespace    http://iapp.run
 // @version      0.1
-// @description  添加一个按钮到每个网页左上方的位置，点击后显示工具箱的菜单\n
+// @description  添加一个按钮到每个网页左上方的位置，点击后显示工具箱的菜单
 // @author       zero-ljz
 // @homepage     https://github.com/zero-ljz/scripts/blob/main/greasemonkey/tools.js
 // @license MIT
@@ -10,14 +10,24 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_info
 // @grant        GM_xmlhttpRequest
+// @require      https://openuserjs.org/src/libs/sizzle/GM_config.js
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM.getValue
+// @grant        GM.setValue
 // ==/UserScript==
 
 (function () {
   "use strict";
 
   var menuItems = [
-    { name: "显示/隐藏按钮", action: toggleButton },
-
+    { name: "临时隐藏按钮", action: toggleButton },
+    {
+      name: "打开脚本设置",
+      action: function () {
+        gmc.open();
+      },
+    },
     {
       name: "打开脚本主页",
       action: function () {
@@ -233,7 +243,7 @@
       action: function () {
         let q = window.getSelection().toString();
         if (q == "") {
-          q = prompt("你没有选中任何文本，请输入", "");
+          q = prompt("你没有选中任何文本，请输入：", "");
         }
         if (q != null)
           window.open(
@@ -248,7 +258,7 @@
       action: function () {
         let q = window.getSelection().toString();
         if (q == "") {
-          q = prompt("你没有选中任何文本，请输入", "");
+          q = prompt("你没有选中任何文本，请输入：", "");
         }
         if (q != null) {
           // 发送翻译请求
@@ -376,7 +386,7 @@
       name: "生成二维码",
       action: function () {
         let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入", "");
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
         if (q != null)
           window.open(
             "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" +
@@ -409,11 +419,7 @@
       name: "朗读文本",
       action: function () {
         let q = window.getSelection().toString();
-        if (!q)
-          q = prompt(
-            "You didn%27t select any text.  Enter a search phrase:",
-            ""
-          );
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
         if (q != null)
           window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(q));
       },
@@ -421,6 +427,63 @@
     { name: "菜单项1", action: function () {} },
     { name: "菜单项2", action: function () {} },
   ];
+
+  let default_values = {
+    btn_top: "10%",
+    btn_left: "10px",
+    show_button: true,
+    btn_text: "◯",
+  };
+
+  // 创建脚本设置页面实例
+  let gmc = new GM_config({
+    id: "MyConfig", // The id used for this instance of GM_config
+    title: "脚本设置", // Panel Title
+    // Fields object
+    fields: {
+      btn_top: {
+        label: "按钮水平坐标",
+        type: "text",
+        default: default_values.btn_top,
+      },
+      btn_left: {
+        label: "按钮垂直坐标",
+        type: "text",
+        default: default_values.btn_left,
+      },
+      show_button: {
+        label: "显示按钮",
+        type: "checkbox",
+        default: default_values.show_button,
+      },
+      btn_text: {
+        label: "按钮文字",
+        type: "select",
+        options: ["◯", "🌎", "🌏", "🟢", "🔵", "💧", "🍀", "❄", "〓", "╳"],
+        default: default_values.btn_text,
+      },
+    },
+    events: {
+      init: function () {
+        // runs after initialization completes
+        // override saved value
+        //this.set('Name', 'Mike Medley');
+        // open frame
+        //this.open();
+      },
+      save: function () {
+        // Save each setting to GM_setValue
+        for (var key in this.fields) {
+          if (this.fields.hasOwnProperty(key)) {
+            var value = this.get(key);
+            GM_setValue(key, value);
+          }
+        }
+
+        this.close();
+      },
+    },
+  });
 
   // 注册菜单项
   menuItems.forEach(function (item) {
@@ -469,15 +532,18 @@
 
   // 创建按钮
   var button = document.createElement("button");
-  button.innerHTML = "〓";
+  button.innerHTML = GM_getValue("btn_text", default_values.btn_text);
   Object.assign(button.style, {
     padding: "5px",
     backgroundColor: "grey",
+    borderRadius: "0.5rem",
+    border: "0",
     color: "white",
     position: "fixed",
-    top: "10%",
-    left: "10px",
+    top: GM_getValue("btn_top"),
+    left: GM_getValue("btn_left"),
   });
+  button.style.display = GM_getValue("show_button") ? "block" : "none";
 
   // 添加按钮点击事件
   button.addEventListener("mousedown", function (event) {
@@ -500,16 +566,12 @@
   document.body.appendChild(menuContainer);
   document.body.appendChild(button);
 
-  // 全局变量，用于跟踪按钮的显示状态
-  var isButtonVisible = true;
-
   // 切换按钮的显示状态
   function toggleButton() {
-    if (isButtonVisible) {
+    if (button.style.display === "block") {
       button.style.display = "none";
     } else {
       button.style.display = "block";
     }
-    isButtonVisible = !isButtonVisible;
   }
 })();
