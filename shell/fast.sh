@@ -832,7 +832,7 @@ EOF
 
 start_v2ray(){
     #systemctl restart v2ray
-    /usr/local/bin/v2ray -config /usr/local/etc/v2ray/config.json
+    nohup /usr/local/bin/v2ray -config /usr/local/etc/v2ray/config.json &
     export ALL_PROXY="http://127.0.0.1:10809"
 }
 
