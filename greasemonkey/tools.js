@@ -15,30 +15,90 @@
 // @grant        GM_setValue
 // @grant        GM.getValue
 // @grant        GM.setValue
+// @grant        GM_addStyle
 // ==/UserScript==
 
 (function () {
   "use strict";
 
+  // 添加毛玻璃框的 CSS 类
+  GM_addStyle(`
+    .glass-box {
+      all: initial;
+      transform: translateX(-50%);
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+    }
+  `);
+
+  // 创建消息框元素
+  function createMessageBox(message) {
+    var messageBox = document.createElement("div");
+    messageBox.classList.add("glass-box");
+
+    messageBox.style.position = "fixed";
+    messageBox.style.top = "20px"; // 将消息框的位置移到屏幕的上方
+    messageBox.style.left = "50%";
+    messageBox.style.zIndex = "9999";
+    messageBox.style.minWidth = "200px"; // 设置最小宽度
+    messageBox.style.minHeight = "100px"; // 设置最小高度
+
+    var messageText = document.createElement("span");
+    messageText.textContent = message.replace(/\n/g, "\r\n"); // 替换换行符为回车换行
+    messageText.style.whiteSpace = "pre-line"; // 设置样式以支持换行
+    messageText.style.color = "blue"; // 设置固定的文字颜色
+    messageBox.appendChild(messageText);
+
+    var closeButton = document.createElement("button");
+    closeButton.textContent = "关闭";
+    closeButton.style.marginLeft = "10px";
+    closeButton.style.position = "absolute";
+    closeButton.style.bottom = "10px";
+    closeButton.style.right = "10px";
+    closeButton.addEventListener("click", function () {
+      messageBox.style.display = "none";
+    });
+    messageBox.appendChild(closeButton);
+
+    document.body.appendChild(messageBox);
+
+    return messageBox;
+  }
+
+  // 显示消息框
+  function showMessage(message, duration) {
+    var messageBox = createMessageBox(message);
+    setTimeout(function () {
+      messageBox.style.display = "none";
+    }, duration);
+  }
+
   var menuItems = [
-    { name: "临时显隐按钮", action: toggleButton },
     {
-      name: "打开脚本设置",
+      name: "test",
+      action: function () {
+        showMessage(
+          `这是一
+        个自
+        定fsd
+        义消息框！`,
+          2000
+        );
+      },
+    },
+    { name: "隐藏按钮", action: toggleButton },
+    {
+      name: "脚本设置",
       action: function () {
         gmc.open();
       },
     },
-    {
-      name: "打开脚本主页",
-      action: function () {
-        location.href =
-          "https://greasyfork.org/zh-CN/scripts/469339-" +
-          encodeURIComponent(GM_info.script.name);
-      },
-    },
 
     {
-      name: "打印调试信息",
+      name: "调试信息",
       action: function () {
         console.log(`
           script.name: ${GM_info.script.name}
@@ -73,24 +133,32 @@
       },
     },
     {
-      name: "屏蔽焦点元素",
+      name: "屏蔽元素",
       action: function () {
-        // document.activeElement.style.pointerEvents = "none";
-        // document.activeElement.style.opacity = "0.5";
-        document.activeElement.style.display = "none";
-      },
-    },
-    {
-      name: "倒计时刷新",
-      action: function () {
-        const q = prompt("输入毫秒数：");
-        if (q !== null) {
-          setTimeout(() => {
-            location.reload();
-          }, parseInt(q));
+        let selection = window.getSelection();
+        if (selection.toString()) {
+          var range = selection.getRangeAt(0); // 获取范围内的节点
+
+          // 递归遍历节点，查找最近的元素节点
+          function findClosestElement(node) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              return node; // 当前节点是元素节点，返回
+            } else if (node.parentNode) {
+              return findClosestElement(node.parentNode); // 继续向上查找父节点
+            } else {
+              return null; // 未找到包含文本的元素节点
+            }
+          }
+
+          // 查找包含所选文本的最近的元素节点
+          findClosestElement(range.commonAncestorContainer).style.display =
+            "none";
+        } else {
+          document.activeElement.style.display = "none";
         }
       },
     },
+
     {
       name: "朗读文本",
       action: function () {
@@ -100,16 +168,9 @@
           window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(q));
       },
     },
+
     {
-      name: "执行JS表达式",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "alert()");
-        if (q != null) eval(q);
-      },
-    },
-    {
-      name: "显示密码框",
+      name: "显示密码",
       action: function () {
         /*window.top.document.activeElement.type = "text"; */ !(function () {
           for (
@@ -120,6 +181,14 @@
             "password" === t[e].getAttribute("type") &&
               t[e].setAttribute("type", "text");
         })();
+      },
+    },
+    {
+      name: "执行JS代码",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "alert()");
+        if (q != null) eval(q);
       },
     },
     {
@@ -155,70 +224,9 @@
         })();
       },
     },
-    {
-      name: "正则查找文本",
-      action: function () {
-        (function () {
-          var count = 0,
-            text,
-            regexp;
-          text = prompt("Search regexp:", "");
-          if (text == null || text.length == 0) return;
-          try {
-            regexp = new RegExp("(" + text + ")", "i");
-          } catch (er) {
-            alert(
-              "Unable to create regular expression using text '" +
-                text +
-                "'.\n\n" +
-                er
-            );
-            return;
-          }
-          function searchWithinNode(node, re) {
-            var pos, skip, spannode, middlebit, endbit, middleclone;
-            skip = 0;
-            if (node.nodeType == 3) {
-              pos = node.data.search(re);
-              if (pos >= 0) {
-                spannode = document.createElement("SPAN");
-                spannode.style.backgroundColor = "yellow";
-                middlebit = node.splitText(pos);
-                endbit = middlebit.splitText(RegExp.$1.length);
-                middleclone = middlebit.cloneNode(true);
-                spannode.appendChild(middleclone);
-                middlebit.parentNode.replaceChild(spannode, middlebit);
-                ++count;
-                skip = 1;
-              }
-            } else if (
-              node.nodeType == 1 &&
-              node.childNodes &&
-              node.tagName.toUpperCase() != "SCRIPT" &&
-              node.tagName.toUpperCase != "STYLE"
-            ) {
-              for (var child = 0; child < node.childNodes.length; ++child) {
-                child = child + searchWithinNode(node.childNodes[child], re);
-              }
-            }
-            return skip;
-          }
-          window.status = "Searching for " + regexp + "...";
-          searchWithinNode(document.body, regexp);
-          window.status =
-            "Found " +
-            count +
-            " match" +
-            (count == 1 ? "" : "es") +
-            " for " +
-            regexp +
-            ".";
-        })();
-      },
-    },
 
     {
-      name: "自由编辑页面",
+      name: "自由编辑网页",
       action: function () {
         !(function () {
           "true" === document.body.getAttribute("contenteditable")
@@ -231,7 +239,7 @@
     },
 
     {
-      name: "翻译-谷歌-页面",
+      name: "翻译页面-谷歌",
       action: function () {
         location.href =
           "https://translate.google.com/translate?sl=auto&tl=zh-CN&u=" +
@@ -240,28 +248,14 @@
     },
 
     {
-      name: "翻译-有道-页面",
+      name: "翻译页面-有道",
       action: function () {
         location.href =
           "http://webtrans.yodao.com/webTransPc/index.html#/?from=auto&to=auto&type=1&url=" +
           encodeURIComponent(location.href);
       },
     },
-    {
-      name: "词典-有道",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (q == "") {
-          q = prompt("你没有选中任何文本，请输入：", "");
-        }
-        if (q != null)
-          window.open(
-            "http://dict.youdao.com/w/eng/" + encodeURIComponent(q),
-            "new",
-            "location=no, toolbar=no"
-          );
-      },
-    },
+
     {
       name: "翻译-谷歌",
       action: function () {
@@ -287,7 +281,7 @@
               for (const [key, value] of Object.entries(obj.sentences)) {
                 res += value.trans + "\r\n";
               }
-              alert(res);
+              showMessage(res, 5000);
             },
           });
         }
@@ -306,17 +300,25 @@
           );
       },
     },
+
     {
-      name: "搜索-谷歌-快照",
+      name: "词典-有道",
       action: function () {
-        document.location.href =
-          "http://www.google.com/search?q=cache:" +
-          escape(document.location.href);
+        let q = window.getSelection().toString();
+        if (q == "") {
+          q = prompt("你没有选中任何文本，请输入：", "");
+        }
+        if (q != null)
+          window.open(
+            "http://dict.youdao.com/w/eng/" + encodeURIComponent(q),
+            "new",
+            "location=no, toolbar=no"
+          );
       },
     },
 
     {
-      name: "搜索-谷歌-站点",
+      name: "搜索-谷歌搜本站",
       action: function () {
         let q = window.getSelection().toString();
         if (!q) q = prompt("你没有选中任何文本，请输入：", "");
@@ -331,7 +333,7 @@
       },
     },
     {
-      name: "搜索-谷歌-中文",
+      name: "搜索-谷歌搜中文",
       action: function () {
         let q = window.getSelection().toString();
         if (!q) q = prompt("你没有选中任何文本，请输入：", "");
@@ -367,19 +369,6 @@
     },
 
     {
-      name: "翻译-DeepL",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
-        if (q != null)
-          window.open(
-            "https://www.deepl.com/translator#en/zh/" + encodeURIComponent(q),
-            "new",
-            "location=no, toolbar=no"
-          );
-      },
-    },
-    {
       name: "网页标注",
       action: function () {
         !(function () {
@@ -405,7 +394,15 @@
       },
     },
     {
-      name: "站点替代品",
+      name: "谷歌页面快照",
+      action: function () {
+        document.location.href =
+          "http://www.google.com/search?q=cache:" +
+          encodeURIComponent(document.location.href);
+      },
+    },
+    {
+      name: "类似网站",
       action: function () {
         window.open(
           "https://www.similarweb.com/zh-tw/website/" +
@@ -417,15 +414,13 @@
       },
     },
     {
-      name: "页面存档",
+      name: "网页存档",
       action: function () {
         document.location.href =
-          "http://web.archive.org/" + escape(document.location.href);
+          "http://web.archive.org/" +
+          encodeURIComponent(document.location.href);
       },
     },
-
-    { name: "菜单项1", action: function () {} },
-    { name: "菜单项2", action: function () {} },
   ];
 
   let default_values = {
@@ -495,13 +490,14 @@
   menuContainer.style.cssText = `
   position: fixed;
   padding: 10px;
-  /* background-color: white; */
-  border: 1px solid white; 
   z-index: 9999;
   display: none;
-  border-radius: 7px;
   max-height: 80%; /* 设置最大高度为父元素高度的50% */
   overflow-y: auto; /* 显示滚动条，仅在内容溢出时显示 */
+  
+  /* background-color: white; */
+  border: 1px solid white; 
+  border-radius: 7px;
 
   box-shadow: inset 1px 1px rgb(255 255 255 / 20%), inset -1px -1px rgb(255 255 255 / 10%), 1px 3px 24px -1px rgb(0 0 0 / 15%);
   background-color: transparent;

@@ -645,7 +645,9 @@ fi
 install_v2ray2(){
 curl -LkOJ http://us.iapp.run:777/http-proxy?url=https://github.com/v2fly/v2ray-core/releases/download/v4.45.2/v2ray-linux-64.zip
 unzip -d v2ray-linux-64 v2ray-linux-64.zip
+# 复制主程序和辅助工具
 cp v2ray-linux-64/v2ray v2ray-linux-64/v2ctl /usr/local/bin/ && chmod 777 /usr/local/bin/v2ray
+# 复制ip数据文件和域名数据文件
 mkdir -p /usr/local/share/v2ray && cp v2ray-linux-64/geoip.dat v2ray-linux-64/geosite.dat /usr/local/share/v2ray/
 mkdir -p /usr/local/etc/v2ray && cp v2ray-linux-64/config.json /usr/local/etc/v2ray/
 cp v2ray-linux-64/systemd/system/v2ray.service v2ray-linux-64/systemd/system/v2ray@.service /etc/systemd/system/
@@ -836,7 +838,7 @@ start_v2ray(){
 
     # 不显示任何输出
     #nohup /usr/local/bin/v2ray -config /usr/local/etc/v2ray/config.json > /dev/null 2>&1 &
-    
+
     # 为了使环境变量在脚本的父进程中生效，使用 . fast.sh start_v2ray
     export ALL_PROXY="http://127.0.0.1:10809"
 }
