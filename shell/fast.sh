@@ -831,13 +831,15 @@ EOF
 
 
 start_v2ray(){
-    systemctl restart v2ray
+    #systemctl restart v2ray
+    /usr/local/bin/v2ray -config /usr/local/etc/v2ray/config.json
     export ALL_PROXY="http://127.0.0.1:10809"
 }
 
 stop_v2ray()
 {
-    systemctl stop v2ray
+    #systemctl stop v2ray
+    killall v2ray
     unset ALL_PROXY
 }
 
