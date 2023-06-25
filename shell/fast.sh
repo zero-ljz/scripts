@@ -642,6 +642,205 @@ fi
 
 
 
+install_v2ray2(){
+curl -LkOJ http://us.iapp.run:777/http-proxy?url=https://github.com/v2fly/v2ray-core/releases/download/v4.45.2/v2ray-linux-64.zip
+unzip -d v2ray-linux-64 v2ray-linux-64.zip
+cp v2ray-linux-64/v2ray v2ray-linux-64/v2ctl /usr/local/bin/ && chmod 777 /usr/local/bin/v2ray
+mkdir /usr/local/share/v2ray && cp v2ray-linux-64/geoip.dat v2ray-linux-64/geosite.dat /usr/local/share/v2ray/
+mkdir /usr/local/etc/v2ray && cp v2ray-linux-64/config.json /usr/local/etc/v2ray/
+cp v2ray-linux-64/systemd/system/v2ray.service v2ray-linux-64/systemd/system/v2ray@.service /etc/systemd/system/
+
+# 在v2rayN windows客户端右键节点导出为客户端配置config.json文件复制到/usr/local/etc/v2ray
+
+# systemctl enable v2ray
+# systemctl restart v2ray
+
+# /usr/local/bin/v2ray -config /usr/local/etc/v2ray/config.json
+
+#查看环境变量的值
+#echo #ALL_PROXY
+
+#一键设置系统代理，10809是Windows上v2rayN的监听端口
+#export ALL_PROXY="http://127.0.0.1:10809"
+#unset ALL_PROXY
+
+#这个我也不清楚需不需要
+#export http_proxy="http://127.0.0.1:10809"
+
+# 参考链接
+# https://www.junz.org/post/v2_in_linux/
+
+
+rm /usr/local/etc/v2ray/config.json
+cat>/usr/local/etc/v2ray/config.json<<EOF
+{
+  "log": {
+    "access": "",
+    "error": "",
+    "loglevel": "warning"
+  },
+  "inbounds": [
+    {
+      "tag": "socks",
+      "port": 10808,
+      "listen": "127.0.0.1",
+      "protocol": "socks",
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      },
+      "settings": {
+        "auth": "noauth",
+        "udp": true,
+        "allowTransparent": false
+      }
+    },
+    {
+      "tag": "http",
+      "port": 10809,
+      "listen": "127.0.0.1",
+      "protocol": "http",
+      "sniffing": {
+        "enabled": true,
+        "destOverride": [
+          "http",
+          "tls"
+        ]
+      },
+      "settings": {
+        "auth": "noauth",
+        "udp": true,
+        "allowTransparent": false
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "47.87.214.106",
+            "port": 80,
+            "users": [
+              {
+                "id": "cd051aef-2b9c-4c7b-95ef-a0ea888a9896",
+                "alterId": 0,
+                "email": "t@t.tt",
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "wsSettings": {
+          "path": "/",
+          "headers": {
+            "Host": "down.dingtalk.com"
+          }
+        }
+      },
+      "mux": {
+        "enabled": false,
+        "concurrency": -1
+      }
+    },
+    {
+      "tag": "direct",
+      "protocol": "freedom",
+      "settings": {}
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole",
+      "settings": {
+        "response": {
+          "type": "http"
+        }
+      }
+    }
+  ],
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "inboundTag": [
+          "api"
+        ],
+        "outboundTag": "api",
+        "enabled": true
+      },
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "domain": [
+          "domain:example-example.com",
+          "domain:example-example2.com"
+        ],
+        "enabled": true
+      },
+      {
+        "type": "field",
+        "outboundTag": "block",
+        "domain": [
+          "geosite:category-ads-all"
+        ],
+        "enabled": true
+      },
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "domain": [
+          "geosite:cn"
+        ],
+        "enabled": true
+      },
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "ip": [
+          "geoip:private",
+          "geoip:cn"
+        ],
+        "enabled": true
+      },
+      {
+        "type": "field",
+        "port": "0-65535",
+        "outboundTag": "proxy",
+        "enabled": true
+      }
+    ]
+  }
+}
+
+EOF
+
+
+
+
+
+}
+
+
+start_v2ray(){
+    systemctl restart v2ray
+    export ALL_PROXY="http://127.0.0.1:10809"
+}
+
+stop_v2ray()
+{
+    systemctl stop v2ray
+    unset ALL_PROXY
+}
+
 
 create_ssl(){
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
