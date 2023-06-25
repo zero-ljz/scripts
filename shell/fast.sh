@@ -833,6 +833,11 @@ EOF
 start_v2ray(){
     #systemctl restart v2ray
     nohup /usr/local/bin/v2ray -config /usr/local/etc/v2ray/config.json &
+
+    # 不显示任何输出
+    #nohup /usr/local/bin/v2ray -config /usr/local/etc/v2ray/config.json > /dev/null 2>&1 &
+    
+    # 为了使环境变量在脚本的父进程中生效，使用 . fast.sh start_v2ray
     export ALL_PROXY="http://127.0.0.1:10809"
 }
 
@@ -840,6 +845,8 @@ stop_v2ray()
 {
     #systemctl stop v2ray
     killall v2ray
+
+    # 为了使环境变量在脚本的父进程中生效，使用 . fast.sh stop_v2ray
     unset ALL_PROXY
 }
 
