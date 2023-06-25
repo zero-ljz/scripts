@@ -92,6 +92,15 @@
       },
     },
     {
+      name: "朗读文本",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
+        if (q != null)
+          window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(q));
+      },
+    },
+    {
       name: "执行JS表达式",
       action: function () {
         let q = window.getSelection().toString();
@@ -222,7 +231,7 @@
     },
 
     {
-      name: "谷歌翻译页面",
+      name: "翻译-谷歌-页面",
       action: function () {
         location.href =
           "https://translate.google.com/translate?sl=auto&tl=zh-CN&u=" +
@@ -231,7 +240,7 @@
     },
 
     {
-      name: "有道翻译页面",
+      name: "翻译-有道-页面",
       action: function () {
         location.href =
           "http://webtrans.yodao.com/webTransPc/index.html#/?from=auto&to=auto&type=1&url=" +
@@ -239,7 +248,7 @@
       },
     },
     {
-      name: "有道词典",
+      name: "词典-有道",
       action: function () {
         let q = window.getSelection().toString();
         if (q == "") {
@@ -254,7 +263,7 @@
       },
     },
     {
-      name: "谷歌翻译文本",
+      name: "翻译-谷歌",
       action: function () {
         let q = window.getSelection().toString();
         if (q == "") {
@@ -284,17 +293,8 @@
         }
       },
     },
-
     {
-      name: "谷歌页面快照",
-      action: function () {
-        document.location.href =
-          "http://www.google.com/search?q=cache:" +
-          escape(document.location.href);
-      },
-    },
-    {
-      name: "谷歌牛津词典",
+      name: "词典-谷歌",
       action: function () {
         let q = window.getSelection().toString();
         if (!q) q = prompt("你没有选中任何文本，请输入：", "");
@@ -307,43 +307,16 @@
       },
     },
     {
-      name: "谷歌搜索中文",
+      name: "搜索-谷歌-快照",
       action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
-        if (q != null)
-          window.open(
-            "https://www.google.com/search?lr=lang_zh-CN&q=" +
-              encodeURIComponent(q).replace(/ /g, "+")
-          );
+        document.location.href =
+          "http://www.google.com/search?q=cache:" +
+          escape(document.location.href);
       },
     },
 
     {
-      name: "百度搜索",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
-        if (q != null)
-          window.open(
-            "http://www.baidu.com/s?wd=" +
-              encodeURIComponent(q).replace(/ /g, "+")
-          );
-      },
-    },
-
-    {
-      name: "维基百科",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
-        if (q != null)
-          window.open("https://zh.wikipedia.org/wiki/" + encodeURIComponent(q));
-      },
-    },
-
-    {
-      name: "谷歌站点搜索",
+      name: "搜索-谷歌-站点",
       action: function () {
         let q = window.getSelection().toString();
         if (!q) q = prompt("你没有选中任何文本，请输入：", "");
@@ -357,9 +330,44 @@
           ).replace(/ /g, "+");
       },
     },
+    {
+      name: "搜索-谷歌-中文",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
+        if (q != null)
+          window.open(
+            "https://www.google.com/search?lr=lang_zh-CN&q=" +
+              encodeURIComponent(q).replace(/ /g, "+")
+          );
+      },
+    },
 
     {
-      name: "DeepL翻译",
+      name: "搜索-百度",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
+        if (q != null)
+          window.open(
+            "http://www.baidu.com/s?wd=" +
+              encodeURIComponent(q).replace(/ /g, "+")
+          );
+      },
+    },
+
+    {
+      name: "搜索-维基百科",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
+        if (q != null)
+          window.open("https://zh.wikipedia.org/wiki/" + encodeURIComponent(q));
+      },
+    },
+
+    {
+      name: "翻译-DeepL",
       action: function () {
         let q = window.getSelection().toString();
         if (!q) q = prompt("你没有选中任何文本，请输入：", "");
@@ -415,15 +423,7 @@
           "http://web.archive.org/" + escape(document.location.href);
       },
     },
-    {
-      name: "朗读文本",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
-        if (q != null)
-          window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(q));
-      },
-    },
+
     { name: "菜单项1", action: function () {} },
     { name: "菜单项2", action: function () {} },
   ];
@@ -495,8 +495,8 @@
   menuContainer.style.cssText = `
   position: fixed;
   padding: 10px;
-  background-color: white;
-  border: 1px solid black;
+  /* background-color: white; */
+  border: 1px solid white; 
   z-index: 9999;
   display: none;
   border-radius: 7px;
@@ -552,7 +552,9 @@
     top: GM_getValue("btn_top", default_values.btn_top),
     left: GM_getValue("btn_left", default_values.btn_left),
   });
-  button.style.display = GM_getValue("show_button", default_values.show_button) ? "block" : "none";
+  button.style.display = GM_getValue("show_button", default_values.show_button)
+    ? "block"
+    : "none";
 
   // 添加按钮点击事件
   button.addEventListener("mousedown", function (event) {
