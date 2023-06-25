@@ -34,6 +34,23 @@
     }
   `);
 
+    // 添加半透明框的 CSS 类
+    GM_addStyle(`
+    .blur-box {
+    all: initial;
+    
+    box-shadow: inset 1px 1px rgb(255 255 255 / 20%), inset -1px -1px rgb(255 255 255 / 10%), 1px 3px 24px -1px rgb(0 0 0 / 15%);
+    background-color: transparent;
+    background-image: linear-gradient(125deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2) 70%); /* 搭配 #ADADAD 颜色文字*/
+    background-image: linear-gradient(125deg, rgba(64, 64, 64, 0.3), rgba(64, 64, 64, 0.2) 70%);
+
+    -webkit-backdrop-filter: blur(5px);
+    border-radius: 7px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(5px);
+  }
+  `);
+
   // 创建消息框元素
   function createMessageBox(message) {
     var messageBox = document.createElement("div");
@@ -54,6 +71,7 @@
 
     var closeButton = document.createElement("button");
     closeButton.textContent = "关闭";
+    closeButton.style.all = "initial";
     closeButton.style.marginLeft = "10px";
     closeButton.style.position = "absolute";
     closeButton.style.bottom = "10px";
@@ -487,6 +505,7 @@
 
   // 创建菜单容器
   var menuContainer = document.createElement("div");
+  menuContainer.classList.add("blur-box");
   menuContainer.style.cssText = `
   position: fixed;
   padding: 10px;
@@ -494,16 +513,6 @@
   display: none;
   max-height: 80%; /* 设置最大高度为父元素高度的50% */
   overflow-y: auto; /* 显示滚动条，仅在内容溢出时显示 */
-  
-  /* background-color: white; */
-  border: 1px solid white; 
-  border-radius: 7px;
-
-  box-shadow: inset 1px 1px rgb(255 255 255 / 20%), inset -1px -1px rgb(255 255 255 / 10%), 1px 3px 24px -1px rgb(0 0 0 / 15%);
-  background-color: transparent;
-  background-image: linear-gradient(125deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2) 70%);
-  -webkit-backdrop-filter: blur(5px);
-  backdrop-filter: blur(5px);
 `;
 
   // 创建菜单项
@@ -514,15 +523,15 @@
     menuItem.style.marginBottom = "5px";
     menuItem.style.fontSize = "16px";
     menuItem.style.lineHeight = "1.2";
-    menuItem.style.color = "#ADADAD";
+    menuItem.style.color = "#F2F2F2";
     menuItem.style.textAlign = "left";
 
     menuItem.addEventListener("mouseenter", function () {
-      menuItem.style.color = "blue"; // 在鼠标悬停时
+      menuItem.style.color = "white"; // 在鼠标悬停时 0078D7
     });
 
     menuItem.addEventListener("mouseleave", function () {
-      menuItem.style.color = "#ADADAD"; // 在鼠标离开时
+      menuItem.style.color = "#F2F2F2"; // 在鼠标离开时
     });
 
     menuItem.addEventListener("mousedown", function (event) {
