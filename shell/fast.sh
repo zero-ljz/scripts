@@ -646,8 +646,8 @@ install_v2ray2(){
 curl -LkOJ http://us.iapp.run:777/http-proxy?url=https://github.com/v2fly/v2ray-core/releases/download/v4.45.2/v2ray-linux-64.zip
 unzip -d v2ray-linux-64 v2ray-linux-64.zip
 cp v2ray-linux-64/v2ray v2ray-linux-64/v2ctl /usr/local/bin/ && chmod 777 /usr/local/bin/v2ray
-mkdir /usr/local/share/v2ray && cp v2ray-linux-64/geoip.dat v2ray-linux-64/geosite.dat /usr/local/share/v2ray/
-mkdir /usr/local/etc/v2ray && cp v2ray-linux-64/config.json /usr/local/etc/v2ray/
+mkdir -p /usr/local/share/v2ray && cp v2ray-linux-64/geoip.dat v2ray-linux-64/geosite.dat /usr/local/share/v2ray/
+mkdir -p /usr/local/etc/v2ray && cp v2ray-linux-64/config.json /usr/local/etc/v2ray/
 cp v2ray-linux-64/systemd/system/v2ray.service v2ray-linux-64/systemd/system/v2ray@.service /etc/systemd/system/
 
 # 在v2rayN windows客户端右键节点导出为客户端配置config.json文件复制到/usr/local/etc/v2ray
