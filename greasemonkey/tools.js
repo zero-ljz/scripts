@@ -87,7 +87,7 @@
   }
 
   // 显示消息框
-  function showMessage(message, duration) {
+  function showMessage(message, duration='3000') {
     var messageBox = createMessageBox(message);
     setTimeout(function () {
       messageBox.style.display = "none";
@@ -99,10 +99,7 @@
       name: "test",
       action: function () {
         showMessage(
-          `这是一
-        个自
-        定fsd
-        义消息框！`,
+          `这是一个自定义消息框！`,
           2000
         );
       },
@@ -229,7 +226,7 @@
               "cut",
               "contextmenu",
               "selectstart",
-              "mousedown",
+              //"mousedown",
               "mouseup",
               "mousemove",
               "keydown",
@@ -238,7 +235,7 @@
             ].forEach(function (e) {
               document.documentElement.addEventListener(e, t, { capture: !0 });
             }),
-            alert("解除限制成功啦！");
+            showMessage("解除限制成功啦！");
         })();
       },
     },
@@ -249,9 +246,9 @@
         !(function () {
           "true" === document.body.getAttribute("contenteditable")
             ? (document.body.setAttribute("contenteditable", !1),
-              alert("网页不能编辑啦！"))
+              showMessage("网页不能编辑啦！"))
             : (document.body.setAttribute("contenteditable", !0),
-              alert("网页可以编辑啦！"));
+              showMessage("网页可以编辑啦！"));
         })();
       },
     },
@@ -394,7 +391,7 @@
             eval(await res.text())
           );
         })();
-        alert("按住Alt即可使用");
+        showMessage("按住Alt即可使用");
       },
     },
     {
