@@ -39,12 +39,18 @@ dpkg-reconfigure tzdata
 apt update
 
 echo -e "\n\n\n 安装必备组件"
-apt -y install sudo aptitude zip unzip wget curl python3 python3-pip python3-dev telnet sqlite3 perl lua
+apt -y install sudo aptitude zip unzip wget curl telnet sqlite3 python3 python3-pip python3-dev perl lua
 
 # 使用包管理器安装 apt -y install nodejs npm
 # 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
 nvm install --lts
+# 全局安装yarn
+npm install -g yarn
+npm config set registry https://registry.npm.taobao.org
+
+# 部署theia ide 
+# https://theia--ide-org.translate.goog/docs/composing_applications?_x_tr_hist=true&_x_tr_sl=auto&_x_tr_tl=zh-CN&_x_tr_hl=zh-CN
 
 
 echo -e "\n\n\n 安装 Git"
