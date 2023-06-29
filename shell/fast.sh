@@ -649,7 +649,7 @@ fi
 
 
 install_v2ray2(){
-curl -LkOJ http://us.iapp.run:777/http-proxy?url=https://github.com/v2fly/v2ray-core/releases/download/v4.45.2/v2ray-linux-64.zip
+curl -LkOJ http://us.iapp.run:777/proxy/https://github.com/v2fly/v2ray-core/releases/download/v4.45.2/v2ray-linux-64.zip
 unzip -d v2ray-linux-64 v2ray-linux-64.zip
 # 复制主程序和辅助工具
 cp v2ray-linux-64/v2ray v2ray-linux-64/v2ctl /usr/local/bin/ && chmod 777 /usr/local/bin/v2ray
