@@ -4,11 +4,11 @@ import json
 import aiohttp
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
-    QPushButton, QComboBox, QMessageBox, QTabWidget, QFileDialog, QSplitter
+    QPushButton, QComboBox, QMessageBox, QTabWidget, QFileDialog, QSplitter, QStatusBar, QCheckBox
 from PySide6.QtGui import QAction
 
 
-class HTTPDebugTool(QMainWindow):
+class HTTPClient(QMainWindow):
     def __init__(self):
         super().__init__()
         self.tab_widget = QTabWidget()
@@ -18,7 +18,7 @@ class HTTPDebugTool(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle("HTTP Debug Tool")
+        self.setWindowTitle("HTTP Client")
         self.setGeometry(100, 100, 800, 600)
 
         central_widget = QWidget(self)
@@ -36,6 +36,9 @@ class HTTPDebugTool(QMainWindow):
         self.create_new_tab()
 
         self.create_menu_bar()
+
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
 
     def create_menu_bar(self):
         menu_bar = self.menuBar()
@@ -147,6 +150,10 @@ class HTTPDebugTool(QMainWindow):
     
         send_button = QPushButton("Send")
         send_button.clicked.connect(self.send_request)
+
+        follow_redirect_checkbox = QCheckBox("Follow Redirects")
+        follow_redirect_checkbox.setObjectName("follow_redirect_checkbox")  # 添加对象名称
+        follow_redirect_checkbox.setChecked(True)  # 默认勾选
     
         request_layout.addLayout(url_layout)
         request_layout.addLayout(method_layout)
@@ -155,6 +162,7 @@ class HTTPDebugTool(QMainWindow):
         request_layout.addWidget(request_body_label)
         request_layout.addWidget(request_body_text)
         request_layout.addWidget(send_button)
+        request_layout.addWidget(follow_redirect_checkbox)
     
         response_widget = QWidget()
         response_widget.setObjectName("response_widget")  # 添加对象名称
@@ -210,13 +218,15 @@ class HTTPDebugTool(QMainWindow):
         return headers
 
     async def make_request(self, url, method, headers, body):
+        current_tab_index = self.tab_widget.currentIndex()
+        current_tab = self.tab_widget.widget(current_tab_index)
+        allow_redirects = current_tab.findChild(QWidget, "follow_redirect_checkbox").isChecked()
+
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.request(method, url, headers=headers, data=body) as response:
+                async with session.request(method, url, headers=headers, data=body, allow_redirects=allow_redirects) as response:
                     response_text = await response.text()
 
-                    current_tab_index = self.tab_widget.currentIndex()
-                    current_tab = self.tab_widget.widget(current_tab_index)
                     response_widget = current_tab.findChild(QWidget, "response_widget")
 
                     response_headers_text = current_tab.findChild(QWidget, "response_headers_text")
@@ -238,6 +248,9 @@ class HTTPDebugTool(QMainWindow):
                             response_body_text.setPlainText(formatted_json)
                         except ValueError:
                             pass
+                    # Update status bar message
+                    status_message = f"{response.status} {response.reason}"
+                    self.statusBar().showMessage(status_message)
 
         except aiohttp.ClientError as e:
             QMessageBox.warning(self, "Error", str(e))
@@ -262,6 +275,6 @@ class HTTPDebugTool(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    http_debug_tool = HTTPDebugTool()
-    http_debug_tool.show()
+    http_client = HTTPClient()
+    http_client.show()
     sys.exit(app.exec())
