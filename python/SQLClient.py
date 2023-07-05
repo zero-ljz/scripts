@@ -1,11 +1,65 @@
 import sys
 import csv
+import re
 import sqlite3
 import pymysql
 import psycopg2
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTextEdit, QPushButton, QMessageBox, QLineEdit, QHBoxLayout, QTableWidget, QTableWidgetItem, QMenu, QFileDialog, QInputDialog, QComboBox, QSplitter
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTextEdit, QPushButton, QMessageBox, QLineEdit, QHBoxLayout, QTableWidget, QTableWidgetItem, QMenu, QFileDialog, QInputDialog, QComboBox, QSplitter, QPlainTextEdit
+from PySide6.QtGui import QAction, QKeySequence, QPainter, QSyntaxHighlighter, QTextCharFormat, QColor, QFont
+
+
+class SQLTextEdit(QTextEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.highlighter = SQLSyntaxHighlighter(self.document())
+
+    def paintEvent(self, event):
+        # 绘制文本框背景
+        super().paintEvent(event)
+
+
+class SQLSyntaxHighlighter(QSyntaxHighlighter):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.highlighting_rules = []
+
+        keyword_format = QTextCharFormat()
+        keyword_format.setForeground(Qt.darkBlue)
+        keyword_format.setFontWeight(QFont.Bold)
+        keywords = [
+            "SELECT", "FROM", "WHERE", "INSERT", "INTO", "VALUES",
+            "UPDATE", "SET", "DELETE", "CREATE", "TABLE", "DROP",
+            "DATABASE", "ALTER", "ADD", "PRIMARY", "KEY", "FOREIGN",
+            "REFERENCES", "INDEX", "IF", "NOT", "NULL", "AND", "OR",
+            "AS", "LIKE", "JOIN", "LEFT", "RIGHT", "INNER", "OUTER",
+            "ASC", "DESC", "GROUP", "BY", "HAVING", "ORDER", "LIMIT",
+            "OFFSET", "UNION", "ALL", "DISTINCT", "CASE", "WHEN",
+            "THEN", "ELSE", "END"
+        ]
+        for keyword in keywords:
+            pattern = r"\b" + re.escape(keyword) + r"\b"
+            rule = (re.compile(pattern, re.IGNORECASE), keyword_format)
+            self.highlighting_rules.append(rule)
+
+        quotation_format = QTextCharFormat()
+        quotation_format.setForeground(Qt.darkGreen)
+        self.highlighting_rules.append((re.compile(r"'[^']*'"), quotation_format))
+        self.highlighting_rules.append((re.compile(r'"[^"]*"'), quotation_format))
+
+        comment_format = QTextCharFormat()
+        comment_format.setForeground(Qt.darkGray)
+        self.highlighting_rules.append((re.compile(r"--[^\n]*"), comment_format))
+
+    def highlightBlock(self, text):
+        for rule in self.highlighting_rules:
+            expression, char_format = rule
+    
+            matches = expression.finditer(text)
+            for match in matches:
+                start, end = match.span()
+                self.setFormat(start, end - start, char_format)
+
 
 class SQLClient(QMainWindow):
     def __init__(self):
@@ -29,12 +83,13 @@ class SQLClient(QMainWindow):
         input_layout = QHBoxLayout()
         top_layout.addLayout(input_layout)
 
-        self.query_text = QTextEdit()
-        input_layout.addWidget(self.query_text)
+        # self.query_text = QTextEdit()
+        # input_layout.addWidget(self.query_text)
 
-        execute_button = QPushButton("Execute")
-        execute_button.clicked.connect(self.execute_query)
-        input_layout.addWidget(execute_button)
+        # 创建 SQL 输入框
+        self.query_text = SQLTextEdit(self)
+        # self.setCentralWidget(self.query_text)
+        input_layout.addWidget(self.query_text)
 
         # 设置上部分为可伸缩部件
         top_widget.setLayout(top_layout)
@@ -63,7 +118,7 @@ class SQLClient(QMainWindow):
 
 
         self.db_type_input = QComboBox()
-        self.db_type_input.addItems(["mysql", "sqlite", "pgsql"])
+        self.db_type_input.addItems(["sqlite", "mysql", "pgsql"])
         self.db_type_input.setPlaceholderText("Database Type")
         connection_layout.addWidget(self.db_type_input)
 
@@ -121,8 +176,10 @@ class SQLClient(QMainWindow):
         insert_menu.addAction(select_action)
         create_action = QAction("CREATE DATABASE", self)
         insert_menu.addAction(create_action)
-        show_action = QAction("SHOW TABLES", self)
-        insert_menu.addAction(show_action)
+        show_tables_action = QAction("SHOW TABLES", self)
+        insert_menu.addAction(show_tables_action)
+        show_dbs_action = QAction("SHOW DATABASES", self)
+        insert_menu.addAction(show_dbs_action)
 
         # 连接插入子菜单项的信号槽
         insert_action.triggered.connect(lambda: self.insert_sql("INSERT INTO"))
@@ -130,17 +187,15 @@ class SQLClient(QMainWindow):
         update_action.triggered.connect(lambda: self.insert_sql("UPDATE"))
         select_action.triggered.connect(lambda: self.insert_sql("SELECT"))
         create_action.triggered.connect(lambda: self.insert_sql("CREATE DATABASE"))
-        show_action.triggered.connect(lambda: self.insert_sql("SHOW TABLES"))
-
-        # 创建执行菜单
-        execute_menu = menu_bar.addMenu("执行")
+        show_tables_action.triggered.connect(lambda: self.insert_sql("SHOW TABLES"))
+        show_dbs_action.triggered.connect(lambda: self.insert_sql("SHOW DATABASES"))
 
         # 创建执行动作
-        execute_action = QAction("执行", self)
+        execute_action = QAction("Execute (F5)", self)
         execute_action.triggered.connect(self.execute_query)
         execute_action.setShortcut(QKeySequence(Qt.Key_F5))
-        # 将执行动作添加到执行菜单中
-        execute_menu.addAction(execute_action)
+        # 将执行动作添加到菜单栏
+        menu_bar.addAction(execute_action)
 
     def insert_sql(self, sql_type):
         if sql_type:
@@ -160,6 +215,13 @@ class SQLClient(QMainWindow):
                     sql = "SELECT name FROM sqlite_master WHERE type='table'"
                 else:
                     sql = "SHOW TABLES"
+            elif sql_type == "SHOW DATABASES":
+                if isinstance(self.connection, sqlite3.Connection):
+                    sql = "SELECT name FROM sqlite_master WHERE type='database'"
+                elif isinstance(self.connection, psycopg2.extensions.connection):
+                    sql = "SELECT datname FROM pg_database WHERE datistemplate = false"
+                else:
+                    sql = "SHOW DATABASES"
     
             # 将语句插入到输入框中
             cursor = self.query_text.textCursor()
@@ -175,16 +237,26 @@ class SQLClient(QMainWindow):
 
         try:
             if db_type.lower() == "mysql":
-                self.connection = pymysql.connect(host=db_host, user=db_user, password=db_password, db=db_name)
+                host_parts = db_host.split(':')
+                host = host_parts[0]
+                port = int(host_parts[1]) if len(host_parts) > 1 else 3306
+                self.connection = pymysql.connect(host=host, port=port, user=db_user, password=db_password, db=db_name)
                 self.cursor = self.connection.cursor()
             elif db_type.lower() == "sqlite":
                 self.connection = sqlite3.connect(db_name)
                 self.cursor = self.connection.cursor()
             elif db_type.lower() == "pgsql":
-                self.connection = psycopg2.connect(host=db_host, user=db_user, password=db_password, dbname=db_name)
+                host_parts = db_host.split(':')
+                host = host_parts[0]
+                port = int(host_parts[1]) if len(host_parts) > 1 else 5432
+                self.connection = psycopg2.connect(host=host, port=port, user=db_user, password=db_password, dbname=db_name)
                 self.cursor = self.connection.cursor()
             else:
                 raise ValueError("Invalid database type")
+            
+            # 更新窗口标题
+            title = f"SQLClient - {db_host}/{db_name}"
+            self.setWindowTitle(title)
 
             self.statusBar().showMessage("Connected to database" + " " + db_name)
         except (sqlite3.Error, pymysql.Error, psycopg2.Error) as e:
@@ -209,7 +281,20 @@ class SQLClient(QMainWindow):
             query = self.query_text.toPlainText()
 
         try:
-            self.cursor.execute(query)
+            # 使用分号分割多个 SQL 语句
+            sql_statements = query.split(";")
+
+            # 执行每个 SQL 语句
+            for statement in sql_statements:
+                # 忽略空语句
+                if not statement.strip():
+                    continue
+
+                # 执行
+                self.cursor.execute(statement)
+
+            # 提交事务
+            self.connection.commit()
 
             # 获取查询结果
             result = self.cursor.fetchall()
@@ -255,7 +340,7 @@ class SQLClient(QMainWindow):
 
     def get_target_table_name(self):
         table_name, ok = QInputDialog.getText(self, "Target Table", "Enter the target table name:")
-        if ok:
+        if ok and table_name:
             return table_name
         else:
             return None
@@ -270,23 +355,66 @@ class SQLClient(QMainWindow):
             return
 
         try:
-            self.cursor.execute(f"DELETE FROM {table_name}")
+
+            # 获取表的主键字段名
+            primary_key_column = self.get_primary_key_column(table_name)
+            if not primary_key_column:
+                QMessageBox.warning(self, "Warning", "Table doesn't have a primary key column")
+                return
 
             for row in range(self.result_table.rowCount()):
                 values = []
+                update_pairs = []
+                primary_key_value = None
+
                 for col in range(self.result_table.columnCount()):
                     item = self.result_table.item(row, col)
                     value = item.text()
                     values.append(value)
-                placeholders = ", ".join(["%s"] * len(values))
-                query = f"INSERT INTO {table_name} VALUES ({placeholders})"
-                self.cursor.execute(query, values)
+
+                    # 构建更新语句的列名=值对
+                    column_name = self.result_table.horizontalHeaderItem(col).text()
+                    update_pairs.append(f"{column_name} = '{value}'")
+
+                    # 获取主键列的值
+                    if column_name == primary_key_column:
+                        primary_key_value = value
+
+                # 构建更新语句
+                update_query = f"UPDATE {table_name} SET {', '.join(update_pairs)} WHERE {primary_key_column} = '{primary_key_value}'"
+                self.cursor.execute(update_query)
 
             self.connection.commit()
+
             self.statusBar().showMessage("Updated to database successfully")
         except (sqlite3.Error, pymysql.Error, psycopg2.Error) as e:
             QMessageBox.critical(self, "Error", str(e))
             self.statusBar().showMessage("Update to database failed")
+
+
+    def get_primary_key_column(self, table_name):
+        # 根据数据库类型查询表的主键字段名
+        if self.db_type_input.currentText().lower() == "mysql":
+            query = f"SHOW KEYS FROM {table_name} WHERE Key_name = 'PRIMARY'"
+            self.cursor.execute(query)
+            primary_key_info = self.cursor.fetchone()
+            if primary_key_info:
+                return primary_key_info[4]
+        elif self.db_type_input.currentText().lower() == "sqlite":
+            query = f"PRAGMA table_info({table_name})"
+            self.cursor.execute(query)
+            columns = self.cursor.fetchall()
+            for column in columns:
+                if column[5] == 1:  # 判断是否为主键
+                    return column[1]
+        elif self.db_type_input.currentText().lower() == "pgsql":
+            query = f"SELECT column_name FROM information_schema.key_column_usage WHERE table_name = '{table_name}' AND constraint_name LIKE '%_pkey'"
+            self.cursor.execute(query)
+            primary_key_info = self.cursor.fetchone()
+            if primary_key_info:
+                return primary_key_info[0]
+        return None
+
 
 
     def export_as_csv(self):
@@ -319,6 +447,13 @@ class SQLClient(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    sql_client = SQLClient()
+
+    if len(sys.argv) > 1:
+        db_file = sys.argv[1]
+        sql_client = SQLClient()
+        sql_client.db_name_input.setText(db_file)
+    else:
+        sql_client = SQLClient()
+
     sql_client.show()
     sys.exit(app.exec())

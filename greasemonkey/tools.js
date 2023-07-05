@@ -23,38 +23,35 @@
 
   // 添加毛玻璃框的 CSS 类
   GM_addStyle(`
-    .glass-box {
+    .gm-glass-box {
       all: initial;
-      transform: translateX(-50%);
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 10px;
+
+      background: rgba(255, 255, 255, 0.6);
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
       backdrop-filter: blur(10px);
+      border-radius: 1.2rem;
     }
   `);
 
     // 添加半透明框的 CSS 类
     GM_addStyle(`
-    .blur-box {
+    .gm-blur-box {
     all: initial;
-    
-    box-shadow: inset 1px 1px rgb(255 255 255 / 20%), inset -1px -1px rgb(255 255 255 / 10%), 1px 3px 24px -1px rgb(0 0 0 / 15%);
-    background-color: transparent;
-    background-image: linear-gradient(125deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2) 70%); /* 搭配 #ADADAD 颜色文字*/
-    background-image: linear-gradient(125deg, rgba(64, 64, 64, 0.3), rgba(64, 64, 64, 0.2) 70%);
 
-    -webkit-backdrop-filter: blur(5px);
-    border-radius: 7px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    background-image: linear-gradient(125deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2) 70%); /* color: #ADADAD */
+    background-image: linear-gradient(125deg, rgba(64, 64, 64, 0.3), rgba(64, 64, 64, 0.2) 70%);
+    color: white;
+    box-shadow: inset 1px 1px rgb(255 255 255 / 20%), inset -1px -1px rgb(255 255 255 / 10%), 1px 3px 24px -1px rgb(0 0 0 / 15%);
     backdrop-filter: blur(5px);
+    border-radius: 7px;
+    -webkit-backdrop-filter: blur(5px);
   }
   `);
 
   // 创建消息框元素
   function createMessageBox(message) {
     var messageBox = document.createElement("div");
-    messageBox.classList.add("glass-box");
+    messageBox.classList.add("gm-glass-box");
 
     messageBox.style.position = "fixed";
     messageBox.style.top = "20px"; // 将消息框的位置移到屏幕的上方
@@ -95,15 +92,6 @@
   }
 
   var menuItems = [
-    {
-      name: "test",
-      action: function () {
-        showMessage(
-          `这是一个自定义消息框！`,
-          2000
-        );
-      },
-    },
     { name: "隐藏按钮", action: toggleButton },
     {
       name: "脚本设置",
@@ -429,6 +417,19 @@
       },
     },
     {
+      name: "类似网站2",
+      action: function () {
+        const subdomain = window.location.hostname;
+        const domainParts = subdomain.split(".");
+        const mainDomain = domainParts.slice(-2).join(".");
+        window.open(
+          "https://www.similarsites.com/site/" + mainDomain + "",
+          "new",
+          "location=no, toolbar=no"
+        );
+      },
+    },
+    {
       name: "网页存档",
       action: function () {
         document.location.href =
@@ -502,7 +503,7 @@
 
   // 创建菜单容器
   var menuContainer = document.createElement("div");
-  menuContainer.classList.add("blur-box");
+  menuContainer.classList.add("gm-blur-box");
   menuContainer.style.cssText = `
   position: fixed;
   padding: 10px;

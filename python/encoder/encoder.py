@@ -5,8 +5,6 @@ import binascii
 import datetime
 import urllib.parse
 import html
-import textwrap
-
 
 # 命令行选项常量定义
 ENCODE_OPTION = '--encode'
@@ -243,7 +241,4 @@ def html_escape(text, decode):
 
     click.echo(output)
 
-
-if __name__ == '__main__':
-    cli()
 
