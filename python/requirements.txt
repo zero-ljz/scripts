@@ -37,7 +37,7 @@ pandas
 sqlalchemy
 pymysql
 pymongo
-psycopg
+psycopg2
 celery
 redis
 
