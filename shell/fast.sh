@@ -36,18 +36,15 @@ dpkg-reconfigure locales
 echo -e "\n\n\n 配置时区"
 dpkg-reconfigure tzdata
 
+# 安装命令行提示工具
+curl -sS https://starship.rs/install.sh | sh
+echo 'eval "$(starship init bash)"' >> ~/.bashrc
+source ~/.bashrc
+
 apt update
 
 echo -e "\n\n\n 安装必备组件"
 apt -y install sudo aptitude zip unzip wget curl telnet sqlite3 python3 python3-pip python3-dev perl lua
-
-# 使用包管理器安装 apt -y install nodejs npm
-# 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
-nvm install --lts
-# 全局安装yarn
-npm install -g yarn
-npm config set registry https://registry.npm.taobao.org
 
 # 部署theia ide 
 # https://theia--ide-org.translate.goog/docs/composing_applications?_x_tr_hist=true&_x_tr_sl=auto&_x_tr_tl=zh-CN&_x_tr_hl=zh-CN
@@ -172,25 +169,30 @@ apt -y install mc
 
 echo -e "\n\n\n 安装一个快速的命令行模糊搜索工具，可以帮助你更快地找到你需要的文件、目录、命令等等。"
 apt -y install fzf
+
+echo -e "\n\n\n 安装一个快速的命令行文本搜索工具，支持正则表达式和递归搜索目录"
+apt -y install ripgrep
+
+
 # echo -e "\n\n\n 安装用 Python 编写的终端文件管理器，可以方便地在终端中浏览和操作文件。"
 # apt -y install ranger-fm
 # echo -e "\n\n\n 安装一个基于文本搜索的快速查找工具，全称为"The Silver Searcher"。它是类似于grep的命令行工具，但比grep更快速、更强大。"
 # apt -y install silversearcher-ag
-# echo -e "\n\n\n 安装一个简单易用的磁盘使用情况分析工具，可以直观地查看磁盘空间使用情况。"
-# apt -y install ncdu
-# echo -e "\n\n\n 安装系统监视工具，可以监视 CPU、内存、网络等方面的系统指标。"
-# apt -y install glances
+echo -e "\n\n\n 安装一个简单易用的磁盘使用情况分析工具，可以直观地查看磁盘空间使用情况。"
+apt -y install ncdu
 
 # echo -e "\n\n\n 安装w3m浏览器。"
 # apt -y install w3m
 # echo -e "\n\n\n 安装类似于 top 命令，但是具有更强的交互性和可读性，它可以显示更多有关进程的信息。"
 # apt -y install htop
-# echo -e "\n\n\n 安装命令行 JSON 处理器，可以帮助您以可读的方式解析和格式化 JSON 数据。"
-# apt -y install jq
+echo -e "\n\n\n 安装命令行 JSON 处理器，可以帮助您以可读的方式解析和格式化 JSON 数据。"
+apt -y install jq
 # echo -e "\n\n\n 安装实时网络带宽监控器。"
 # apt -y install bmon
-# echo -e "\n\n\n 安装网络扫描工具，用于检测主机和服务。"
-# apt -y install nmap
+
+echo -e "\n\n\n 安装网络扫描工具，用于检测主机和服务。其他替代品：masscan"
+apt -y install nmap
+
 echo -e "\n\n\n 安装可帮助您在终端中以树形结构显示目录结构。"
 apt -y install tree
 
@@ -210,8 +212,18 @@ apt -y install micro
 # echo -e "\n\n\n 安装 nnn 文件管理器"
 # apt -y install nnn
 
-# echo -e "\n\n\n 多功能的基准测试工具，可以测试CPU、内存、磁盘和数据库等各种系统性能。"
-# apt -y install sysbench
+echo -e "\n\n\n 多功能的基准测试工具，可以测试CPU、内存、磁盘和数据库等各种系统性能。"
+apt -y install sysbench
+# cpu测试 sysbench cpu --threads=1 run
+# 内存测试 sysbench memory --threads=1 run
+# 文件io测试 sysbench fileio --threads=1 --file-total-size=1G --file-test-mode=rndrw prepare
+
+
+echo -e "\n\n\n 安装fio磁盘性能测试工具"
+apt -y install fio
+# 运行随机读取测试
+# fio --name=random-read --ioengine=libaio --direct=1 --rw=randread --bs=4k --size=1G --numjobs=1 --runtime=60s
+
 
 # echo -e "\n\n\n 安装 fd 文件搜索工具，一个更好的 find 命令替代品，可以帮助你更快地查找文件，支持快速查找和过滤。"
 # wget -O fd_8.4.0_amd64.deb ${base_url}https://github.com/sharkdp/fd/releases/download/v8.4.0/fd_8.4.0_amd64.deb
@@ -221,6 +233,10 @@ apt -y install micro
 echo -e "\n\n\n 安装 tldr 控制台命令的协作备忘单，用法tldr cp"
 pip3 install tldr
 
+echo -e "\n\n\n 安装 cht.sh 命令行查询"
+apt -y install rlwrap
+curl -s https://cht.sh/:cht.sh | tee /usr/local/bin/cht.sh && chmod +x /usr/local/bin/cht.sh
+
 echo -e "\n\n\n 安装 thefuck 命令行自动纠正"
 apt -y install python3-dev python3-pip python3-setuptools
 pip3 install thefuck --user
@@ -228,6 +244,9 @@ pip3 install thefuck --user
 echo -e "\n\n\n 安装 bpytop资源监视器"
 pip3 install psutil
 pip3 install bpytop
+
+# echo -e "\n\n\n 安装跨平台系统监视工具，可以监视 CPU、内存、网络等方面的系统指标。"
+pip install --user glances
 
 # 安装GoTTY - 将您的终端共享为 Web 应用程序
 wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz
@@ -379,6 +398,21 @@ apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin do
 fi
 }
 
+install_nodejs(){
+echo -e "\n\n\n------------------------------安装 Aria2------------------------------"
+echo "是否继续？ (y)"
+read -t 10 answer
+if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+apt -y install npm
+# 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+nvm install --lts
+# 全局安装yarn
+npm install -g yarn
+#npm config set registry https://registry.npm.taobao.org
+fi
+}
+
 install_aria2(){
 echo -e "\n\n\n------------------------------安装 Aria2------------------------------"
 echo "是否继续？ (y)"
@@ -404,6 +438,7 @@ read -t 10 answer
 if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
 curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash 
 # filebrowser -r / -a 0.0.0.0 -p 8080
+# 默认账户 admin / admin
 fi
 }
 
@@ -750,7 +785,7 @@ cat>/usr/local/etc/v2ray/config.json<<EOF
         "wsSettings": {
           "path": "/",
           "headers": {
-            "Host": "down.dingtalk.com"
+            "Host": "qq.com"
           }
         }
       },
