@@ -36,19 +36,10 @@ dpkg-reconfigure locales
 echo -e "\n\n\n 配置时区"
 dpkg-reconfigure tzdata
 
-# 安装命令行提示工具
-curl -sS https://starship.rs/install.sh | sh
-echo 'eval "$(starship init bash)"' >> ~/.bashrc
-source ~/.bashrc
-
 apt update
 
 echo -e "\n\n\n 安装必备组件"
 apt -y install sudo aptitude zip unzip wget curl telnet sqlite3 python3 python3-pip python3-dev perl lua
-
-# 部署theia ide 
-# https://theia--ide-org.translate.goog/docs/composing_applications?_x_tr_hist=true&_x_tr_sl=auto&_x_tr_tl=zh-CN&_x_tr_hl=zh-CN
-
 
 echo -e "\n\n\n 安装 Git"
 apt -y install git
@@ -229,6 +220,10 @@ apt -y install fio
 # wget -O fd_8.4.0_amd64.deb ${base_url}https://github.com/sharkdp/fd/releases/download/v8.4.0/fd_8.4.0_amd64.deb
 # dpkg -i  fd_8.4.0_amd64.deb
 
+# 安装命令行提示工具
+curl -sS https://starship.rs/install.sh | sh
+echo 'eval "$(starship init bash)"' >> ~/.bashrc
+source ~/.bashrc
 
 echo -e "\n\n\n 安装 tldr 控制台命令的协作备忘单，用法tldr cp"
 pip3 install tldr
@@ -253,6 +248,17 @@ wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.t
 tar -xzf gotty_linux_amd64.tar.gz
 mv gotty /usr/local/bin/
 # 命令：gotty top
+
+
+
+
+# 部署theia ide 
+# https://theia--ide-org.translate.goog/docs/composing_applications?_x_tr_hist=true&_x_tr_sl=auto&_x_tr_tl=zh-CN&_x_tr_hl=zh-CN
+
+
+
+
+
 fi
 }
 
