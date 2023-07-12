@@ -39,7 +39,7 @@ dpkg-reconfigure tzdata
 apt update
 
 echo -e "\n\n\n 安装必备组件"
-apt -y install sudo aptitude zip unzip wget curl telnet sqlite3 python3 python3-pip python3-dev perl lua
+apt -y install sudo aptitude zip unzip wget curl telnet sqlite3 python3 python3-pip python3-dev perl lua5.3
 
 echo -e "\n\n\n 安装 Git"
 apt -y install git
@@ -405,7 +405,7 @@ fi
 }
 
 install_nodejs(){
-echo -e "\n\n\n------------------------------安装 Aria2------------------------------"
+echo -e "\n\n\n------------------------------安装 Nodejs------------------------------"
 echo "是否继续？ (y)"
 read -t 10 answer
 if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
@@ -940,7 +940,7 @@ if [ ! -f "$DOMAIN_KEY" ];then
 fi
 
 echo "Generate CSR..."
-#openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name},DNS:${domain_name}")) > "${DOMAIN_CSR}"
+openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name},DNS:${domain_name}")) > "${DOMAIN_CSR}"
 
 
 # crt文件存在时备份
@@ -1144,7 +1144,6 @@ GRANT ALL PRIVILEGES ON ${db_user}_db.* TO '${db_user}'@'%';
 FLUSH PRIVILEGES;
 EOF
 docker exec -i mysql1 mysql -u root -p${MYSQL_ROOT_PASSWORD} < ${domain_name}.sql
-echo ${db_password} >> ${domain_name}_DB_PASSWORD.txt
 
 echo "已创建数据库和用户 mysql://${db_user}:${db_password}@mysql:3306/${db_user}_db"
 }
@@ -1575,16 +1574,20 @@ function reinstall_debian(){
 
 
 function auto_mode(){
-    install_utils
+    system_init
     install_docker
+    install_nodejs
 
     install_aria2
     install_frp
     install_v2ray
 
-    deploy_lnmpr
     deploy_portainer
+    deploy_lnmpr
     deploy_nextcloud
+    
+    
+    
 }
 
 # 获取函数名
