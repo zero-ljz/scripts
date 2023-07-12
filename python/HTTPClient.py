@@ -126,7 +126,7 @@ class HTTPClient(QMainWindow):
     
         url_layout = QHBoxLayout()
         url_label = QLabel("URL:")
-        url_text = QTextEdit()
+        url_text = QTextEdit("https://httpbin.org/get")
         url_text.setObjectName("url_text")  # 添加对象名称
         url_text.setFixedHeight(30)
         url_layout.addWidget(url_label)
@@ -141,7 +141,7 @@ class HTTPClient(QMainWindow):
         method_layout.addWidget(method_combo)
     
         request_headers_label = QLabel("Request Headers:")
-        request_headers_text = QTextEdit()
+        request_headers_text = QTextEdit("User-Agent: curl/7.85.0<br/>Content-Type: application/json")
         request_headers_text.setObjectName("request_headers_text")  # 添加对象名称
     
         request_body_label = QLabel("Request Body:")
