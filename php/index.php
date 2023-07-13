@@ -75,7 +75,7 @@ function get_info($request)
 }
 
 
-function bing_wallpaper($request) {
+function bing_wallpaper() {
     $response = curl("http://cn.bing.com/HPImageArchive.aspx?format=js&idx=5&n=1");
 
     $data = json_decode($response, true);
@@ -92,8 +92,15 @@ function bing_wallpaper($request) {
     $bgText = $data['images'][0]['copyright'];
 
   header("Content-Type: application/json; charset=UTF-8");
-  return json_encode(['url' => $bgUrl, 'name' => $bgName, 'text' => $bgText]);
+  return ['url' => $bgUrl, 'name' => $bgName, 'text' => $bgText];
+}
 
+function bing_wallpaper_info($request) {
+    return json_encode(bing_wallpaper());
+}
+
+function bing_wallpaper_image($request) {
+    Header("Location: " . bing_wallpaper()['url']);
 }
 
 function proxy($request)
