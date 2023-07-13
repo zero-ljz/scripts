@@ -1,0 +1,33 @@
+{
+  "name": "global-package",
+  "version": "1.0.0",
+  "description": "A global package for Node.js",
+  "author": "zero-ljz",
+  "dependencies": {
+    "commander": "^10.0.0",
+    "lodash": "^4.17.21",
+    "axios": "^0.21.4",
+    "moment": "^2.29.1",
+    "jsonwebtoken": "^8.5.1",
+    "bcrypt": "^5.0.1",
+    "dotenv": "^10.0.0",
+    "node-fetch": "^3.1.0",
+    "express": "^4.17.1",
+    "mongoose": "^6.1.4",
+    "socket.io": "^4.4.1",
+    "nodemailer": "^6.6.3",
+    "sharp": "^0.29.1",
+    "validator": "^13.6.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "prettier": "^2.4.1",
+    "mocha": "^9.1.2",
+    "chai": "^4.3.4",
+    "sinon": "^11.1.2"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "license": "MIT"
+}
