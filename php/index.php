@@ -91,12 +91,12 @@ function bing_wallpaper($itx = 1) {
     // 壁纸说明文字
     $bgText = $data['images'][0]['copyright'];
 
-    header("Content-Type: application/json; charset=UTF-8");
     return ['url' => $bgUrl, 'name' => $bgName, 'text' => $bgText];
 }
 
 function bing_wallpaper_info($request) {
     $itx = $_GET["itx"] ?? 1;
+    header("Content-Type: application/json; charset=UTF-8");
     return json_encode(bing_wallpaper($itx));
 }
 
