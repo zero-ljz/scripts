@@ -89,7 +89,7 @@ class TreeItem:
         rootItem.key = "root"
 
         if isinstance(value, dict):
-            items = sorted(value.items()) if sort else value.items()
+            items = value.items() if sort else value.items()
 
             for key, value in items:
                 child = cls.load(value, rootItem)
@@ -310,10 +310,13 @@ if __name__ == "__main__":
 
     view.setModel(model)
 
-    # Open file dialog to choose the JSON file
-    json_file, _ = QFileDialog.getOpenFileName(
-        None, "Open JSON File", "", "JSON Files (*.json)"
-    )
+    if len(sys.argv) > 1:
+        json_file = sys.argv[1]
+    else:
+        # Open file dialog to choose the JSON file
+        json_file, _ = QFileDialog.getOpenFileName(
+            None, "Open JSON File", "", "JSON Files (*.json)"
+        )
     
     if not json_file:
         sys.exit(0)  # Exit if no file selected
@@ -341,7 +344,7 @@ if __name__ == "__main__":
             json_data = model.to_json()
 
             # 将JSON数据写入文件
-            with open(json_file, 'w', encoding='utf-8-sig') as file:
+            with open(json_file, 'w', encoding='utf-8') as file:
                 json.dump(json_data, file, ensure_ascii=False, indent=4, separators=(',', ': '))
         elif reply == QMessageBox.Discard:
             pass # 放弃更改并退出

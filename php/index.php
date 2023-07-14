@@ -1,29 +1,51 @@
 <?php
 
-function curl($url, $method = 'GET', $headers = [], $data = '') {
-    $ch = curl_init($url);
+function curl($url, $method = "GET", $headers = [], $data = "")
+{
+  $ch = curl_init($url);
 
-    // 设置cURL选项
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+  // 设置cURL选项
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 
-    // 执行请求并获取响应
-    $response = curl_exec($ch);
+  // 执行请求并获取响应
+  $response = curl_exec($ch);
 
-    // 检查是否有错误发生
-    if (curl_errno($ch)) {
-        $error_msg = curl_error($ch);
-        // 处理错误
-    }
+  // 检查是否有错误发生
+  if (curl_errno($ch)) {
+    $error_msg = curl_error($ch);
+    // 处理错误
+  }
 
-    // 关闭cURL资源
-    curl_close($ch);
+  // 关闭cURL资源
+  curl_close($ch);
 
-    return $response;
+  return $response;
 }
 
+function bing_wallpaper($itx = 1)
+{
+  $response = curl(
+    "http://cn.bing.com/HPImageArchive.aspx?format=js&idx={$itx}&n=1"
+  );
+
+  $data = json_decode($response, true);
+
+  // 壁纸文件地址
+  $bgUri = $data["images"][0]["urlbase"] . "_1920x1080.jpg";
+  $bgUrl = "http://cn.bing.com" . $bgUri;
+
+  // 壁纸文件名
+  preg_match("/\/th\?id=OHR\.(.*?\.jpg)/", $bgUrl, $arr);
+  $bgName = $arr[1];
+
+  // 壁纸说明文字
+  $bgText = $data["images"][0]["copyright"];
+
+  return ["url" => $bgUrl, "name" => $bgName, "text" => $bgText];
+}
 
 function html($title, $main)
 {
@@ -39,73 +61,79 @@ function html($title, $main)
 EOD;
 }
 
-function index($request)
+class Router
 {
-  if ($request["method"] == "POST") {
-  } else {
-    header("Content-Type: text/html; charset=UTF-8");
+  private $request;
 
-    // 获取所有定义的函数
-    $allFunctions = get_defined_functions();
+  public function __construct($request)
+  {
+    $this->request = $request;
+  }
 
-    // 获取自定义函数的名称
-    $customFunctions = array_filter($allFunctions["user"], function (
-      $functionName
-    ) {
-      $reflection = new ReflectionFunction($functionName);
-      return $reflection->getFileName() === __FILE__;
-    });
+  public function handleRequest()
+  {
+    $methodName = $this->request["route"];
 
-    $content = "<ul>";
-    // 打印自定义函数的名称
-    foreach ($customFunctions as $functionName) {
-      $content .=
-        '<li><a href="?' . $functionName . '">' . $functionName . "</a></li>";
+    if (method_exists($this, $methodName)) {
+      return $this->$methodName();
+    } else {
+      http_response_code(404);
+      echo "Not Found";
+      exit();
     }
+  }
+
+  function index()
+  {
+    $content = "<ul>";
+    $content .= '<li><a href="?echo">echo</a></li>';
+    $content .= '<li><a href="?bing_wallpaper_info">bing_wallpaper_info</a></li>';
+    $content .= '<li><a href="?bing_wallpaper_image">bing_wallpaper_image</a></li>';
+    $content .= '<li><a href="?test">test</a></li>';
     $content .= "</ul>";
 
-    return html("首页", $content);
+    header("Content-Type: text/html; charset=UTF-8");
+    return html("Index", $content);
   }
-}
 
-function get_info($request)
-{
-  header("Content-Type: text/plain; charset=UTF-8");
-  return print_r($request);
-}
+  function echo()
+  {
+    header("Content-Type: text/plain; charset=UTF-8");
+    return print_r($this->request, true);
+  }
 
+  function test()
+  {
+    if ($this->request["method"] === "POST") {
+      $name = $_POST["name"] ?? "";
+      return html("测试结果", $name);
+    } else {
+      header("Content-Type: text/html; charset=UTF-8");
+      $form = <<<EOD
+<form method="post">
+    <input type="text" name="name" />
+    <input type="submit" value="提交" />
+</form>
+EOD;
+      return html("测试", $form);
+    }
+  }
 
-function bing_wallpaper($itx = 1) {
-    $response = curl("http://cn.bing.com/HPImageArchive.aspx?format=js&idx={$itx}&n=1");
-
-    $data = json_decode($response, true);
-
-    // 壁纸文件地址
-    $bgUri = $data['images'][0]['urlbase'] . "_1920x1080.jpg";
-    $bgUrl = "http://cn.bing.com" . $bgUri;
-
-    // 壁纸文件名
-    preg_match("/\/th\?id=OHR\.(.*?\.jpg)/", $bgUrl, $arr);
-    $bgName = $arr[1];
-
-    // 壁纸说明文字
-    $bgText = $data['images'][0]['copyright'];
-
-    return ['url' => $bgUrl, 'name' => $bgName, 'text' => $bgText];
-}
-
-function bing_wallpaper_info($request) {
+  function bing_wallpaper_info()
+  {
     $itx = $_GET["itx"] ?? 1;
     header("Content-Type: application/json; charset=UTF-8");
     return json_encode(bing_wallpaper($itx));
-}
+  }
 
-function bing_wallpaper_image($request) {
+  function bing_wallpaper_image()
+  {
     $itx = $_GET["itx"] ?? 1;
-    Header("Location: " . bing_wallpaper($itx)['url']);
-}
+    Header("Location: " . bing_wallpaper($itx)["url"]);
+  }
 
-function proxy($request)
+
+function proxy()
 {
   // 从传入请求中获取目标URL
   $url = $_GET["url"];
@@ -177,34 +205,44 @@ function proxy($request)
   curl_close($ch);
 }
 
-function test($request)
-{
-  if ($request["method"] == "POST") {
-    return html(
-      "测试结果",
-      <<<EOD
-{$_POST["name"]}
-EOD
-    );
-  } else {
-    header("Content-Type: text/html; charset=UTF-8");
-    return html(
-      "测试",
-      <<<EOD
-<form method="post">
-    <input type="text" name="name" />
-    <input type="submit" value="提交" />
-</form>
+  function proxy2()
+  {
+    $url = $this->request["query"]["url"];
+    $uri = "";
+    $cs = unpack("C*", $url);
+    for ($i = 1; $i <= count($cs); $i++) {
+      $uri .= $cs[$i] > 127 ? "%" . strtoupper(dechex($cs[$i])) : $url[$i - 1];
+    }
 
-EOD
-    );
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $uri);
+    curl_setopt_array($ch, [
+      CURLOPT_RETURNTRANSFER => true, //不直接打印结果
+      CURLINFO_HEADER_OUT => true, //info中包含请求头
+      CURLOPT_FOLLOWLOCATION => true, //跟随重定向
+    ]);
+    $response = curl_exec($ch);
+    $info = curl_getinfo($ch);
+    curl_close($ch);
+
+    $contentType = $info["content_type"];
+    //$contentDisposition = $info["Content-Disposition"];
+
+    header("Content-Type: " . $contentType);
+    //header("Content-Disposition: " . $contentDisposition);
+
+    return $response;
   }
 }
 
-$route = empty($_GET) || $_GET[array_keys($_GET)[0]] ? "index" : array_keys($_GET)[0];
-echo call_user_func($route, [
+$request = [
   "method" => $_SERVER["REQUEST_METHOD"],
-  "route" => $route,
-  "query" => array_slice($_GET, 1)
-]);
+  "route" =>
+    empty($_GET) || $_GET[array_keys($_GET)[0]]
+      ? "index"
+      : array_keys($_GET)[0],
+  "query" => array_slice($_GET, 1),
+];
 
+$router = new Router($request);
+echo $router->handleRequest();

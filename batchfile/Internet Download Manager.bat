@@ -1,3 +1,4 @@
-regedit /s "C:\Users\LJZ\OneDrive\Ó¦ÓÃ\Windows\idm_reset.reg"
+chcp 65001
+regedit /s "C:\Users\LJZ\OneDrive\åº”ç”¨\Windows\idm_reset.reg"
 
 explorer "C:\Program Files (x86)\Internet Download Manager\IDMan.exe"

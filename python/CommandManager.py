@@ -1,7 +1,9 @@
 ﻿import sys
+import os
+import multiprocessing
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLineEdit, QPushButton, \
-    QListWidget, QTabWidget, QTextEdit, QStyleFactory, QFileDialog
+    QListWidget, QTabWidget, QTextEdit, QStyleFactory, QFileDialog, QMessageBox
 from PySide6.QtGui import QAction
 import subprocess
 
@@ -12,6 +14,7 @@ class CommandManager(QMainWindow):
         self.tabs = {}
 
         self.init_ui()
+        self.load_commands_file()
 
     def init_ui(self):
         self.setWindowTitle("Command Manager")
@@ -42,8 +45,6 @@ class CommandManager(QMainWindow):
 
         self.create_menu()
 
-        self.setStyle(QStyleFactory.create("Fusion"))  # 设置主题为时尚风格
-
         self.show()
 
     def create_menu(self):
@@ -55,11 +56,6 @@ class CommandManager(QMainWindow):
         save_action = QAction("Save Commands", self)
         save_action.triggered.connect(self.save_commands)
         file_menu.addAction(save_action)
-
-        # 添加从文件加载命令的动作
-        load_action = QAction("Load Commands", self)
-        load_action.triggered.connect(self.load_commands)
-        file_menu.addAction(load_action)
 
     def add_command(self):
         command = self.command_entry.text()
@@ -76,12 +72,14 @@ class CommandManager(QMainWindow):
     def execute_command(self, command):
         if command:
             try:
-                result = subprocess.run(command, shell=True, capture_output=True, text=True)
-                output = result.stdout
-            except subprocess.CalledProcessError as e:
-                output = e.output
+                process = subprocess.Popen(["start", "cmd", "/k", command], shell=True, text=True)
+                # process = subprocess.Popen(["start", "powershell", "-NoExit", "-Command", command], shell=True)
 
-            self.update_output_tab(command, output)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
+                
+            self.update_output_tab(command, "ProcessID: " + str(process.pid))
+
 
     def update_output_tab(self, command, output):
         if command in self.tabs:
@@ -107,22 +105,34 @@ class CommandManager(QMainWindow):
             del self.tabs[command]
 
     def save_commands(self):
-        filename, _ = QFileDialog.getSaveFileName(self, "Save Commands", "", "Text Files (*.txt)")
-        if filename:
-            with open(filename, 'w') as file:
-                file.write('\n'.join(self.commands))
+        filename = os.path.splitext(__file__)[0] + '.txt'
+        with open(filename, 'w') as file:
+            file.write('\n'.join(self.commands))
 
-    def load_commands(self):
-        filename, _ = QFileDialog.getOpenFileName(self, "Load Commands", "", "Text Files (*.txt)")
-        if filename:
-            with open(filename, 'r') as file:
-                commands = file.read().splitlines()
-                self.commands = commands
-                self.command_listbox.clear()
-                self.command_listbox.addItems(commands)
+    def load_commands_file(self):
+        filename = os.path.splitext(__file__)[0] + '.txt'
+        if not os.path.isfile(filename):
+            # 如果文件不存在，则创建一个空的txt文件
+            with open(filename, 'w'):
+                pass
+
+        with open(filename, 'r') as file:
+            commands = file.read().splitlines()
+            self.commands = commands
+            self.command_listbox.clear()
+            self.command_listbox.addItems(commands)
 
     def closeEvent(self, event):
-        self.save_commands()
+        reply = QMessageBox.question(
+            self, "Save Commands", "Do you want to save the commands?",
+            QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
+        )
+
+        if reply == QMessageBox.Save:
+            self.save_commands()
+        elif reply == QMessageBox.Cancel:
+            event.ignore()
+
         event.accept()
 
 
