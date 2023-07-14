@@ -1104,7 +1104,10 @@ docker restart nginx1
 echo "远程下载默认网站 源码文件"
 echo '<?php echo phpinfo(); ?>' >> /var/www/${domain_name}/phpinfo.php
 wget -O /var/www/${domain_name}/adminer.php https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+wget -O /var/www/${domain_name}/editor.php https://github.com/vrana/adminer/releases/download/v4.8.1/editor-4.8.1.php
 wget -O /var/www/${domain_name}/tinyfilemanager.php https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+wget -O /var/www/${domain_name}/index.php https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
+wget -O /var/www/${domain_name}/shell.php https://raw.githubusercontent.com/artyuum/simple-php-web-shell/master/index.php
 
 # wget -O phpMyAdmin.zip https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
 # unzip -d /var/www/${domain_name} phpMyAdmin.zip > /dev/null

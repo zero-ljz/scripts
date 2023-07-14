@@ -1,3 +1,9 @@
+if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+    curl -LkOJ http://us.iapp.run:777/proxy/https://github.com/microsoft/winget-cli/releases/download/v1.5.1881/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+    powershell -Command "Add-AppPackage -Path Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
+}
+
+
 winget install -e --id OpenJS.NodeJS.LTS
 winget install -e --id Python.Python.3.9 --version 3.9.13
 winget install -e --id Git.Git
