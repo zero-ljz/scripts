@@ -1367,14 +1367,11 @@ echo -e "\n\n\n------------------------------部署 Gitea-----------------------
 echo "是否继续？ (y)"
 read -t 10 answer
 if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
-user_uid=$(id -u)
-user_gid=$(id -g)
-
 docker run -d \
 --name gitea1 \
 -p 127.0.0.1:3000:3000 -p 222:22 \
--e USER_UID=${user_uid} \
--e USER_GID=${user_gid} \
+-e USER_UID=$(id -u) \
+-e USER_GID=$(id -g) \
 -v /docker/gitea:/data  \
 -v /etc/timezone:/etc/timezone:ro \
 -v /etc/localtime:/etc/localtime:ro  \
