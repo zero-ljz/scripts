@@ -1367,16 +1367,18 @@ echo -e "\n\n\n------------------------------部署 Gitea-----------------------
 echo "是否继续？ (y)"
 read -t 10 answer
 if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+user_uid=$(id -u)
+user_gid=$(id -g)
+
 docker run -d \
 --name gitea1 \
 -p 127.0.0.1:3000:3000 -p 222:22 \
--e USER_UID=1000 \
--e USER_GID=1000 \
+-e USER_UID=${user_uid} \
+-e USER_GID=${user_gid} \
 -v /docker/gitea:/data  \
 -v /etc/timezone:/etc/timezone:ro \
 -v /etc/localtime:/etc/localtime:ro  \
-gitea/gitea
-
+gitea/gitea:1.19
 
 domain_name=${1:-git.iapp.run}
 create_proxy ${domain_name} 3000
