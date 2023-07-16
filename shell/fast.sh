@@ -1354,7 +1354,7 @@ docker run --rm \
 -e "INSTANCE_NAME=my-instance" \
 searxng/searxng
 
-domain_name=${1:-search.iapp.run}
+domain_name=${1:-s.iapp.run}
 create_proxy ${domain_name} 8012
 
 
@@ -1388,6 +1388,9 @@ gitea/gitea:1.19
 domain_name=${1:-git.iapp.run}
 create_proxy ${domain_name} 3000
 
+# 记得配置SSH_PORT=222，SSH_LISTEN_PORT=22
+
+# ssh://git@git.iapp.run:222/zero-ljz/repo.git
 fi
 }
 
@@ -1598,6 +1601,7 @@ function auto_mode(){
     deploy_portainer
     deploy_lnmpr
     deploy_nextcloud
+    deploy_searxng
     
     
     
