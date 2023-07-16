@@ -1367,11 +1367,19 @@ echo -e "\n\n\n------------------------------部署 Gitea-----------------------
 echo "是否继续？ (y)"
 read -t 10 answer
 if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+adduser \
+   --system \
+   --shell /bin/bash \
+   --gecos 'Git Version Control' \
+   --group \
+   --disabled-password \
+   --home /home/git \
+   git
 docker run -d \
 --name gitea1 \
 -p 127.0.0.1:3000:3000 -p 222:22 \
--e USER_UID=$(id -u) \
--e USER_GID=$(id -g) \
+-e USER_UID=$(id -u git) \
+-e USER_GID=$(id -g git) \
 -v /docker/gitea:/data  \
 -v /etc/timezone:/etc/timezone:ro \
 -v /etc/localtime:/etc/localtime:ro  \
