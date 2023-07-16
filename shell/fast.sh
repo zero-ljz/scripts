@@ -1370,6 +1370,8 @@ if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
 docker run -d \
 --name gitea1 \
 -p 127.0.0.1:3000:3000 -p 222:22 \
+-e USER_UID=1000 \
+-e USER_GID=1000 \
 -v /docker/gitea:/data  \
 -v /etc/timezone:/etc/timezone:ro \
 -v /etc/localtime:/etc/localtime:ro  \
