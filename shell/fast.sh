@@ -254,7 +254,8 @@ mv gotty /usr/local/bin/
 # https://theia--ide-org.translate.goog/docs/composing_applications?_x_tr_hist=true&_x_tr_sl=auto&_x_tr_tl=zh-CN&_x_tr_hl=zh-CN
 
 
-
+# 文件发送工具：轻松安全地将内容从一台计算机发送到另一台计算机
+curl https://getcroc.schollz.com | bash
 
 
 fi
@@ -1225,7 +1226,11 @@ docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /var/www:/var
 fi
 }
 
-
+deploy_tinyfilemanager(){
+docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
+domain_name=${1:-file.iapp.run}
+create_proxy ${domain_name} 8020
+}
 
 deploy_wordpress_fpm(){
 echo -e "\n\n\n------------------------------部署 Wordpress FPM 和 Nginx 配合------------------------------"
