@@ -1344,17 +1344,17 @@ echo -e "\n\n\n------------------------------部署 SearXNG---------------------
 echo "是否继续？ (y)"
 read -t 10 answer
 if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
-
+domain_name=${1:-s.iapp.run}
 # https://docs.searxng.org/admin/installation-docker.html#searxng-searxng
 docker run --rm \
 -d -p 127.0.0.1:8012:8080 \
 --name searxng1 \
 -v "/docker/searxng:/etc/searxng" \
--e "BASE_URL=http://localhost:8012/" \
--e "INSTANCE_NAME=my-instance" \
+-e "BASE_URL=http://${domain_name}/" \
+-e "INSTANCE_NAME=元搜索" \
 searxng/searxng
 
-domain_name=${1:-s.iapp.run}
+
 create_proxy ${domain_name} 8012
 
 
@@ -1413,7 +1413,6 @@ cloudreve/cloudreve:latest
 
 domain_name=${1:-c.iapp.run}
 create_proxy ${domain_name} 5212
-create_database ${domain_name}
 
 fi
 }
@@ -1600,7 +1599,7 @@ function auto_mode(){
 
     deploy_portainer
     deploy_lnmpr
-    deploy_nextcloud
+    deploy_cloudreve
     deploy_searxng
     
     
