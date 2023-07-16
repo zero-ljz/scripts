@@ -1350,7 +1350,7 @@ docker run --rm \
 -d -p 127.0.0.1:8012:8080 \
 --name searxng1 \
 -v "/docker/searxng:/etc/searxng" \
--e "BASE_URL=http://localhost:8010/" \
+-e "BASE_URL=http://localhost:8012/" \
 -e "INSTANCE_NAME=my-instance" \
 searxng/searxng
 
