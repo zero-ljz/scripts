@@ -19,7 +19,7 @@ elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
     declare -f ${FUNCNAME}
     exit 0
 fi
-bash -c 'wget -O fast.sh http://47.87.214.106:666/php-proxy/index.php?q=https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
+bash -c 'wget -O fast.sh http://us.iapp.run:777/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
 }
 
 system_init(){
@@ -1354,7 +1354,7 @@ docker run --rm \
 -e "INSTANCE_NAME=元搜索" \
 searxng/searxng
 
-
+# 在settings.yml文件中设置默认启用的搜索引擎
 create_proxy ${domain_name} 8012
 
 
