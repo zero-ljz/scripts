@@ -1616,7 +1616,7 @@ function_list=$(compgen -A function)
 # 定义在不传入参数时默认执行的函数
 function default()
 {
-    echo "Welcome Usage: ${FUNCNAME} [function_name] [-h] [arguments]"
+    echo "Usage: ${FUNCNAME} [function_name] [-h] [arguments]"
     echo -e "\nAvailable functions:"
     for func in $function_list; do
         echo "  $func"
