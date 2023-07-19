@@ -422,12 +422,12 @@ short_version=${version%%.*}
 apt -y install gcc
 wget https://www.python.org/ftp/python/${version}/Python-${version}.tgz
 tar xzvf Python-${version}.tgz
-./Python-${version}/configure --prefix=/usr/local/bin/python
-make -C Python-${version} && make -C Python-${version} install
+cd Python-${version}
+./configure --prefix=/usr/local/bin/python
+make && make install
 ln -s  /usr/local/bin/python/bin/python${short_version} /usr/bin/python3
 ln -s  /usr/local/bin/python/bin/pip3 /usr/bin/pip3
-ln -s  /usr/local/bin/python/bin/pip3 /usr/bin/pip
-
+cd ..
 fi
 
 }
