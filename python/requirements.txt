@@ -43,3 +43,6 @@ redis
 
 sphinx
 ansible
+
+schedule
+pytz
