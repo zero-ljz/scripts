@@ -419,7 +419,7 @@ fi
 
 version=${1:-3.9.13}
 short_version=${version%%.*}
-apt -y install gcc
+apt -y install build-essential zlib1g zlib1g-dev
 wget https://www.python.org/ftp/python/${version}/Python-${version}.tgz
 tar xzvf Python-${version}.tgz
 cd Python-${version}
