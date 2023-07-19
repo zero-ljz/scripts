@@ -403,6 +403,37 @@ apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin do
 fi
 }
 
+install_python(){
+echo -e "\n\n\n------------------------------安装 Python------------------------------"
+echo "是否继续？ (y)"
+read -t 10 answer
+if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} version"
+    exit 0
+elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
+    declare -f ${FUNCNAME}
+    exit 0
+fi
+
+version=${1:-3.9.13}
+short_version=${version%%.*}
+apt -y install gcc
+wget https://www.python.org/ftp/python/${version}/Python-${version}.tgz
+tar xzvf Python-${version}.tgz
+./Python-${version}/configure --prefix=/usr/local/bin/python
+make -C Python-${version} && make -C Python-${version} install
+ln -s  /usr/local/bin/python/bin/python${short_version} /usr/bin/python3
+ln -s  /usr/local/bin/python/bin/pip3 /usr/bin/pip3
+ln -s  /usr/local/bin/python/bin/pip3 /usr/bin/pip
+
+fi
+
+}
+
+
+
 install_nodejs(){
 echo -e "\n\n\n------------------------------安装 Nodejs------------------------------"
 echo "是否继续？ (y)"
@@ -1584,7 +1615,7 @@ fi
 
 function reinstall_debian(){
     read -p "请输入新的root密码：" password
-    curl -fLO https://raw.githubusercontent.com/bohanyang/debi/master/debi.sh && chmod a+rx debi.sh && sudo ./debi.sh --cdn --network-console --ethx --bbr --timezone Asia/Shanghai --china --user root --password ${password}
+    curl -fLO https://raw.githubusercontent.com/bohanyang/debi/master/debi.sh && chmod a+rx debi.sh && ./debi.sh --cdn --network-console --ethx --bbr --timezone Asia/Shanghai --user root --password ${password}
 }
 
 
