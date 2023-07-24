@@ -12,8 +12,9 @@ pyautogui
 autopy
 
 bottle==0.12.25
-Django==3.2.19
+Django==3.2.20
 fastapi
+flask==1.1.2
 
 gevent
 twisted
