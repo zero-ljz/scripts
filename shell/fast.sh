@@ -442,6 +442,12 @@ if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
 apt -y install npm
 # 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+
+# 运行以下操作可以不用重启终端就能使用nvm
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
 nvm install --lts
 # 全局安装yarn
 npm install -g yarn
@@ -1580,7 +1586,14 @@ fi
 # )
 # docker exec debian1 bash -c "$commands"
 
-
+create_php_app
+{
+app_name=$1
+http_port=$2
+docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
+wget -P /docker/${app_name} https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+wget -P /docker/${app_name} https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+}
 
 # docker restart nginx1
 
