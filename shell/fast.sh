@@ -19,7 +19,8 @@ elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
     declare -f ${FUNCNAME}
     exit 0
 fi
-bash -c 'wget -O fast.sh http://us.iapp.run:777/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
+#bash -c 'wget -O fast.sh http://us.iapp.run:777/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
+bash -c 'wget -O fast.sh http://us.iapp.run:666/php-proxy/index.php?q=https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
 }
 
 system_init(){
@@ -1588,6 +1589,14 @@ fi
 
 create_php_app()
 {
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} app_name http_port"
+    exit 0
+elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
+    declare -f ${FUNCNAME}
+    exit 0
+fi
+
 app_name=$1
 http_port=$2
 docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
