@@ -1599,7 +1599,7 @@ fi
 app_name=$1
 http_port=$2
 docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
-wget -P /docker/${app_name} http://us.iapp.run:777/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+wget -O /docker/${app_name}/adminer.php http://us.iapp.run:777/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
 wget -P /docker/${app_name} http://us.iapp.run:777/proxy/https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
 }
 
