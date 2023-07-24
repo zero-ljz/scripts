@@ -1590,7 +1590,7 @@ create_php_app()
 {
 app_name=$1
 http_port=$2
-docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
+docker run -d -p ${http_port}:80 --name ${app_name} -v /docker/${app_name}:/var/www/html php:7.4-apache
 wget -P /docker/${app_name} https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
 wget -P /docker/${app_name} https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
 }
