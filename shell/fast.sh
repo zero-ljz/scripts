@@ -1586,7 +1586,7 @@ fi
 # )
 # docker exec debian1 bash -c "$commands"
 
-create_php_app
+create_php_app()
 {
 app_name=$1
 http_port=$2
