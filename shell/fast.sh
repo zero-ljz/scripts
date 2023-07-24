@@ -1265,6 +1265,7 @@ fi
 
 deploy_tinyfilemanager(){
 docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
+docker exec -i tinyfilemanager1 wget -O /docker/${app_name}/adminer.php http://us.iapp.run:777/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
 domain_name=${1:-file.iapp.run}
 create_proxy ${domain_name} 8020
 }
