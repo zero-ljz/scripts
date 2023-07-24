@@ -19,8 +19,7 @@ elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
     declare -f ${FUNCNAME}
     exit 0
 fi
-#bash -c 'wget -O fast.sh http://us.iapp.run:777/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
-# bash -c 'wget -O fast.sh http://us.iapp.run:666/php-proxy/index.php?q=https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
+bash -c 'wget -O fast.sh http://us.iapp.run:777/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
 }
 
 system_init(){
