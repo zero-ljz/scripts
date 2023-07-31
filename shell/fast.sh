@@ -499,7 +499,7 @@ fi
 install_frp(){
 echo -e "\n\n\n------------------------------安装 Frp------------------------------"
 echo -e "\n\n\n下载 Frp 二进制包"
-wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz https://kgithub.com/fatedier/frp/releases/download/v0.48.0/frp_0.48.0_linux_amd64.tar.gz
+wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz http://us.iapp.run:777/proxy/https://github.com/fatedier/frp/releases/download/v0.48.0/frp_0.48.0_linux_amd64.tar.gz
 tar xzvf frp_0.48.0_linux_amd64.tar.gz -C /usr/local/bin/
 mv /usr/local/bin/frp_0.48.0_linux_amd64 /usr/local/bin/frp
 
