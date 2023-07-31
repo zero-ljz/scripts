@@ -42,9 +42,9 @@
     background-image: linear-gradient(125deg, rgba(64, 64, 64, 0.3), rgba(64, 64, 64, 0.2) 70%);
     color: white;
     box-shadow: inset 1px 1px rgb(255 255 255 / 20%), inset -1px -1px rgb(255 255 255 / 10%), 1px 3px 24px -1px rgb(0 0 0 / 15%);
+    -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
     border-radius: 7px;
-    -webkit-backdrop-filter: blur(5px);
   }
   `);
 
@@ -416,6 +416,7 @@
         );
       },
     },
+    
     {
       name: "类似网站2",
       action: function () {
@@ -424,6 +425,18 @@
         const mainDomain = domainParts.slice(-2).join(".");
         window.open(
           "https://www.similarsites.com/site/" + mainDomain + "",
+          "new",
+          "location=no, toolbar=no"
+        );
+      },
+    },
+    {
+      name: "类似网站3",
+      action: function () {
+        window.open(
+          "https://www.sitelike.org/similar/" +
+            window.location.host +
+            "/competitors/",
           "new",
           "location=no, toolbar=no"
         );

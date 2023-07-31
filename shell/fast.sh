@@ -499,7 +499,7 @@ fi
 install_frp(){
 echo -e "\n\n\n------------------------------安装 Frp------------------------------"
 echo -e "\n\n\n下载 Frp 二进制包"
-wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz https://github.com/fatedier/frp/releases/download/v0.48.0/frp_0.48.0_linux_amd64.tar.gz
+wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz https://kgithub.com/fatedier/frp/releases/download/v0.48.0/frp_0.48.0_linux_amd64.tar.gz
 tar xzvf frp_0.48.0_linux_amd64.tar.gz -C /usr/local/bin/
 mv /usr/local/bin/frp_0.48.0_linux_amd64 /usr/local/bin/frp
 
@@ -1134,6 +1134,9 @@ server {
         include        fastcgi_params;
     }
 
+    # 设置请求大小限制
+    client_max_body_size 100m;
+
 }
 EOF
 docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
@@ -1221,7 +1224,7 @@ echo "安装 Nginx"
 docker run -d --name nginx1 --network host -v /var/www:/var/www/html -v /var/ssl:/var/ssl -v /docker/nginx1:/etc/nginx/conf.d nginx:alpine
 echo "安装 PHP"
 #docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /var/www:/var/www/html php:7.4-fpm
-docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /var/www:/var/www/html webdevops/php:7.4-alpine
+docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /docker/php1:/usr/local/etc -v /var/www:/var/www/html webdevops/php:7.4-alpine
 
 # echo "安装 PHP扩展"
 # # https://github.com/docker-library/wordpress/blob/97f75b51f909fbd9894d128ea6893120cfd23979/latest/php8.0/fpm/Dockerfile#L10-L16
