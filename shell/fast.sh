@@ -37,7 +37,7 @@ dpkg-reconfigure tzdata
 apt update
 
 echo -e "\n\n\n 安装必备组件"
-apt -y install sudo aptitude zip unzip wget curl telnet sqlite3 python3 python3-pip python3-dev perl lua5.3
+apt -y install sudo openssl aptitude zip unzip wget curl telnet sqlite3 python3 python3-pip python3-dev perl lua5.3
 
 echo -e "\n\n\n 安装 Git"
 apt -y install git
