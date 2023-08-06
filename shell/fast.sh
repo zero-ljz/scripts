@@ -30,9 +30,9 @@ read -t 10 answer
 if [ "$answer" = "y" ]; then
 
 echo -e "\n\n\n 配置语言"
-dpkg-reconfigure locales
+#dpkg-reconfigure locales
 echo -e "\n\n\n 配置时区"
-dpkg-reconfigure tzdata
+#dpkg-reconfigure tzdata
 
 apt update
 
