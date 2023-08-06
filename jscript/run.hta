@@ -1,0 +1,162 @@
+﻿<html>
+<head>
+<title></title>
+<HTA:APPLICATION 
+    ID="FileManager" <!-- HTA应用程序的ID -->
+    APPLICATIONNAME="文件管理 HTA" <!-- 应用程序的名称 -->
+    BORDER="dialog" <!-- 窗口边框类型 -->
+    BORDERSTYLE="normal" <!-- 窗口边框样式 -->
+    ICON="shell32.dll,3" <!-- 窗口图标 -->
+    INNERBORDER="no" <!-- 窗口内边框 -->
+    MAXIMIZEBUTTON="yes" <!-- 最大化按钮 -->
+    MINIMIZEBUTTON="yes" <!-- 最小化按钮 -->
+    SCROLL="yes" <!-- 是否显示滚动条 -->
+    SHOWINTASKBAR="yes" <!-- 是否在任务栏显示图标 -->
+    SINGLEINSTANCE="yes" <!-- 是否允许单实例运行 -->
+    SYSMENU="yes" <!-- 是否显示系统菜单 -->
+    WINDOWSTATE="normal" <!-- 窗口初始状态 -->
+    RESIZABLE="yes" <!-- 是否支持调节窗口大小 -->
+>
+<style>
+
+</style>
+</head>
+
+<script language="JavaScript">
+
+function listFiles() {
+    var fso = new ActiveXObject("Scripting.FileSystemObject");
+    var folder = fso.GetFolder(".");
+    var fileEnum = new Enumerator(folder.Files);
+    var table = "<table>";
+    
+    for (; !fileEnum.atEnd(); fileEnum.moveNext()) {
+        var file = fileEnum.item();
+        var extension = file.Name.split(".").pop().toLowerCase();
+        var buttons = "";
+        var status = "";
+        
+        var editButton = "<td><button onclick=\"editFile('" + file.Name + "')\">编辑</button></td>";
+        
+        if (extension === "exe" || extension === "bat" || extension === "cmd" || extension === "py") {
+            var isRunning = FindProcess(file.Name);
+            status = isRunning ? "运行中" : "未运行";
+            buttons = "<td><button onclick=\"runFile('" + file.Name + "')\">运行</button></td><td><button onclick=\"killFile('" + file.Name + "')\">终止</button></td>";
+        }
+
+        var setStartupButton = "<td><button onclick=\"setStartup('" + file.Name + "')\">开机自启</button></td>";
+        
+
+        table += "<tr><td>" + file.Name + "</td><td>" + getLocalTime(file.DateLastModified) + "</td>" + editButton + setStartupButton + buttons + "<td>" + status + "</td></tr>";
+
+
+    }
+    
+    table += "</table>";
+    var fileListDiv = document.getElementById("fileList");
+    fileListDiv.innerHTML = table;
+    
+    // 自动刷新列表，间隔时间为1000毫秒（1秒）
+    setTimeout(listFiles, 1000);
+}
+
+function getLocalTime(dateString) {
+    var dateObj = new Date(dateString);
+    var year = dateObj.getFullYear();
+    var month = ("0" + (dateObj.getMonth() + 1)).slice(-2);
+    var date = ("0" + dateObj.getDate()).slice(-2);
+    var hours = ("0" + dateObj.getHours()).slice(-2);
+    var minutes = ("0" + dateObj.getMinutes()).slice(-2);
+    var seconds = ("0" + dateObj.getSeconds()).slice(-2);
+    return year + "-" + month + "-" + date + " " + hours + ":" + minutes + ":" + seconds;
+}
+
+function runFile(fileName) {
+    var command = window.prompt("请输入参数（如果不需要参数请留空）：",readCommand(fileName));
+    if (command === null) {
+        return; // 点击取消，不继续执行
+    }
+    
+    var objShell = new ActiveXObject("WScript.Shell");
+    var command =  command ? command : fileName; // 仅当 command 不为 null 时才添加参数
+    objShell.Run(command, 1);
+    
+    // 将本次执行的命令保存到文件
+    var fso = new ActiveXObject("Scripting.FileSystemObject");
+    var commandFile = fso.CreateTextFile(fileName + ".command.txt", true);
+    commandFile.Write(command);
+    commandFile.Close();
+}
+
+function readCommand(fileName) {
+    var fso = new ActiveXObject("Scripting.FileSystemObject");
+    var commandFile = fileName + ".command.txt";
+    if (fso.FileExists(commandFile)) {
+var stream = new ActiveXObject("ADODB.Stream");
+    stream.Charset = "utf-8";
+    stream.Open();
+    stream.LoadFromFile(commandFile);
+var command = stream.ReadText();
+ stream.Close();
+
+        return command;
+    } else {
+        return "";
+    }
+}
+
+function killFile(fileName) {
+    var objShell = new ActiveXObject("WScript.Shell");
+    objShell.Run("taskkill /IM " + fileName + " /T /F", 0, true);
+}
+
+function FindProcess(strProcess) { //查询指定进程
+    var locator = new ActiveXObject("WbemScripting.SWbemLocator");
+    var service = locator.ConnectServer(".");
+    var properties = service.ExecQuery("SELECT * FROM Win32_Process");
+    var eProc = new Enumerator(properties);
+
+    var bRet = false;
+    for (; !eProc.atEnd(); eProc.moveNext()) {
+        var p = eProc.item().Name;
+        if (p.toUpperCase() == strProcess.toUpperCase()) {
+            bRet = true;
+            break;
+        }
+    }
+    return bRet;
+}
+
+function editFile(fileName) {
+    var objShell = new ActiveXObject("WScript.Shell");
+    objShell.Run("notepad.exe " + fileName, 1);
+}
+
+function setStartup(fileName) {
+    var fso = new ActiveXObject("Scripting.FileSystemObject");
+    var objShell = new ActiveXObject("WScript.Shell");
+    var startupPath = objShell.SpecialFolders("Startup");
+    var shortcutPath = startupPath + "\\" + fileName + ".lnk";
+
+    if (!fso.FileExists(shortcutPath)) {
+        var shortcut = objShell.CreateShortcut(shortcutPath);
+        shortcut.TargetPath = fso.GetAbsolutePathName(fileName);
+        var arguments = window.prompt("请输入启动参数：", "");
+        if (arguments === null) {
+            return; // 点击取消，不继续执行
+        }
+        shortcut.Arguments = arguments;
+        shortcut.WorkingDirectory = fso.GetParentFolderName(fso.GetAbsolutePathName(fileName));
+        shortcut.Save();
+        alert("已将 " + fileName + " 设置为开机启动。");
+    } else {
+        alert(fileName + " 已经设置过开机启动了。");
+    }
+}
+
+</script>
+
+<body onload="listFiles()">
+    <div id="fileList"></div>
+</body>
+</html>

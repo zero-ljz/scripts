@@ -419,7 +419,7 @@ fi
 
 version=${1:-3.9.13}
 short_version=${version%%.*}
-apt -y install build-essential zlib1g zlib1g-dev
+apt -y install build-essential zlib1g zlib1g-dev libffi-dev
 wget https://www.python.org/ftp/python/${version}/Python-${version}.tgz
 tar xzvf Python-${version}.tgz
 cd Python-${version}
@@ -452,6 +452,96 @@ nvm install --lts
 # 全局安装yarn
 npm install -g yarn
 #npm config set registry https://registry.npm.taobao.org
+fi
+}
+
+install_php(){
+echo -e "\n\n\n------------------------------安装 PHP------------------------------"
+echo "是否继续？ (y)"
+read -t 10 answer
+if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+apt -y install php php-fpm composer php-json php-mbstring php-mysql php-xml php-zip php-curl php-imagick php-gd php-pear php-redis php-sqlite3 php-mongodb php-bcmath php-soap php-intl php-igbinary php-xdebug
+# 建议安装
+apt -y install fossil mercurial subversion php-zip php-symfony-event-dispatcher php-symfony-lock php-pear
+systemctl enable php7.3-fpm
+systemctl start php7.3-fpm
+fi
+}
+
+install_nginx(){
+echo -e "\n\n\n------------------------------安装 Nginx------------------------------"
+echo "是否继续？ (y)"
+read -t 10 answer
+if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+apt -y install nginx
+
+systemctl enable nginx
+systemctl start nginx
+fi
+}
+
+install_mysql(){
+echo -e "\n\n\n------------------------------安装 MySQL------------------------------"
+echo "是否继续？ (y)"
+read -t 10 answer
+if [ "$answer" = "y" ]; then
+
+# wget -O mysql-apt-config_0.8.24-1_all.deb https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
+# dpkg -i mysql-apt-config_0.8.24-1_all.deb
+
+# #安装MariaDB GPG密钥
+# sudo apt-get install software-properties-common dirmngr
+# sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
+# # 添加MariaDB官方软件包源
+# sudo add-apt-repository 'deb [arch=amd64] http://ftp.ubuntu-tw.org/mirror/mariadb/repo/10.3/debian buster main'
+
+# echo -e "\n\n\n 安装 MySQL-Server"
+# apt -y install MariaDB-client mariadb-server
+
+# systemctl enable mariadb
+# systemctl start mariadb
+
+apt -y install lsb-release
+wget -O mysql-apt-config_0.8.18-1_all.deb ${base_url}https://dev.mysql.com/get/mysql-apt-config_0.8.18-1_all.deb
+dpkg -i mysql-apt-config_0.8.18-1_all.deb
+systemctl enable mysql
+systemctl start mysql
+
+echo -e "\n\n\n 设置 MySQL 安全选项"
+mysql_secure_installation
+
+echo '
+使用以下命令连接到MySQL服务器
+mysql -h 127.0.0.1 -u root -p
+'
+
+echo '
+使用以下命令修改root密码
+UPDATE user SET PASSWORD=PASSWORD('root') where USER='root'; 
+'
+
+echo '
+使用以下命令创建数据库和用户
+CREATE DATABASE db1;
+CREATE USER 'user1'@'%' IDENTIFIED BY '123';
+GRANT ALL PRIVILEGES ON db1.* TO 'user1'@'%';
+FLUSH PRIVILEGES;
+'
+
+fi
+}
+
+install_redis(){
+echo -e "\n\n\n------------------------------安装 Redis------------------------------"
+echo "是否继续？ (y)"
+read -t 10 answer
+if [ "$answer" = "y" ]; then
+echo -e "\n\n\n 安装 redis-server"
+apt -y install redis-server
+
+systemctl enable redis-server
+systemctl restart redis-server
+
 fi
 }
 
@@ -1075,8 +1165,9 @@ EOF
 # EOF
 
 
-docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
-docker restart nginx1
+# docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
+cp ./${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
+# docker restart nginx1
 }
 
 create_vhost(){
@@ -1139,8 +1230,9 @@ server {
 
 }
 EOF
-docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
-docker restart nginx1
+#docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
+cp ${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
+#docker restart nginx1
 
 echo "远程下载默认网站 源码文件"
 echo '<?php echo phpinfo(); ?>' >> /var/www/${domain_name}/phpinfo.php
@@ -1185,9 +1277,11 @@ CREATE USER '${db_user}'@'%' IDENTIFIED BY '${db_password}';
 GRANT ALL PRIVILEGES ON ${db_user}_db.* TO '${db_user}'@'%';
 FLUSH PRIVILEGES;
 EOF
-docker exec -i mysql1 mysql -u root -p${MYSQL_ROOT_PASSWORD} < ${domain_name}.sql
 
-echo "已创建数据库和用户 mysql://${db_user}:${db_password}@mysql:3306/${db_user}_db"
+cmd=mysql -u root -p${MYSQL_ROOT_PASSWORD} < ${domain_name}.sql
+echo "请执行${cmd}创建数据库和用户 mysql://${db_user}:${db_password}@mysql:3306/${db_user}_db"
+echo "在容器内创建需执行 docker exec -i mysql1 ${cmd}"
+
 }
 
 
@@ -1221,9 +1315,9 @@ docker run -dp 3306:3306 --name mysql1 --network lnmp --network-alias mysql -v /
 mariadb:10.3
 
 echo "安装 Nginx"
-docker run -d --name nginx1 --network host -v /var/www:/var/www/html -v /var/ssl:/var/ssl -v /docker/nginx1:/etc/nginx/conf.d nginx:alpine
+docker run -d --name nginx1 --network host -v /var/www:/var/www/html -v /var/ssl:/var/ssl -v /etc/nginx:/etc/nginx nginx:alpine
 echo "安装 PHP"
-#docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /var/www:/var/www/html php:7.4-fpm
+#docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /var/www:/var/www/html php:7.4-fpm-alpine
 docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /docker/php1:/usr/local/etc -v /var/www:/var/www/html webdevops/php:7.4-alpine
 
 # echo "安装 PHP扩展"

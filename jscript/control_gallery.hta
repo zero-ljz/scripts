@@ -1,0 +1,72 @@
+<html>
+<head>
+    <title>Control Gallery</title>
+    <HTA:APPLICATION ID="ControlGallery" 
+                     APPLICATIONNAME="HTA Control Gallery" 
+                     BORDER="dialog" 
+                     BORDERSTYLE="normal" 
+                     ICON="shell32.dll,3" 
+                     INNERBORDER="no" 
+                     MAXIMIZEBUTTON="yes" 
+                     MINIMIZEBUTTON="yes" 
+                     SCROLL="yes" 
+                     SHOWINTASKBAR="yes" 
+                     SINGLEINSTANCE="yes" 
+                     SYSMENU="yes" 
+                     WINDOWSTATE="normal" 
+                     RESIZABLE="yes" 
+                     WIDTH="600"
+                     HEIGHT="400">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <h1>Control Gallery</h1>
+    <div class="control-container">
+        <h2>Buttons</h2>
+        <button id="btn1" onclick="alert('Button 1 clicked!');">Click Me</button>
+        <input type="button" value="Input Button" id="btn2">
+        <input type="submit" value="Submit Button" id="btn3">
+    </div>
+    
+    <div class="control-container">
+        <h2>Checkboxes</h2>
+        <label><input type="checkbox"> Checkbox 1</label><br>
+        <label><input type="checkbox"> Checkbox 2</label><br>
+        <label><input type="checkbox"> Checkbox 3</label>
+    </div>
+    
+    <div class="control-container">
+        <h2>Radio Buttons</h2>
+        <label><input type="radio" name="radioGroup"> Radio 1</label><br>
+        <label><input type="radio" name="radioGroup"> Radio 2</label><br>
+        <label><input type="radio" name="radioGroup"> Radio 3</label>
+    </div>
+    
+    <div class="control-container">
+        <h2>Text Inputs</h2>
+        <input type="text" placeholder="Text input"><br>
+        <input type="password" placeholder="Password input">
+    </div>
+    
+    <div class="control-container">
+        <h2>Select Box</h2>
+        <select>
+            <option value="option1">Option 1</option>
+            <option value="option2">Option 2</option>
+            <option value="option3">Option 3</option>
+        </select>
+    </div>
+
+    <script>
+
+
+    </script>
+</body>
+</html>

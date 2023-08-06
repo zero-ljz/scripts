@@ -430,68 +430,7 @@ fi
 
 
 
-echo -e "\n\n\n------------------------------安装 MySQL------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ "$answer" = "y" ]; then
 
-# wget -O mysql-apt-config_0.8.24-1_all.deb https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
-# dpkg -i mysql-apt-config_0.8.24-1_all.deb
-
-# #安装MariaDB GPG密钥
-# sudo apt-get install software-properties-common dirmngr
-# sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
-# # 添加MariaDB官方软件包源
-# sudo add-apt-repository 'deb [arch=amd64] http://ftp.ubuntu-tw.org/mirror/mariadb/repo/10.3/debian buster main'
-
-# echo -e "\n\n\n 安装 MySQL-Server"
-# apt -y install MariaDB-client mariadb-server
-
-# systemctl enable mariadb
-# systemctl start mariadb
-
-apt -y install lsb-release
-wget -O mysql-apt-config_0.8.18-1_all.deb ${base_url}https://dev.mysql.com/get/mysql-apt-config_0.8.18-1_all.deb
-dpkg -i mysql-apt-config_0.8.18-1_all.deb
-systemctl enable mysql
-systemctl start mysql
-
-echo -e "\n\n\n 设置 MySQL 安全选项"
-mysql_secure_installation
-
-echo '
-使用以下命令连接到MySQL服务器
-mysql -h 127.0.0.1 -u root -p
-'
-
-echo '
-使用以下命令修改root密码
-UPDATE user SET PASSWORD=PASSWORD('root') where USER='root'; 
-'
-
-echo '
-使用以下命令创建数据库和用户
-CREATE DATABASE db1;
-CREATE USER 'user1'@'%' IDENTIFIED BY '123';
-GRANT ALL PRIVILEGES ON db1.* TO 'user1'@'%';
-FLUSH PRIVILEGES;
-'
-
-fi
-
-
-
-echo -e "\n\n\n------------------------------安装 Redis------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ "$answer" = "y" ]; then
-echo -e "\n\n\n 安装 redis-server"
-apt -y install redis-server
-
-systemctl enable redis-server
-systemctl restart redis-server
-
-fi
 
 
 echo -e "\n\n\n------------------------------安装 Zsh & Oh My Zsh------------------------------"

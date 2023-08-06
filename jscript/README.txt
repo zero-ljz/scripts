@@ -26,3 +26,10 @@ JScript最初是由微软开发的一种脚本语言，用于在Windows环境下
 JavaScript是一种跨平台的脚本语言，最初由Netscape公司开发，后来成为ECMAScript标准的实现之一。它在Web开发中得到广泛应用，可以在不同的浏览器和操作系统上运行。
 
 尽管JScript和JavaScript有一些细微的差异和特定的实现细节，但从大部分功能和语法角度来看，它们可以被认为是相同的语言。在实际开发中，JScript和JavaScript通常可以互换使用，特别是在Windows环境下进行脚本编程。
+
+
+以管理员身份运行hta脚本
+Start-Process -FilePath "C:\windows\system32\mshta.exe" "C:\Users\ljz\Desktop\app.hta" -Verb RunAs
+
+hta应用程序说明
+https://learn.microsoft.com/en-us/previous-versions/ms536496%28v%3dvs.85%29
