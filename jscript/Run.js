@@ -52,13 +52,6 @@ WSH.Quit();
 
 
 
-
-
-
-
-
-
-
 function FindProcess(strProcess) { //查询指定进程
     var locator = new ActiveXObject("WbemScripting.SWbemLocator");
     var service = locator.ConnectServer("."); // 本机
