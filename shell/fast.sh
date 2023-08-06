@@ -120,7 +120,7 @@ ufw allow 1024:65535/tcp
 
 ufw enable
 
-ufw reload
+#ufw reload
 
 # 查看所有规则编号
 # ufw status numbered
