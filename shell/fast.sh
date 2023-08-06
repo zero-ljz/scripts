@@ -1036,7 +1036,7 @@ elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
 fi
 
 domain_name=$1
-site_root_dir=/var/www/${domain_name}
+site_root_dir=/var/www/html/${domain_name}
 
 SSL_DIR=/var/ssl
 if [ ! -d "$SSL_DIR" ]; then
@@ -1181,7 +1181,7 @@ fi
 
 domain_name=$1
     
-mkdir /var/www/${domain_name}
+mkdir /var/www/html/${domain_name}
 cat>${domain_name}.conf<<EOF
 server {
     listen       80; # default_server;
@@ -1214,6 +1214,8 @@ server {
     # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
     #
     location ~ \.php$ {
+        # 本地安装的php-fpm默认是只能通过套接字通信
+        #fastcgi_pass unix:/run/php/php8.2-fpm.sock;
         fastcgi_pass   127.0.0.1:9000;
         fastcgi_index  index.php;
         # PHP脚本文件路径，document_root表示使用静态资源相同目录，目录路径必须是在php-fpm容器内有效的目录路径
@@ -1235,25 +1237,25 @@ cp ${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
 #docker restart nginx1
 
 echo "远程下载默认网站 源码文件"
-echo '<?php echo phpinfo(); ?>' >> /var/www/${domain_name}/phpinfo.php
-wget -O /var/www/${domain_name}/adminer.php https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
-wget -O /var/www/${domain_name}/editor.php https://github.com/vrana/adminer/releases/download/v4.8.1/editor-4.8.1.php
-wget -O /var/www/${domain_name}/tinyfilemanager.php https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
-wget -O /var/www/${domain_name}/index.php https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
-wget -O /var/www/${domain_name}/shell.php https://raw.githubusercontent.com/artyuum/simple-php-web-shell/master/index.php
+echo '<?php echo phpinfo(); ?>' >> /var/www/html/${domain_name}/phpinfo.php
+wget -O /var/www/html/${domain_name}/adminer.php https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+wget -O /var/www/html/${domain_name}/editor.php https://github.com/vrana/adminer/releases/download/v4.8.1/editor-4.8.1.php
+wget -O /var/www/html/${domain_name}/tinyfilemanager.php https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+wget -O /var/www/html/${domain_name}/index.php https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
+wget -O /var/www/html/${domain_name}/shell.php https://raw.githubusercontent.com/artyuum/simple-php-web-shell/master/index.php
 
 # wget -O phpMyAdmin.zip https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
-# unzip -d /var/www/${domain_name} phpMyAdmin.zip > /dev/null
-# mv /var/www/${domain_name}/phpMyAdmin-5.2.1-all-languages /var/www/${domain_name}/phpMyAdmin
-# mv /var/www/${domain_name}/phpMyAdmin/config.sample.inc.php /var/www/${domain_name}/phpMyAdmin/config.inc.php && chmod 755 /var/www/${domain_name}/phpMyAdmin/config.inc.php
-# sed -i "s/localhost/mysql/g" /var/www/${domain_name}/phpMyAdmin/config.inc.php
+# unzip -d /var/www/html/${domain_name} phpMyAdmin.zip > /dev/null
+# mv /var/www/html/${domain_name}/phpMyAdmin-5.2.1-all-languages /var/www/html/${domain_name}/phpMyAdmin
+# mv /var/www/html/${domain_name}/phpMyAdmin/config.sample.inc.php /var/www/html/${domain_name}/phpMyAdmin/config.inc.php && chmod 755 /var/www/html/${domain_name}/phpMyAdmin/config.inc.php
+# sed -i "s/localhost/mysql/g" /var/www/html/${domain_name}/phpMyAdmin/config.inc.php
 
 #https://cn.wordpress.org/latest-zh_CN.zip
 #https://github.com/typecho/typecho/releases/latest/download/typecho.zip
 
 
-chown -R www-data:www-data /var/www/${domain_name}
-chmod -R 777 /var/www/${domain_name}
+chown -R www-data:www-data /var/www/html/${domain_name}
+chmod -R 777 /var/www/html/${domain_name}
 }
 
 
@@ -1315,10 +1317,10 @@ docker run -dp 3306:3306 --name mysql1 --network lnmp --network-alias mysql -v /
 mariadb:10.3
 
 echo "安装 Nginx"
-docker run -d --name nginx1 --network host -v /var/www:/var/www/html -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:alpine
+docker run -d --name nginx1 --network host -v /var/www/html:/var/www/html -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:alpine
 echo "安装 PHP"
-#docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /var/www:/var/www/html php:7.4-fpm-alpine
-docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /docker/php1:/usr/local/etc -v /var/www:/var/www/html webdevops/php:7.4-alpine
+#docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /var/www/html:/var/www/html php:7.4-fpm-alpine
+docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /docker/php1:/usr/local/etc -v /var/www/html:/var/www/html webdevops/php:7.4-alpine
 
 # echo "安装 PHP扩展"
 # # https://github.com/docker-library/wordpress/blob/97f75b51f909fbd9894d128ea6893120cfd23979/latest/php8.0/fpm/Dockerfile#L10-L16
@@ -1376,7 +1378,7 @@ if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
 domain_name=${1:-blog.iapp.run}
 create_database ${domain_name}
 
-docker run -dp 127.0.0.1:9001:9000 --name wordpress1 --network lnmp -v /var/www/${domain_name}:/var/www/html \
+docker run -dp 127.0.0.1:9001:9000 --name wordpress1 --network lnmp -v /var/www/html/${domain_name}:/var/www/html \
 -e WORDPRESS_DB_HOST=mysql \
 -e WORDPRESS_DB_USER=${db_user} \
 -e WORDPRESS_DB_PASSWORD=${db_password} \
