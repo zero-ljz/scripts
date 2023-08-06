@@ -1196,7 +1196,7 @@ server {
     # 静态资源路径，必须是在nginx容器内有效的路径
     root   /var/www/html/${domain_name};
 
-    #access_log  /var/log/nginx/host.access.log  main;
+    #access_log  /var/log/nginx/${domain_name}.access.log  main;
 
     location / {
         index index.php index.html index.htm;
