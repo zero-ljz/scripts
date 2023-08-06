@@ -1315,7 +1315,7 @@ docker run -dp 3306:3306 --name mysql1 --network lnmp --network-alias mysql -v /
 mariadb:10.3
 
 echo "安装 Nginx"
-docker run -d --name nginx1 --network host -v /var/www:/var/www/html -v /var/ssl:/var/ssl -v /etc/nginx:/etc/nginx nginx:alpine
+docker run -d --name nginx1 --network host -v /var/www:/var/www/html -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:alpine
 echo "安装 PHP"
 #docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /var/www:/var/www/html php:7.4-fpm-alpine
 docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /docker/php1:/usr/local/etc -v /var/www:/var/www/html webdevops/php:7.4-alpine
