@@ -1319,7 +1319,7 @@ mariadb:10.3
 echo "安装 Nginx"
 docker run -d --name nginx1 --network host -v /var/www/html:/var/www/html -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:alpine
 echo "安装 PHP"
-docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /docker/php1:/usr/local/etc -v /var/www/html:/var/www/html php:7.4-fpm-alpine
+docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /var/www/html:/var/www/html php:7.4-fpm-alpine
 
 # 使用这个必须 -v /var/www:/var/www/html，否则nginx连不上php-fpm，日志报错[error] 20#20: *5 recv() failed (104: Connection reset by peer) while reading response header from upstream
 #docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /docker/php1:/usr/local/etc -v /var/www:/var/www/html webdevops/php:7.4-alpine
@@ -1342,6 +1342,7 @@ docker exec -t php1 docker-php-ext-configure gd --with-freetype --with-jpeg --wi
 docker exec -t php1 docker-php-ext-install -j "$(nproc)" bcmath exif gd intl mysqli zip
 
 # 用 pecl 安装扩展
+docker exec php1 apk add build-base autoconf
 docker exec php1 pecl install imagick-3.6.0 redis
 docker exec php1 docker-php-ext-enable imagick redis
 docker exec -t php1 rm -r /tmp/pear
