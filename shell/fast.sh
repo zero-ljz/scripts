@@ -120,7 +120,7 @@ ufw allow 1024:65535/tcp
 
 ufw enable
 
-#ufw reload
+ufw reload
 
 # 查看所有规则编号
 # ufw status numbered
@@ -463,8 +463,8 @@ if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
 apt -y install php php-fpm composer php-json php-mbstring php-mysql php-xml php-zip php-curl php-imagick php-gd php-pear php-redis php-sqlite3 php-mongodb php-bcmath php-soap php-intl php-igbinary php-xdebug
 # 建议安装
 apt -y install fossil mercurial subversion php-zip php-symfony-event-dispatcher php-symfony-lock php-pear
-systemctl enable php7.3-fpm
-systemctl start php7.3-fpm
+# systemctl enable php7.3-fpm
+# systemctl start php7.3-fpm
 fi
 }
 
@@ -1741,13 +1741,15 @@ function auto_mode(){
     system_init
     install_docker
     install_nodejs
+    install_php
+    install_nginx
 
     install_aria2
     install_frp
     install_v2ray
 
-    deploy_portainer
-    deploy_lnmpr
+    # deploy_portainer
+    # deploy_lnmpr
     # deploy_cloudreve
     # deploy_searxng
     
