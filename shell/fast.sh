@@ -10,6 +10,7 @@
 #rm -rf /docker
 #docker rm -f $(docker ps -a -q)
 
+
 upgrade()
 {
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
@@ -456,16 +457,17 @@ npm install -g yarn
 fi
 }
 
-install_php(){
-echo -e "\n\n\n------------------------------安装 PHP------------------------------"
+install_phpfpm(){
+echo -e "\n\n\n------------------------------安装 PHP FPM------------------------------"
 echo "是否继续？ (y)"
 read -t 10 answer
 if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
-apt -y install php php-fpm composer php-json php-mbstring php-mysql php-xml php-zip php-curl php-imagick php-gd php-pear php-redis php-sqlite3 php-mongodb php-bcmath php-soap php-intl php-igbinary php-xdebug
-# 建议安装
-apt -y install fossil mercurial subversion php-zip php-symfony-event-dispatcher php-symfony-lock php-pear
-# systemctl enable php7.3-fpm
-# systemctl start php7.3-fpm
+apt -y install php-fpm composer php-json php-mbstring php-mysql php-xml php-zip php-curl php-imagick php-gd file php-pear php-redis php-sqlite3 php-mongodb php-bcmath php-soap php-intl php-igbinary php-xdebug
+# systemctl enable php8.2-fpm
+# systemctl start php8.2-fpm
+
+#curl -sS https://getcomposer.org/installer | php
+
 fi
 }
 
@@ -1037,7 +1039,7 @@ elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
 fi
 
 domain_name=$1
-site_root_dir=/var/www/html/${domain_name}
+site_root_dir=/var/www/${domain_name}
 
 SSL_DIR=/var/ssl
 if [ ! -d "$SSL_DIR" ]; then
@@ -1182,7 +1184,7 @@ fi
 
 domain_name=$1
     
-mkdir /var/www/html/${domain_name}
+mkdir /var/www/${domain_name}
 cat>${domain_name}.conf<<EOF
 server {
     listen       80; # default_server;
@@ -1195,7 +1197,7 @@ server {
     #ssl_certificate_key /var/ssl/${domain_name}.key;
 
     # 静态资源路径，必须是在nginx容器内有效的路径
-    root   /var/www/html/${domain_name};
+    root   /var/www/${domain_name};
 
     #access_log  /var/log/nginx/${domain_name}.access.log  main;
 
@@ -1238,25 +1240,25 @@ cp ${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
 #docker restart nginx1
 
 echo "远程下载默认网站 源码文件"
-echo '<?php echo phpinfo(); ?>' >> /var/www/html/${domain_name}/phpinfo.php
-wget -O /var/www/html/${domain_name}/adminer.php https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
-wget -O /var/www/html/${domain_name}/editor.php https://github.com/vrana/adminer/releases/download/v4.8.1/editor-4.8.1.php
-wget -O /var/www/html/${domain_name}/tinyfilemanager.php https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
-wget -O /var/www/html/${domain_name}/index.php https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
-wget -O /var/www/html/${domain_name}/shell.php https://raw.githubusercontent.com/artyuum/simple-php-web-shell/master/index.php
+echo '<?php echo phpinfo(); ?>' >> /var/www/${domain_name}/phpinfo.php
+wget -O /var/www/${domain_name}/adminer.php https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+wget -O /var/www/${domain_name}/editor.php https://github.com/vrana/adminer/releases/download/v4.8.1/editor-4.8.1.php
+wget -O /var/www/${domain_name}/tinyfilemanager.php https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+wget -O /var/www/${domain_name}/index.php https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
+wget -O /var/www/${domain_name}/shell.php https://raw.githubusercontent.com/artyuum/simple-php-web-shell/master/index.php
 
 # wget -O phpMyAdmin.zip https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
-# unzip -d /var/www/html/${domain_name} phpMyAdmin.zip > /dev/null
-# mv /var/www/html/${domain_name}/phpMyAdmin-5.2.1-all-languages /var/www/html/${domain_name}/phpMyAdmin
-# mv /var/www/html/${domain_name}/phpMyAdmin/config.sample.inc.php /var/www/html/${domain_name}/phpMyAdmin/config.inc.php && chmod 755 /var/www/html/${domain_name}/phpMyAdmin/config.inc.php
-# sed -i "s/localhost/mysql/g" /var/www/html/${domain_name}/phpMyAdmin/config.inc.php
+# unzip -d /var/www/${domain_name} phpMyAdmin.zip > /dev/null
+# mv /var/www/${domain_name}/phpMyAdmin-5.2.1-all-languages /var/www/${domain_name}/phpMyAdmin
+# mv /var/www/${domain_name}/phpMyAdmin/config.sample.inc.php /var/www/${domain_name}/phpMyAdmin/config.inc.php && chmod 755 /var/www/${domain_name}/phpMyAdmin/config.inc.php
+# sed -i "s/localhost/mysql/g" /var/www/${domain_name}/phpMyAdmin/config.inc.php
 
 #https://cn.wordpress.org/latest-zh_CN.zip
 #https://github.com/typecho/typecho/releases/latest/download/typecho.zip
 
 
-chown -R www-data:www-data /var/www/html/${domain_name}
-chmod -R 777 /var/www/html/${domain_name}
+chown -R www-data:www-data /var/www/${domain_name}
+chmod -R 777 /var/www/${domain_name}
 }
 
 
@@ -1318,9 +1320,9 @@ docker run -dp 3306:3306 --name mysql1 --network lnmp --network-alias mysql -v /
 mariadb:10.3
 
 echo "安装 Nginx"
-docker run -d --name nginx1 --network host -v /var/www/html:/var/www/html -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:alpine
+docker run -d --name nginx1 --network host -v /var/www:/var/www -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:stable-bullseye
 echo "安装 PHP"
-docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /var/www/html:/var/www/html php:7.4-fpm-alpine
+docker run -d -p 127.0.0.1:9000:9000 --name php-fpm1 --network lnmp -v /var/www:/var/www php:7.4-fpm-bullseye
 
 # 使用这个必须 -v /var/www:/var/www/html，否则nginx连不上php-fpm，日志报错[error] 20#20: *5 recv() failed (104: Connection reset by peer) while reading response header from upstream
 #docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /docker/php1:/usr/local/etc -v /var/www:/var/www/html webdevops/php:7.4-alpine
@@ -1330,32 +1332,32 @@ echo "安装 PHP扩展"
 # https://make.wordpress.org/hosting/handbook/server-environment/
 
 # https://github.com/docker-library/wordpress/blob/97f75b51f909fbd9894d128ea6893120cfd23979/latest/php7.4/fpm-alpine/Dockerfile
-docker exec -t php1 apk update
-docker exec -t php1 apk add --no-cache bash ghostscript imagemagick 
-docker exec -t php1 apk add --no-cache --virtual .build-deps freetype-dev icu-dev imagemagick-dev libjpeg-turbo-dev libpng-dev libwebp-dev libzip-dev
+# docker exec -t php-fpm1 apk update
+# docker exec -t php-fpm1 apk add --no-cache bash ghostscript imagemagick 
+# docker exec -t php-fpm1 apk add --no-cache --virtual .build-deps freetype-dev icu-dev imagemagick-dev libjpeg-turbo-dev libpng-dev libwebp-dev libzip-dev
+# docker exec php-fpm1 apk add build-base autoconf
 
-# docker exec -t php1 apt-get update
-# docker exec -t php1 apt-get install -y --no-install-recommends libfreetype6-dev libicu-dev libjpeg-dev libmagickwand-dev libpng-dev libwebp-dev libzip-dev
+docker exec -t php-fpm1 apt-get update
+docker exec -t php-fpm1 apt-get install -y --no-install-recommends libfreetype6-dev libicu-dev libjpeg-dev libmagickwand-dev libpng-dev libwebp-dev libzip-dev
 
-docker exec -t php1 docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp
+docker exec -t php-fpm1 docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp
 
 # 用 docker-php-ext-install 安装扩展
-docker exec -t php1 docker-php-ext-install -j "$(nproc)" bcmath exif gd intl mysqli zip
+docker exec -t php-fpm1 docker-php-ext-install -j "$(nproc)" bcmath exif gd intl mysqli zip
 
 # 用 pecl 安装扩展
-docker exec php1 apk add build-base autoconf
-docker exec php1 pecl install imagick-3.6.0 redis
-docker exec php1 docker-php-ext-enable imagick redis
-docker exec -t php1 rm -r /tmp/pear
+docker exec php-fpm1 pecl install imagick-3.6.0 redis
+docker exec php-fpm1 docker-php-ext-enable imagick redis
+docker exec -t php-fpm1 rm -r /tmp/pear
 
 
 
 
-#docker exec -t php1 apt-get install -y libbz2-dev sqlite3 libsqlite3-dev libssl-dev libcurl4-openssl-dev libjpeg-dev libonig-dev libreadline-dev libtidy-dev libxslt-dev libzip-dev
+#docker exec -t php-fpm1 apt-get install -y libbz2-dev sqlite3 libsqlite3-dev libssl-dev libcurl4-openssl-dev libjpeg-dev libonig-dev libreadline-dev libtidy-dev libxslt-dev libzip-dev
 # docker-php-ext-install 全部可安装扩展
-#docker exec -t php1 docker-php-ext-install bcmath bz2 calendar ctype curl dba dom enchant exif ffi fileinfo filter ftp gd gettext gmp hash iconv imap intl json ldap mbstring mysqli oci8 odbc opcache pcntl pdo pdo_dblib pdo_firebird pdo_mysql pdo_oci pdo_odbc pdo_pgsql pdo_sqlite pgsql phar posix pspell readline reflection session shmop simplexml snmp soap sockets sodium spl standard sysvmsg sysvsem sysvshm tidy tokenizer xml xmlreader xmlrpc xmlwriter xsl zend_test zip
+#docker exec -t php-fpm1 docker-php-ext-install bcmath bz2 calendar ctype curl dba dom enchant exif ffi fileinfo filter ftp gd gettext gmp hash iconv imap intl json ldap mbstring mysqli oci8 odbc opcache pcntl pdo pdo_dblib pdo_firebird pdo_mysql pdo_oci pdo_odbc pdo_pgsql pdo_sqlite pgsql phar posix pspell readline reflection session shmop simplexml snmp soap sockets sodium spl standard sysvmsg sysvsem sysvshm tidy tokenizer xml xmlreader xmlrpc xmlwriter xsl zend_test zip
 
-docker restart php1
+docker restart php-fpm1
 
 fi
 }
@@ -1376,7 +1378,7 @@ if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
 domain_name=${1:-blog.iapp.run}
 create_database ${domain_name}
 
-docker run -dp 127.0.0.1:9001:9000 --name wordpress1 --network lnmp -v /var/www/html/${domain_name}:/var/www/html \
+docker run -dp 127.0.0.1:9001:9000 --name wordpress1 --network lnmp -v /var/www/${domain_name}:/var/www/html \
 -e WORDPRESS_DB_HOST=mysql \
 -e WORDPRESS_DB_USER=${db_user} \
 -e WORDPRESS_DB_PASSWORD=${db_password} \
@@ -1389,7 +1391,7 @@ server {
     listen  [::]:80;
     server_name  ${domain_name};  
     # 在nginx容器里的静态资源根目录
-    root   /var/www/html/${domain_name};
+    root   /var/www/${domain_name};
 
     #access_log  /var/log/nginx/host.access.log  main;
 
@@ -1412,7 +1414,7 @@ server {
         fastcgi_pass   127.0.0.1:9001;
         fastcgi_index  index.php;
         # 在fastcgi process manager 容器里的脚本文件 根目录
-        fastcgi_param  SCRIPT_FILENAME  /var/www/html\$fastcgi_script_name;
+        fastcgi_param  SCRIPT_FILENAME  /var/www\$fastcgi_script_name;
         include        fastcgi_params;
     }
 
@@ -1654,7 +1656,7 @@ docker run -d --name ghost1 \
 fi
 }
 
-#docker run --name py1 -v $PWD:/usr/src/myapp  -w /usr/src/myapp python:3.9.13-alpine python app.py
+
 
 # vnc连接 密码123456 安装vscode后用code --user-data-dir ./ --no-sandbox 启动
 # docker run --name ud1 -d -p 22:22 -p 5900:5900 gotoeasy/ubuntu-desktop
@@ -1673,16 +1675,7 @@ fi
 
 
 
-# 创建空的 Debian 容器并保持运行
-# docker run -d -p  --name debian1 --network host debian:bullseye-slim tail -f /dev/null
-# commands=$(cat <<EOF
 
-# apt update
-
-
-# EOF
-# )
-# docker exec debian1 bash -c "$commands"
 
 create_php_app()
 {
@@ -1702,6 +1695,22 @@ wget -P /docker/${app_name} http://us.iapp.run:777/proxy/https://raw.githubuserc
 }
 
 # docker restart nginx1
+
+
+
+# 创建空的 Debian 容器并保持运行
+# docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/null
+# commands=$(cat <<EOF
+
+# apt update
+
+
+# EOF
+# )
+# docker exec debian1 bash -c "$commands"
+
+#docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-bullseye python app.py
+#docker run -it --rm --name php1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli php app.php
 
 
 

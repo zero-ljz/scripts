@@ -180,6 +180,8 @@ class SQLClient(QMainWindow):
         insert_menu.addAction(show_tables_action)
         show_dbs_action = QAction("SHOW DATABASES", self)
         insert_menu.addAction(show_dbs_action)
+        create_table_action = QAction("CREATE TABLE", self)
+        insert_menu.addAction(create_table_action)
 
         # 连接插入子菜单项的信号槽
         insert_action.triggered.connect(lambda: self.insert_sql("INSERT INTO"))
@@ -189,6 +191,7 @@ class SQLClient(QMainWindow):
         create_action.triggered.connect(lambda: self.insert_sql("CREATE DATABASE"))
         show_tables_action.triggered.connect(lambda: self.insert_sql("SHOW TABLES"))
         show_dbs_action.triggered.connect(lambda: self.insert_sql("SHOW DATABASES"))
+        create_table_action.triggered.connect(lambda: self.insert_sql("CREATE TABLE"))
 
         # 创建执行动作
         execute_action = QAction("Execute (F5)", self)
@@ -222,7 +225,21 @@ class SQLClient(QMainWindow):
                     sql = "SELECT datname FROM pg_database WHERE datistemplate = false"
                 else:
                     sql = "SHOW DATABASES"
-    
+            elif sql_type == "CREATE TABLE":
+                sql = """\
+CREATE TABLE IF NOT EXISTS table_name (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NOT NULL UNIQUE,
+    age INT,
+    hire_date DATE,
+    price DECIMAL(10, 2),
+    content TEXT,
+    is_deleted BOOLEAN,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);\
+"""
             # 将语句插入到输入框中
             cursor = self.query_text.textCursor()
             cursor.insertText(sql)
