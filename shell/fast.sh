@@ -541,6 +541,7 @@ read -t 10 answer
 if [ "$answer" = "y" ]; then
 echo -e "\n\n\n 安装 redis-server"
 apt -y install redis-server
+sudo sed -i 's/^bind .*/bind 0.0.0.0/' /etc/redis/redis.conf
 
 systemctl enable redis-server
 systemctl restart redis-server
@@ -1031,7 +1032,7 @@ stop_v2ray()
 
 create_ssl(){
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} domain_name"
+    echo "Usage: ${FUNCNAME} domain_name [site_root_dir]"
     exit 0
 elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
     declare -f ${FUNCNAME}
@@ -1039,7 +1040,8 @@ elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
 fi
 
 domain_name=$1
-site_root_dir=/var/www/${domain_name}
+# site_root_dir=/var/www/${domain_name}
+site_root_dir=${2:-/var/www/${domain_name}}
 
 SSL_DIR=/var/ssl
 if [ ! -d "$SSL_DIR" ]; then
@@ -1090,6 +1092,14 @@ fi
 # 合并为公钥文件
 cat "$DOMAIN_CRT" lets-encrypt-x3-cross-signed.pem > "$DOMAIN_CHAINED_CRT"
 
+cat << EOF
+在nginx网站配置的server块中添加以下内容:
+
+    listen 443 ssl;
+    ssl_certificate ${DOMAIN_CHAINED_CRT};
+    ssl_certificate_key ${DOMAIN_KEY};
+EOF
+
 }
 
 
@@ -1137,8 +1147,8 @@ server {
 
     # SSL/TLS 配置
     # listen 443 ssl;
-    # ssl_certificate /path/to/certificate.pem;
-    # ssl_certificate_key /path/to/private_key.pem;
+    # ssl_certificate /var/ssl/${domain_name}.chained.crt;
+    # ssl_certificate_key /var/ssl/${domain_name}.key;
 
     # 安全配置
     # 设置请求头
@@ -1302,7 +1312,7 @@ echo "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
 docker network create lnmp
 
 echo "安装 Redis"
-docker run -dp 6379:6379 --name redis1 --network lnmp --network-alias redis redis:alpine
+docker run -dp 6379:6379 --name redis1 --network lnmp --network-alias redis redis:6-bullseye
 
 echo "安装 MySQL"
 # docker run -dp 3306:3306 --name mysql1 --network lnmp --network-alias mysql -v /docker/mysql:/var/lib/mysql \
@@ -1711,7 +1721,7 @@ wget -P /docker/${app_name} http://us.iapp.run:777/proxy/https://raw.githubuserc
 
 #docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-bullseye python app.py
 #docker run -it --rm --name php1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli php app.php
-
+#docker run -it --rm --name node1 -v "$PWD":/usr/src/app -w /usr/src/app node:18-bullseye-slim node app.js
 
 
 
