@@ -1096,8 +1096,8 @@ cat << EOF
 在nginx网站配置的server块中添加以下内容:
 
     listen 443 ssl;
-    ssl_certificate ${DOMAIN_CHAINED_CRT};
-    ssl_certificate_key ${DOMAIN_KEY};
+    ssl_certificate /var/ssl/${domain_name}.chained.crt;
+    ssl_certificate_key /var/ssl/${domain_name}.key;
 EOF
 
 }
@@ -1293,7 +1293,7 @@ GRANT ALL PRIVILEGES ON ${db_user}_db.* TO '${db_user}'@'%';
 FLUSH PRIVILEGES;
 EOF
 
-cmd=mysql -u root -p${MYSQL_ROOT_PASSWORD} < ${domain_name}.sql
+cmd="mysql -u root -p${MYSQL_ROOT_PASSWORD} < ${domain_name}.sql"
 echo "请执行${cmd}创建数据库和用户 mysql://${db_user}:${db_password}@mysql:3306/${db_user}_db"
 echo "在容器内创建需执行 docker exec -i mysql1 ${cmd}"
 
