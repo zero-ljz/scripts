@@ -20,7 +20,7 @@ elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
     declare -f ${FUNCNAME}
     exit 0
 fi
-bash -c 'wget -O fast.sh http://us.iapp.run:777/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
+bash -c 'wget -O fast.sh http://us.iapp.run/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
 }
 
 system_init(){
@@ -339,7 +339,7 @@ EOF
 
 create_supervisor(){
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} app_name command working_dir"
+    echo "Usage: ${FUNCNAME} app_name "command" working_dir"
     exit 0
 elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
     declare -f ${FUNCNAME}
@@ -593,7 +593,7 @@ fi
 install_frp(){
 echo -e "\n\n\n------------------------------安装 Frp------------------------------"
 echo -e "\n\n\n下载 Frp 二进制包"
-wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz http://us.iapp.run:777/proxy/https://github.com/fatedier/frp/releases/download/v0.48.0/frp_0.48.0_linux_amd64.tar.gz
+wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz http://us.iapp.run/proxy/https://github.com/fatedier/frp/releases/download/v0.48.0/frp_0.48.0_linux_amd64.tar.gz
 tar xzvf frp_0.48.0_linux_amd64.tar.gz -C /usr/local/bin/
 mv /usr/local/bin/frp_0.48.0_linux_amd64 /usr/local/bin/frp
 
@@ -820,7 +820,7 @@ fi
 
 
 install_v2ray2(){
-curl -LkOJ http://us.iapp.run:777/proxy/https://github.com/v2fly/v2ray-core/releases/download/v4.45.2/v2ray-linux-64.zip
+curl -LkOJ http://us.iapp.run/proxy/https://github.com/v2fly/v2ray-core/releases/download/v4.45.2/v2ray-linux-64.zip
 unzip -d v2ray-linux-64 v2ray-linux-64.zip
 # 复制主程序和辅助工具
 cp v2ray-linux-64/v2ray v2ray-linux-64/v2ctl /usr/local/bin/ && chmod 777 /usr/local/bin/v2ray
@@ -1140,20 +1140,21 @@ server {
 
         #add_header Content-Security-Policy upgrade-insecure-requests;
         proxy_pass_header Server;
+        proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header Host \$host;
         proxy_redirect off;
         proxy_pass http://127.0.0.1:${local_port};
+
+        # 安全配置
+        # 设置请求头
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     }
 
     # SSL/TLS 配置
     # listen 443 ssl;
     # ssl_certificate /var/ssl/${domain_name}.chained.crt;
     # ssl_certificate_key /var/ssl/${domain_name}.key;
-
-    # 安全配置
-    # 设置请求头
-    # proxy_set_header X-Real-IP $remote_addr;
-    # proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 
     # 设置请求大小限制
     # client_max_body_size 10m;
@@ -1374,7 +1375,7 @@ fi
 
 deploy_tinyfilemanager(){
 docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
-docker exec -i tinyfilemanager1 wget -O /docker/${app_name}/adminer.php http://us.iapp.run:777/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+docker exec -i tinyfilemanager1 wget -O /docker/${app_name}/adminer.php http://us.iapp.run/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
 domain_name=${1:-file.iapp.run}
 create_proxy ${domain_name} 8020
 }
@@ -1700,8 +1701,8 @@ fi
 app_name=$1
 http_port=$2
 docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
-wget -O /docker/${app_name}/adminer.php http://us.iapp.run:777/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
-wget -P /docker/${app_name} http://us.iapp.run:777/proxy/https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+wget -O /docker/${app_name}/adminer.php http://us.iapp.run/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+wget -P /docker/${app_name} http://us.iapp.run/proxy/https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
 }
 
 # docker restart nginx1

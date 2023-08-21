@@ -25,10 +25,10 @@ function curl($url, $method = "GET", $headers = [], $data = "")
   return $response;
 }
 
-function bing_wallpaper($itx = 1)
+function bing_wallpaper($itx = 0)
 {
   $response = curl(
-    "http://cn.bing.com/HPImageArchive.aspx?format=js&idx={$itx}&n=1"
+    "http://cn.bing.com/HPImageArchive.aspx?format=js&idx={$itx}&n=1&mkt=zh-CN"
   );
 
   $data = json_decode($response, true);
