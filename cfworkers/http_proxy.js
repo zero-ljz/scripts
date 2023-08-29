@@ -36,7 +36,7 @@ addEventListener('fetch', event => {
           headers.delete(header)
         }
         // 添加缓存控制字段
-        headers.set('Cache-Control', 'no-cache')
+        headers.set('Cache-Control', 'max-age=0')
   
         // 发起代理请求
         const proxyResponse = await fetch(newUrl, {
