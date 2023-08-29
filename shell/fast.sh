@@ -213,9 +213,10 @@ apt -y install fio
 # dpkg -i  fd_8.4.0_amd64.deb
 
 # 安装命令行提示工具
-curl -sS https://starship.rs/install.sh | sh
-echo 'eval "$(starship init bash)"' >> ~/.bashrc
-source ~/.bashrc
+# curl -sS https://starship.rs/install.sh | sh
+# echo 'eval "$(starship init bash)"' >> ~/.bashrc
+# source ~/.bashrc
+# 由于会需要输入y确认，所以先注释掉
 
 echo -e "\n\n\n 安装 tldr 控制台命令的协作备忘单，用法tldr cp"
 pip3 install tldr
@@ -393,7 +394,7 @@ apt -y install build-essential zlib1g zlib1g-dev libffi-dev
 wget https://www.python.org/ftp/python/${version}/Python-${version}.tgz
 tar xzvf Python-${version}.tgz
 cd Python-${version}
-./configure --prefix=/usr/local/bin/python
+./configure --prefix=/usr/local/bin/python --with-ssl
 make && make install
 ln -s  /usr/local/bin/python/bin/python${short_version} /usr/bin/python3
 ln -s  /usr/local/bin/python/bin/pip3 /usr/bin/pip3
@@ -1245,7 +1246,9 @@ wget -P /docker/${app_name} http://us.iapp.run/proxy/https://raw.githubuserconte
 
 deploy_debian() {
 # 创建空的 Debian 容器并保持运行
-docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/null
+#docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/null
+docker run -d --name debian1 --network host python:3.9.13-bullseye tail -f /dev/null
+
 commands=$(cat <<EOF
 
 apt update
@@ -1255,6 +1258,8 @@ wget -O fast.sh http://us.iapp.run/proxy/https://raw.githubusercontent.com/zero-
 EOF
 )
 docker exec debian1 bash -c "$commands"
+
+docker exec -it debian1 bash
 }
 
 #docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-bullseye python app.py

@@ -9,8 +9,8 @@
  * composer require symfony/console
  *
  * 使用
- * php encoder.php base64 "Hello, world!"
- * php encoder.php base64 -d "SGVsbG8sIHdvcmxkIQ=="
+ * php encoder.php base64 'Hello, world!'
+ * php encoder.php base64 -d 'SGVsbG8sIHdvcmxkIQ=='
  *
  * 或者 
  * chmod 755 encoder.php
