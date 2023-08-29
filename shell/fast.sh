@@ -136,11 +136,8 @@ fi
 
 
 test(){
-echo "是否继续？ (y)"
-read -t 5 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
-return
-fi
+read -t 5 -p "是否继续？ (y)" answer
+[ "$answer" = "y" ] || return
 echo "111"
 }
 
