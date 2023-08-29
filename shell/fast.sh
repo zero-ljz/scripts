@@ -136,9 +136,9 @@ fi
 
 
 test(){
-read -t 5 -p "是否继续？ (y)" answer
-[ "$answer" = "y" ] || return
-echo "111"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+echo "123"
 }
 
 
