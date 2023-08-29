@@ -1003,7 +1003,6 @@ docker restart php-fpm1
 }
 
 
-
 deploy_wordpress_fpm(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署 Wordpress FPM 和 Nginx 配合------------------------------"
@@ -1185,7 +1184,6 @@ create_database ${domain_name}
 }
 
 
-
 deploy_hackmd(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署 HackMD------------------------------"
@@ -1245,18 +1243,18 @@ wget -P /docker/${app_name} http://us.iapp.run/proxy/https://raw.githubuserconte
 
 # docker restart nginx1
 
-
-
+deploy_debian() {
 # 创建空的 Debian 容器并保持运行
-# docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/null
-# commands=$(cat <<EOF
+docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/null
+commands=$(cat <<EOF
 
-# apt update
+apt update
 
 
-# EOF
-# )
-# docker exec debian1 bash -c "$commands"
+EOF
+)
+docker exec debian1 bash -c "$commands"
+}
 
 #docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-bullseye python app.py
 #docker run -it --rm --name php1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli php app.php
