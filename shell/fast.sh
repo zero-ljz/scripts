@@ -12,17 +12,16 @@
 
 upgrade()
 {
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Description: Upgrade this script, Perform this operation in the working directory"
-    exit 0
-elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
-    declare -f ${FUNCNAME}
     exit 0
 fi
 bash -c 'wget -O fast.sh http://us.iapp.run/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
 }
 
 system_init(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装必备组件 && 系统配置------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -131,7 +130,7 @@ ufw allow 1024:65535/tcp
 
 
 install_utils(){
-
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装一些实用的命令行程序------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -260,6 +259,7 @@ curl https://getcroc.schollz.com | bash
 
 
 install_supervisor(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Supervisor 进程管理器------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 pip3 install supervisor
@@ -281,11 +281,9 @@ supervisord -c /etc/supervisor/supervisord.conf
 }
 
 create_service(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name command working_dir"
-    exit 0
-elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
-    declare -f ${FUNCNAME}
     exit 0
 fi
 app_name=$1
@@ -311,11 +309,9 @@ EOF
 }
 
 create_supervisor(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name "command" working_dir"
-    exit 0
-elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
-    declare -f ${FUNCNAME}
     exit 0
 fi
 app_name=$1
@@ -354,6 +350,7 @@ supervisorctl update
 }
 
 install_docker(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Docker------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -382,16 +379,13 @@ apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin do
 }
 
 install_python(){
-echo -e "\n\n\n------------------------------安装 Python------------------------------"
-echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} version"
     exit 0
-elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
-    declare -f ${FUNCNAME}
-    exit 0
 fi
+echo -e "\n\n\n------------------------------安装 Python------------------------------"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 version=${1:-3.9.13}
 short_version=${version%%.*}
@@ -409,6 +403,7 @@ cd ..
 }
 
 install_nodejs(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Nodejs------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 apt -y install npm
@@ -428,6 +423,7 @@ npm install -g yarn
 }
 
 install_phpfpm(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 PHP FPM------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 apt -y install php-fpm composer php-json php-mbstring php-mysql php-xml php-zip php-curl php-imagick php-gd file php-pear php-redis php-sqlite3 php-mongodb php-bcmath php-soap php-intl php-igbinary php-xdebug
@@ -441,6 +437,7 @@ apt -y install php-fpm composer php-json php-mbstring php-mysql php-xml php-zip 
 
 
 install_mysql(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 MySQL------------------------------"
 echo "是否继续？ (y)"
 read -t 10 answer
@@ -490,6 +487,7 @@ fi
 }
 
 install_redis(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Redis------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 echo -e "\n\n\n 安装 redis-server"
@@ -502,6 +500,7 @@ systemctl restart redis-server
 }
 
 install_aria2(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Aria2------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 apt -y install aria2
@@ -518,6 +517,7 @@ systemctl restart aria2c
 }
 
 install_filebrowser(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Web filebrowser------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash 
@@ -527,6 +527,7 @@ curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bas
 }
 
 install_alist(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 AList------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 curl -fsSL "https://alist.nn.ci/v3.sh" | bash -s install /opt
@@ -536,6 +537,7 @@ systemctl restart alist
 }
 
 install_frp(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Frp------------------------------"
 echo -e "\n\n\n下载 Frp 二进制包"
 wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz http://us.iapp.run/proxy/https://github.com/fatedier/frp/releases/download/v0.48.0/frp_0.48.0_linux_amd64.tar.gz
@@ -550,11 +552,9 @@ mv /usr/local/bin/frp_0.48.0_linux_amd64 /usr/local/bin/frp
 
 start_frpc()
 {
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} local_port:remote_port local_port:remote_port ..."
-    exit 0
-elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
-    declare -f ${FUNCNAME}
     exit 0
 fi
 file=/usr/local/bin/frp/frpc.ini
@@ -603,11 +603,9 @@ done
 
 start_frpc2()
 {
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} local_port remote_port server_addr"
-    exit 0
-elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
-    declare -f ${FUNCNAME}
     exit 0
 fi
 local_port=$1
@@ -623,7 +621,8 @@ server_addr=${3:-42.193.229.54}
 }
 
 
-install_ssh(){ 
+install_ssh(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 # alpine 安装ssh服务
 apk add openssh-server 
 
@@ -647,11 +646,9 @@ uname -a && lsb_release -a && cat /etc/os-release && hostnamectl && df -h && fre
 
 
 create_ssl(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} domain_name [site_root_dir]"
-    exit 0
-elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
-    declare -f ${FUNCNAME}
     exit 0
 fi
 
@@ -797,11 +794,9 @@ cp ./${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
 }
 
 create_vhost(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} domain_name"
-    exit 0
-elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
-    declare -f ${FUNCNAME}
     exit 0
 fi
 
@@ -886,11 +881,9 @@ chmod -R 777 /var/www/${domain_name}
 
 
 create_database(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} domain_name"
-    exit 0
-elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
-    declare -f ${FUNCNAME}
     exit 0
 fi
 domain_name=$1
@@ -914,6 +907,7 @@ echo "在容器内创建需执行 docker exec -i mysql1 ${cmd}"
 
 
 deploy_mysql(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 docker network create network1
 
 MYSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
@@ -937,6 +931,7 @@ mariadb:10.3
 }
 
 deploy_redis(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 docker network create network1
 
 echo "安装 Redis" 
@@ -951,11 +946,13 @@ redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 }
 
 deploy_nginx(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo "安装 Nginx"
 docker run -d --name nginx1 --network host -v /var/www:/var/www -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:stable-bullseye
 }
 
 deploy_php(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署PHP和扩展------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -1002,6 +999,7 @@ docker restart php-fpm1
 }
 
 deploy_tinyfilemanager(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
 docker exec -i tinyfilemanager1 wget -O /docker/${app_name}/adminer.php http://us.iapp.run/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
 domain_name=${1:-file.iapp.run}
@@ -1009,6 +1007,7 @@ create_proxy ${domain_name} 8020
 }
 
 deploy_wordpress_fpm(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署 Wordpress FPM 和 Nginx 配合------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -1065,6 +1064,7 @@ docker restart nginx1
 }
 
 deploy_wordpress(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署 Wordpress------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -1077,6 +1077,7 @@ create_database ${domain_name}
 }
 
 deploy_portainer(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署 Portainer------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -1093,6 +1094,7 @@ create_proxy ${domain_name} 9002
 }
 
 deploy_nextcloud(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署 NextCloud------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -1105,6 +1107,7 @@ create_proxy ${domain_name} 8011
 }
 
 deploy_searxng(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署 SearXNG------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 domain_name=${1:-s.iapp.run}
@@ -1125,6 +1128,7 @@ create_proxy ${domain_name} 8012
 
 
 deploy_gitea(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署 Gitea------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 adduser \
@@ -1155,6 +1159,7 @@ create_proxy ${domain_name} 3000
 }
 
 deploy_cloudreve(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署 CloudReve------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -1176,6 +1181,7 @@ create_proxy ${domain_name} 5212
 }
 
 deploy_gocron(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署 GoCron------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -1190,6 +1196,7 @@ create_database ${domain_name}
 
 
 deploy_hackmd(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------部署 HackMD------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -1232,11 +1239,9 @@ create_database ${domain_name}
 
 create_php_app()
 {
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name http_port"
-    exit 0
-elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
-    declare -f ${FUNCNAME}
     exit 0
 fi
 
@@ -1269,11 +1274,9 @@ wget -P /docker/${app_name} http://us.iapp.run/proxy/https://raw.githubuserconte
 
 
 function run_from_git(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} repo_url port_port"
-    exit 0
-elif [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then
-    declare -f ${FUNCNAME}
     exit 0
 fi
   url=$1
@@ -1295,12 +1298,14 @@ fi
 
 
 function reinstall_debian(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     read -p "请输入新的root密码：" password
     curl -fLO https://raw.githubusercontent.com/bohanyang/debi/master/debi.sh && chmod a+rx debi.sh && ./debi.sh --cdn --network-console --ethx --bbr --timezone Asia/Shanghai --user root --password ${password}
 }
 
 
 function auto_mode(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     system_init
     install_docker
     install_nodejs
