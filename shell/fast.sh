@@ -1249,7 +1249,8 @@ docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/nu
 commands=$(cat <<EOF
 
 apt update
-
+apt install wget curl nano micro 
+wget -O fast.sh http://us.iapp.run/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh
 
 EOF
 )
