@@ -10,7 +10,6 @@
 #rm -rf /docker
 #docker rm -f $(docker ps -a -q)
 
-
 upgrade()
 {
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
@@ -31,9 +30,9 @@ read -t 10 answer
 if [ "$answer" = "y" ]; then
 
 echo -e "\n\n\n 配置语言"
-#dpkg-reconfigure locales
+dpkg-reconfigure locales
 echo -e "\n\n\n 配置时区"
-#dpkg-reconfigure tzdata
+dpkg-reconfigure tzdata
 
 apt update
 
@@ -133,6 +132,18 @@ ufw allow 1024:65535/tcp
 
 fi
 }
+
+
+
+test(){
+echo "是否继续？ (y)"
+read -t 5 answer
+if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+return
+fi
+echo "111"
+}
+
 
 
 install_utils(){
@@ -285,25 +296,7 @@ find '/etc/supervisor/supervisord.conf' | xargs perl -pi -e 's|;files = relative
 echo -e "\n\n\n 创建子配置文件夹"
 mkdir -p /etc/supervisor/conf.d
 
-# echo -e "\n\n\n Supervisor 中增加子配置，用 python http server 共享share文件夹"
-# mkdir /home/share
-# touch /etc/supervisor/conf.d/python_http_server.ini
-# cat>/etc/supervisor/conf.d/python_http_server.ini<<EOF
-# [program:python]
-# command=python3 -m http.server -d /home/share
-# directory=/usr/local/bin/
-# autorestart=true
-# startsecs=3
-# startretries=3
-# stdout_logfile=/var/log/python.out.log
-# stderr_logfile=/var/log/python.err.log
-# stdout_logfile_maxbytes=2MB
-# stderr_logfile_maxbytes=2MB
-# user=root
-# priority=999
-# numprocs=1
-# process_name=%(program_name)s_%(process_num)02d
-# EOF
+# python3 -m http.server -d /home/share
 
 echo -e "\n\n\n 将 Supervisor 启动命令添加到 rc.local 中开机自动执行"
 echo supervisord -c /etc/supervisor/supervisord.conf>>/etc/rc.local
@@ -359,12 +352,17 @@ directory=${working_dir}
 command=${command}
 ;user=root
 autostart=true
-autorestart=true
-;startsecs=10          ; 启动延迟时间
-;priority=200          ; 启动优先级
+autorestart=true       ; 如果进程终止,自动重启
+;startsecs=10          ; 进程启动后等待n秒钟如果没有退出则视为启动成功
+;priority=999          ; 启动优先级
 stderr_logfile=/var/log/${app_name}.err
 stdout_logfile=/var/log/${app_name}.log
+;stdout_logfile_maxbytes=2MB
+;stderr_logfile_maxbytes=2MB
 ;environment=CODENATION_ENV=prod,DEBUG=false,ENVIRONMENT=production
+;numprocs=1            ; 启动进程数
+;startretries=3        ; 启动重试次数
+;process_name=%(program_name)s_%(process_num)02d
 EOF
 
 # 重新读取配置文件
@@ -438,8 +436,6 @@ fi
 
 }
 
-
-
 install_nodejs(){
 echo -e "\n\n\n------------------------------安装 Nodejs------------------------------"
 echo "是否继续？ (y)"
@@ -475,17 +471,6 @@ apt -y install php-fpm composer php-json php-mbstring php-mysql php-xml php-zip 
 fi
 }
 
-install_nginx(){
-echo -e "\n\n\n------------------------------安装 Nginx------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
-apt -y install nginx
-
-systemctl enable nginx
-systemctl start nginx
-fi
-}
 
 install_mysql(){
 echo -e "\n\n\n------------------------------安装 MySQL------------------------------"
@@ -509,7 +494,7 @@ if [ "$answer" = "y" ]; then
 # systemctl start mariadb
 
 apt -y install lsb-release
-wget -O mysql-apt-config_0.8.18-1_all.deb ${base_url}https://dev.mysql.com/get/mysql-apt-config_0.8.18-1_all.deb
+wget -O mysql-apt-config_0.8.18-1_all.deb https://dev.mysql.com/get/mysql-apt-config_0.8.18-1_all.deb
 dpkg -i mysql-apt-config_0.8.18-1_all.deb
 systemctl enable mysql
 systemctl start mysql
@@ -592,7 +577,6 @@ systemctl restart alist
 # 默认账号密码 admin/admin，端口5244
 fi
 }
-
 
 install_frp(){
 echo -e "\n\n\n------------------------------安装 Frp------------------------------"
@@ -1128,6 +1112,7 @@ cat>${domain_name}.conf<<EOF
 # 定义反向代理
 server {
     listen 80;
+    listen  [::]:80;
     server_name ${domain_name};
 
     # 日志记录
@@ -1305,19 +1290,34 @@ echo "在容器内创建需执行 docker exec -i mysql1 ${cmd}"
 }
 
 
-deploy_lnmpr(){
-echo -e "\n\n\n------------------------------搭建LNMPR环境------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+deploy_mysql(){
+docker network create network1
 
 MYSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
 echo "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
 
-docker network create lnmp
+echo "安装 MySQL"
+# docker run -dp 3306:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
+# -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+# -e MYSQL_USER=user1 \
+# -e MYSQL_PASSWORD=123 \
+# -e MYSQL_DATABASE=db1 \
+# mysql:5.7-debian
+
+docker run -dp 3306:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
+--env MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+--env MARIADB_USER=user1 \
+--env MARIADB_PASSWORD=123 \
+--env MARIADB_DATABASE=db1 \
+mariadb:10.3
+
+}
+
+deploy_redis(){
+docker network create network1
 
 echo "安装 Redis" 
-docker run -dp 6379:6379 --name redis1 --network lnmp --network-alias redis -v /docker/redis1:/data \
+docker run -dp 6379:6379 --name redis1 --network network1 --network-alias redis -v /docker/redis1:/data \
 redis:6-bullseye \
 redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 # 传给redis服务器的启动参数：若每60秒至少有一个键被修改了1次，就将数据持久化到磁盘，只记录警告及更高级别的日志
@@ -1325,29 +1325,26 @@ redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 # redis://default:123qwe123@@localhost:6379/0
 # 连接方式：redis-cli
 # docker run -it --network redis --rm redis redis-cli -h redis1
+}
 
-echo "安装 MySQL"
-# docker run -dp 3306:3306 --name mysql1 --network lnmp --network-alias mysql -v /docker/mysql:/var/lib/mysql \
-# -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
-# -e MYSQL_USER=user1 \
-# -e MYSQL_PASSWORD=123 \
-# -e MYSQL_DATABASE=db1 \
-# mysql:5.7-debian
-
-docker run -dp 3306:3306 --name mysql1 --network lnmp --network-alias mysql -v /docker/mysql:/var/lib/mysql \
---env MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
---env MARIADB_USER=user1 \
---env MARIADB_PASSWORD=123 \
---env MARIADB_DATABASE=db1 \
-mariadb:10.3
-
+deploy_nginx(){
 echo "安装 Nginx"
 docker run -d --name nginx1 --network host -v /var/www:/var/www -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:stable-bullseye
+}
+
+deploy_php(){
+echo -e "\n\n\n------------------------------部署PHP和扩展------------------------------"
+echo "是否继续？ (y)"
+read -t 10 answer
+if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+
+docker network create network1
+
 echo "安装 PHP"
-docker run -d -p 127.0.0.1:9000:9000 --name php-fpm1 --network lnmp -v /var/www:/var/www php:7.4-fpm-bullseye
+docker run -d -p 127.0.0.1:9000:9000 --name php-fpm1 --network network1 -v /var/www:/var/www php:7.4-fpm-bullseye
 
 # 使用这个必须 -v /var/www:/var/www/html，否则nginx连不上php-fpm，日志报错[error] 20#20: *5 recv() failed (104: Connection reset by peer) while reading response header from upstream
-#docker run -d -p 127.0.0.1:9000:9000 --name php1 --network lnmp -v /docker/php1:/usr/local/etc -v /var/www:/var/www/html webdevops/php:7.4-alpine
+#docker run -d -p 127.0.0.1:9000:9000 --name php1 --network network1 -v /docker/php1:/usr/local/etc -v /var/www:/var/www/html webdevops/php:7.4-alpine
 
 echo "安装 PHP扩展"
 # https://github.com/docker-library/wordpress/blob/97f75b51f909fbd9894d128ea6893120cfd23979/latest/php8.0/fpm/Dockerfile#L10-L16
@@ -1371,7 +1368,6 @@ docker exec -t php-fpm1 docker-php-ext-install -j "$(nproc)" bcmath exif gd intl
 docker exec php-fpm1 pecl install imagick-3.6.0 redis
 docker exec php-fpm1 docker-php-ext-enable imagick redis
 docker exec -t php-fpm1 rm -r /tmp/pear
-
 
 
 
@@ -1400,7 +1396,7 @@ if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
 domain_name=${1:-blog.iapp.run}
 create_database ${domain_name}
 
-docker run -dp 127.0.0.1:9001:9000 --name wordpress1 --network lnmp -v /var/www/${domain_name}:/var/www/html \
+docker run -dp 127.0.0.1:9001:9000 --name wordpress1 --network network1 -v /var/www/${domain_name}:/var/www/html \
 -e WORDPRESS_DB_HOST=mysql \
 -e WORDPRESS_DB_USER=${db_user} \
 -e WORDPRESS_DB_PASSWORD=${db_password} \
@@ -1455,7 +1451,7 @@ echo "是否继续？ (y)"
 read -t 10 answer
 if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
 
-docker run -dp 127.0.0.1:8010:80 --name wordpress1 --network lnmp -v /docker/wordpress1:/var/www/html wordpress
+docker run -dp 127.0.0.1:8010:80 --name wordpress1 --network network1 -v /docker/wordpress1:/var/www/html wordpress
 domain_name=${1:-blog.iapp.run}
 create_proxy ${domain_name} 8010
 create_database ${domain_name}
@@ -1481,16 +1477,13 @@ create_proxy ${domain_name} 9002
 fi
 }
 
-
-
-
 deploy_nextcloud(){
 echo -e "\n\n\n------------------------------部署 NextCloud------------------------------"
 echo "是否继续？ (y)"
 read -t 10 answer
 if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
 
-docker run -dp 127.0.0.1:8011:80 --name nextcloud1 --network lnmp  -v /docker/nextcloud:/var/www/html nextcloud
+docker run -dp 127.0.0.1:8011:80 --name nextcloud1 --network network1  -v /docker/nextcloud:/var/www/html nextcloud
 domain_name=${1:-cloud.iapp.run}
 create_proxy ${domain_name} 8011
 #create_database ${domain_name}
@@ -1515,7 +1508,6 @@ searxng/searxng
 
 # 在settings.yml文件中设置默认启用的搜索引擎
 create_proxy ${domain_name} 8012
-
 
 fi
 }
@@ -1582,7 +1574,7 @@ echo "是否继续？ (y)"
 read -t 10 answer
 if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
 
-docker run --name gocron1 --network lnmp -p 127.0.0.1:5920:5920 -d ouqg/gocron
+docker run --name gocron1 --network network1 -p 127.0.0.1:5920:5920 -d ouqg/gocron
 
 domain_name=${1:-cron.iapp.run}
 create_proxy ${domain_name} 5920
@@ -1602,7 +1594,7 @@ if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
 docker run -d \
 -p 3001:3000 \
 --name hackmd1 \
---network lnmp \
+--network network1 \
 -e CMD_DB_URL=mysql://user1:123@mysql:3306/db1 \
 -e CMD_USECDN=false \
 -v /docker/hackmd/upload-data:/home/hackmd/app/public/uploads \
@@ -1614,70 +1606,6 @@ create_database ${domain_name}
 
 fi
 }
-
-
-
-deploy_lychee()
-{
-echo -e "\n\n\n------------------------------部署 Lychee------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
-
-# https://github.com/LycheeOrg/Lychee-Docker/blob/master/default.conf
-# https://lycheeorg.github.io/docs/docker.html
-docker run -d \
--p 127.0.0.1:8013:80 \
---name=lychee1 \
--v /docker/lychee/conf:/conf \
--v /docker/lychee/uploads:/uploads \
--v /docker/lychee/sym:/sym \
--e PUID=1000 \
--e PGID=1000 \
--e PHP_TZ=Asia/ShangHai \
--e DB_CONNECTION=mysql \
--e DB_HOST=mysql \
--e DB_PORT=3306 \
--e DB_DATABASE=db1 \
--e DB_USERNAME=user1 \
--e DB_PASSWORD=123 \
---network lnmp \
-lycheeorg/lychee
-
-domain_name=${1:-photo.iapp.run}
-create_proxy ${domain_name} 8013
-create_database ${domain_name}
-
-fi
-}
-
-
-deploy_ghost()
-{
-echo -e "\n\n\n------------------------------部署 Ghost------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
-
-domain_name=${1:-ghost.iapp.run}
-create_proxy ${domain_name} 8014
-create_database ${domain_name}
-
-docker volume create --name ghost_data
-docker run -d --name ghost1 \
-  -p 8014:8080 -p 8443:8443 \
-  --env ALLOW_EMPTY_PASSWORD=yes \
-  --env GHOST_DATABASE_USER=${db_user} \
-  --env GHOST_DATABASE_PASSWORD=${db_password} \
-  --env GHOST_DATABASE_NAME=${db_user}_db \
-  --env GHOST_DATABASE_HOST=mysql \
-  --network lnmp \
-  --volume ghost_data:/bitnami/ghost \
-  bitnami/ghost:5.50.4
-# 垃圾镜像，run后显示Inspecting operating system然后卡死就没了下文
-fi
-}
-
 
 
 # vnc连接 密码123456 安装vscode后用code --user-data-dir ./ --no-sandbox 启动
@@ -1774,14 +1702,12 @@ function auto_mode(){
     install_docker
     install_nodejs
     install_php
-    install_nginx
-
+  
     install_aria2
     install_frp
     install_v2ray
 
     # deploy_portainer
-    # deploy_lnmpr
     # deploy_cloudreve
     # deploy_searxng
     
