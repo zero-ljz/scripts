@@ -24,15 +24,12 @@ bash -c 'wget -O fast.sh http://us.iapp.run/proxy/https://raw.githubusercontent.
 
 system_init(){
 echo -e "\n\n\n------------------------------安装必备组件 && 系统配置------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-
-if [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 echo -e "\n\n\n 配置语言"
-dpkg-reconfigure locales
+# dpkg-reconfigure locales
 echo -e "\n\n\n 配置时区"
-dpkg-reconfigure tzdata
+# dpkg-reconfigure tzdata
 
 apt update
 
@@ -130,25 +127,13 @@ ufw allow 1024:65535/tcp
 # ufw enable
 # ufw reset
 
-fi
 }
-
-
-
-test(){
-echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-
-echo "123"
-}
-
 
 
 install_utils(){
 
 echo -e "\n\n\n------------------------------安装一些实用的命令行程序------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 # 更多命令行工具 https://github.com/rothgar/awesome-tuis
 
@@ -262,8 +247,6 @@ mv gotty /usr/local/bin/
 # 命令：gotty top
 
 
-
-
 # 部署theia ide 
 # https://theia--ide-org.translate.goog/docs/composing_applications?_x_tr_hist=true&_x_tr_sl=auto&_x_tr_tl=zh-CN&_x_tr_hl=zh-CN
 
@@ -271,8 +254,6 @@ mv gotty /usr/local/bin/
 # 文件发送工具：轻松安全地将内容从一台计算机发送到另一台计算机
 curl https://getcroc.schollz.com | bash
 
-
-fi
 }
 
 
@@ -280,9 +261,7 @@ fi
 
 install_supervisor(){
 echo -e "\n\n\n------------------------------安装 Supervisor 进程管理器------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 pip3 install supervisor
 echo -e "\n\n\n 生成配置文件"
 mkdir /etc/supervisor
@@ -298,7 +277,7 @@ mkdir -p /etc/supervisor/conf.d
 echo -e "\n\n\n 将 Supervisor 启动命令添加到 rc.local 中开机自动执行"
 echo supervisord -c /etc/supervisor/supervisord.conf>>/etc/rc.local
 supervisord -c /etc/supervisor/supervisord.conf
-fi
+
 }
 
 create_service(){
@@ -376,9 +355,7 @@ supervisorctl update
 
 install_docker(){
 echo -e "\n\n\n------------------------------安装 Docker------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 # curl -fsSL https://get.docker.com -o get-docker.sh
 # sh get-docker.sh
@@ -401,14 +378,12 @@ echo -e "\n\n\n 更新APT包索引"
 apt-get update
 echo -e "\n\n\n 安装 Docker Engine、containerd 和 Docker Compose"
 apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-fi
+
 }
 
 install_python(){
 echo -e "\n\n\n------------------------------安装 Python------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} version"
@@ -429,15 +404,13 @@ make && make install
 ln -s  /usr/local/bin/python/bin/python${short_version} /usr/bin/python3
 ln -s  /usr/local/bin/python/bin/pip3 /usr/bin/pip3
 cd ..
-fi
+
 
 }
 
 install_nodejs(){
 echo -e "\n\n\n------------------------------安装 Nodejs------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 apt -y install npm
 # 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
@@ -451,21 +424,19 @@ nvm install --lts
 # 全局安装yarn
 npm install -g yarn
 #npm config set registry https://registry.npm.taobao.org
-fi
+
 }
 
 install_phpfpm(){
 echo -e "\n\n\n------------------------------安装 PHP FPM------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 apt -y install php-fpm composer php-json php-mbstring php-mysql php-xml php-zip php-curl php-imagick php-gd file php-pear php-redis php-sqlite3 php-mongodb php-bcmath php-soap php-intl php-igbinary php-xdebug
 # systemctl enable php8.2-fpm
 # systemctl start php8.2-fpm
 
 #curl -sS https://getcomposer.org/installer | php
 
-fi
+
 }
 
 
@@ -522,9 +493,7 @@ fi
 
 install_redis(){
 echo -e "\n\n\n------------------------------安装 Redis------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 echo -e "\n\n\n 安装 redis-server"
 apt -y install redis-server
 sudo sed -i 's/^bind .*/bind 0.0.0.0/' /etc/redis/redis.conf
@@ -532,14 +501,11 @@ sudo sed -i 's/^bind .*/bind 0.0.0.0/' /etc/redis/redis.conf
 systemctl enable redis-server
 systemctl restart redis-server
 
-fi
 }
 
 install_aria2(){
 echo -e "\n\n\n------------------------------安装 Aria2------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 apt -y install aria2
 mkdir /etc/aria2/
 touch /etc/aria2/aria2.session
@@ -550,29 +516,25 @@ create_service aria2c "aria2c --conf-path=/etc/aria2/aria2.conf" /etc/aria2/
 systemctl enable aria2c
 systemctl restart aria2c
 # 防火墙需要放行6800
-fi
+
 }
 
 install_filebrowser(){
 echo -e "\n\n\n------------------------------安装 Web filebrowser------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash 
 # filebrowser -r / -a 0.0.0.0 -p 8080
 # 默认账户 admin / admin
-fi
+
 }
 
 install_alist(){
 echo -e "\n\n\n------------------------------安装 AList------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 curl -fsSL "https://alist.nn.ci/v3.sh" | bash -s install /opt
 systemctl restart alist
 # 默认账号密码 admin/admin，端口5244
-fi
+
 }
 
 install_frp(){
@@ -688,9 +650,7 @@ uname -a && lsb_release -a && cat /etc/os-release && hostnamectl && df -h && fre
 
 install_trojan(){
 echo -e "\n\n\n------------------------------安装 Trojan------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 echo -e "\n\n\n 安装 expect 自动交互工具"
 apt-get -y install tcl tk expect
@@ -727,14 +687,12 @@ find '/usr/local/etc/trojan/config.json' | xargs perl -pi -e 's|/path/to/|/home/
 
 systemctl enable trojan
 systemctl restart trojan
-fi
+
 }
 
 install_v2ray(){
 echo -e "\n\n\n------------------------------安装 V2Ray------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 # 安装可执行文件和 .dat 数据文件
 curl -L -s https://raw.githubusercontent.com/v2fly/fhs-install-v2ray/master/install-release.sh | bash
@@ -799,7 +757,7 @@ EOF
 
 systemctl enable v2ray
 systemctl restart v2ray
-fi
+
 }
 
 
@@ -1331,9 +1289,7 @@ docker run -d --name nginx1 --network host -v /var/www:/var/www -v /var/ssl:/var
 
 deploy_php(){
 echo -e "\n\n\n------------------------------部署PHP和扩展------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 docker network create network1
 
@@ -1374,7 +1330,7 @@ docker exec -t php-fpm1 rm -r /tmp/pear
 
 docker restart php-fpm1
 
-fi
+
 }
 
 deploy_tinyfilemanager(){
@@ -1386,9 +1342,7 @@ create_proxy ${domain_name} 8020
 
 deploy_wordpress_fpm(){
 echo -e "\n\n\n------------------------------部署 Wordpress FPM 和 Nginx 配合------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 domain_name=${1:-blog.iapp.run}
 create_database ${domain_name}
@@ -1439,28 +1393,24 @@ docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
 docker restart nginx1
 
 
-fi
+
 }
 
 deploy_wordpress(){
 echo -e "\n\n\n------------------------------部署 Wordpress------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 docker run -dp 127.0.0.1:8010:80 --name wordpress1 --network network1 -v /docker/wordpress1:/var/www/html wordpress
 domain_name=${1:-blog.iapp.run}
 create_proxy ${domain_name} 8010
 create_database ${domain_name}
 
-fi
+
 }
 
 deploy_portainer(){
 echo -e "\n\n\n------------------------------部署 Portainer------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 # https://docs.portainer.io/start/install/server/docker/linux
 docker volume create portainer_data
@@ -1471,28 +1421,24 @@ docker run -d -p 9002:9000 --name portainer1 -v /var/run/docker.sock:/var/run/do
 domain_name=${1:-docker.iapp.run}
 create_proxy ${domain_name} 9002
 
-fi
+
 }
 
 deploy_nextcloud(){
 echo -e "\n\n\n------------------------------部署 NextCloud------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 docker run -dp 127.0.0.1:8011:80 --name nextcloud1 --network network1  -v /docker/nextcloud:/var/www/html nextcloud
 domain_name=${1:-cloud.iapp.run}
 create_proxy ${domain_name} 8011
 #create_database ${domain_name}
 # 用mysql性能不好
-fi
+
 }
 
 deploy_searxng(){
 echo -e "\n\n\n------------------------------部署 SearXNG------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 domain_name=${1:-s.iapp.run}
 # https://docs.searxng.org/admin/installation-docker.html#searxng-searxng
 docker run --rm \
@@ -1506,15 +1452,13 @@ searxng/searxng
 # 在settings.yml文件中设置默认启用的搜索引擎
 create_proxy ${domain_name} 8012
 
-fi
+
 }
 
 
 deploy_gitea(){
 echo -e "\n\n\n------------------------------部署 Gitea------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 adduser \
    --system \
    --shell /bin/bash \
@@ -1539,14 +1483,12 @@ create_proxy ${domain_name} 3000
 # 记得配置SSH_PORT=222，SSH_LISTEN_PORT=22
 
 # ssh://git@git.iapp.run:222/zero-ljz/repo.git
-fi
+
 }
 
 deploy_cloudreve(){
 echo -e "\n\n\n------------------------------部署 CloudReve------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 mkdir -vp /docker/cloudreve/{uploads,avatar} && touch /docker/cloudreve/conf.ini && touch /docker/cloudreve/cloudreve.db
 
@@ -1562,30 +1504,26 @@ cloudreve/cloudreve:latest
 domain_name=${1:-c.iapp.run}
 create_proxy ${domain_name} 5212
 
-fi
+
 }
 
 deploy_gocron(){
 echo -e "\n\n\n------------------------------部署 GoCron------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 docker run --name gocron1 --network network1 -p 127.0.0.1:5920:5920 -d ouqg/gocron
 
 domain_name=${1:-cron.iapp.run}
 create_proxy ${domain_name} 5920
 create_database ${domain_name}
-fi
+
 }
 
 
 
 deploy_hackmd(){
 echo -e "\n\n\n------------------------------部署 HackMD------------------------------"
-echo "是否继续？ (y)"
-read -t 10 answer
-if [ $? -eq 142 ] || [ "$answer" = "y" ]; then
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 # https://hackmd.io/c/codimd-documentation/%2Fs%2Fcodimd-docker-deployment
 docker run -d \
@@ -1601,7 +1539,7 @@ domain_name=${1:-md.iapp.run}
 create_proxy ${domain_name} 3001
 create_database ${domain_name}
 
-fi
+
 }
 
 
