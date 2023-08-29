@@ -6,11 +6,6 @@ import datetime
 import urllib.parse
 import html
 
-# 命令行选项常量定义
-ENCODE_OPTION = '--encode'
-DECODE_OPTION = '--decode'
-
-
 @click.group()
 def cli():
     pass
@@ -18,7 +13,7 @@ def cli():
 
 @cli.command()
 @click.argument('text')
-@click.option(DECODE_OPTION, '-d', is_flag=True, help='Perform decoding')
+@click.option('--decode', '-d', is_flag=True, help='Perform decoding')
 def base64_(text, decode):
     """
     Base64 编码/解码
@@ -60,7 +55,7 @@ def hash(text, algorithm):
 
 @cli.command()
 @click.argument('text')
-@click.option(DECODE_OPTION, '-d', is_flag=True, help='Perform decoding')
+@click.option('--decode', '-d', is_flag=True, help='Perform decoding')
 def hex(text, decode):
     """
     十六进制编码/解码
@@ -76,7 +71,7 @@ def hex(text, decode):
 
 @cli.command()
 @click.argument('text')
-@click.option(DECODE_OPTION, '-d', is_flag=True, help='Perform decoding')
+@click.option('--decode', '-d', is_flag=True, help='Perform decoding')
 def bin_(text, decode):
     """
     二进制编码/解码
@@ -94,7 +89,7 @@ def bin_(text, decode):
 
 @cli.command()
 @click.argument('text')
-@click.option(DECODE_OPTION, '-d', is_flag=True, help='Perform decoding')
+@click.option('--decode', '-d', is_flag=True, help='Perform decoding')
 def hex_binary(text, decode):
     """
     十六进制转二进制/二进制转十六进制
@@ -110,7 +105,7 @@ def hex_binary(text, decode):
 
 @cli.command()
 @click.argument('text')
-@click.option(DECODE_OPTION, '-d', is_flag=True, help='Perform decoding')
+@click.option('--decode', '-d', is_flag=True, help='Perform decoding')
 def ascii(text, decode):
     """
     ASCII 编码/解码
@@ -130,7 +125,7 @@ def ascii(text, decode):
 
 @cli.command()
 @click.argument('text')
-@click.option(DECODE_OPTION, '-d', is_flag=True, help='Perform decoding')
+@click.option('--decode', '-d', is_flag=True, help='Perform decoding')
 def rgb_hex(text, decode):
     """
     RGB 转十六进制/十六进制转 RGB
@@ -153,7 +148,7 @@ def rgb_hex(text, decode):
 
 @cli.command()
 @click.argument('text')
-@click.option(DECODE_OPTION, '-d', is_flag=True, help='Perform decoding')
+@click.option('--decode', '-d', is_flag=True, help='Perform decoding')
 def datetime_timestamp(text, decode):
     """
     日期时间转时间戳/时间戳转日期时间
@@ -177,7 +172,7 @@ def datetime_timestamp(text, decode):
 
 @cli.command()
 @click.argument('text')
-@click.option(DECODE_OPTION, '-d', is_flag=True, help='Perform decoding')
+@click.option('--decode', '-d', is_flag=True, help='Perform decoding')
 def unicode_escape(text, decode):
     """
     Unicode 转义序列编码/解码
@@ -195,7 +190,7 @@ def unicode_escape(text, decode):
 
 @cli.command()
 @click.argument('text')
-@click.option(DECODE_OPTION, '-d', is_flag=True, help='Perform decoding')
+@click.option('--decode', '-d', is_flag=True, help='Perform decoding')
 def uri(text, decode):
     """
     URL 编码/解码
@@ -211,7 +206,7 @@ def uri(text, decode):
 
 @cli.command()
 @click.argument('text')
-@click.option(DECODE_OPTION, '-d', is_flag=True, help='Perform decoding')
+@click.option('--decode', '-d', is_flag=True, help='Perform decoding')
 def uri_component(text, decode):
     """
     URL 组件编码/解码
@@ -227,7 +222,7 @@ def uri_component(text, decode):
 
 @cli.command()
 @click.argument('text')
-@click.option(DECODE_OPTION, '-d', is_flag=True, help='Perform decoding')
+@click.option('--decode', '-d', is_flag=True, help='Perform decoding')
 def html_escape(text, decode):
     """
     HTML 转义编码/解码

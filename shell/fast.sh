@@ -240,6 +240,10 @@ echo -e "\n\n\n 安装 bpytop资源监视器"
 pip3 install psutil
 pip3 install bpytop
 
+echo -e "\n\n\n 安装 httpx，Python的下一代HTTP客户端"
+pip3 install httpx
+pip3 install 'httpx[cli]'
+
 # echo -e "\n\n\n 安装跨平台系统监视工具，可以监视 CPU、内存、网络等方面的系统指标。"
 pip install --user glances
 
@@ -687,7 +691,7 @@ sed -i "s/#PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config && \
     ssh-keygen -t rsa -P "" -f /etc/ssh/ssh_host_rsa_key && \
     ssh-keygen -t ecdsa -P "" -f /etc/ssh/ssh_host_ecdsa_key && \
     ssh-keygen -t ed25519 -P "" -f /etc/ssh/ssh_host_ed25519_key && \
-    echo "root:123123" | chpasswd
+    echo "root:123qwe123@" | chpasswd
 
 /usr/sbin/sshd
 
@@ -1312,8 +1316,15 @@ echo "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
 
 docker network create lnmp
 
-echo "安装 Redis"
-docker run -dp 6379:6379 --name redis1 --network lnmp --network-alias redis redis:6-bullseye
+echo "安装 Redis" 
+docker run -dp 6379:6379 --name redis1 --network lnmp --network-alias redis -v /docker/redis1:/data \
+redis:6-bullseye \
+redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
+# 传给redis服务器的启动参数：若每60秒至少有一个键被修改了1次，就将数据持久化到磁盘，只记录警告及更高级别的日志
+# 连接字符串
+# redis://default:123qwe123@@localhost:6379/0
+# 连接方式：redis-cli
+# docker run -it --network redis --rm redis redis-cli -h redis1
 
 echo "安装 MySQL"
 # docker run -dp 3306:3306 --name mysql1 --network lnmp --network-alias mysql -v /docker/mysql:/var/lib/mysql \

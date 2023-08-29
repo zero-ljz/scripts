@@ -25,6 +25,7 @@ gunicorn==20.1.0
 uvicorn
 
 ipython
+python-dotenv
 pytest
 black
 flake8
@@ -47,3 +48,5 @@ ansible
 
 schedule
 pytz
+
+js2py
