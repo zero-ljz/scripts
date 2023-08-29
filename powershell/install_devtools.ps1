@@ -1,5 +1,5 @@
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-    curl -LkOJ http://us.iapp.run:777/proxy/https://github.com/microsoft/winget-cli/releases/download/v1.5.1881/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+    curl -LkOJ http://us.iapp.run/proxy/https://github.com/microsoft/winget-cli/releases/download/v1.5.1881/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
     powershell -Command "Add-AppPackage -Path Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
 }
 
