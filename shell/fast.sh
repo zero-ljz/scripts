@@ -526,6 +526,14 @@ curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bas
 
 }
 
+deploy_tinyfilemanager(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
+docker exec -i tinyfilemanager1 wget -O /docker/${app_name}/adminer.php http://us.iapp.run/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+domain_name=${1:-file.iapp.run}
+create_proxy ${domain_name} 8020
+}
+
 install_alist(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 AList------------------------------"
@@ -879,7 +887,6 @@ chown -R www-data:www-data /var/www/${domain_name}
 chmod -R 777 /var/www/${domain_name}
 }
 
-
 create_database(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
@@ -987,24 +994,15 @@ docker exec php-fpm1 pecl install imagick-3.6.0 redis
 docker exec php-fpm1 docker-php-ext-enable imagick redis
 docker exec -t php-fpm1 rm -r /tmp/pear
 
-
-
 #docker exec -t php-fpm1 apt-get install -y libbz2-dev sqlite3 libsqlite3-dev libssl-dev libcurl4-openssl-dev libjpeg-dev libonig-dev libreadline-dev libtidy-dev libxslt-dev libzip-dev
 # docker-php-ext-install 全部可安装扩展
 #docker exec -t php-fpm1 docker-php-ext-install bcmath bz2 calendar ctype curl dba dom enchant exif ffi fileinfo filter ftp gd gettext gmp hash iconv imap intl json ldap mbstring mysqli oci8 odbc opcache pcntl pdo pdo_dblib pdo_firebird pdo_mysql pdo_oci pdo_odbc pdo_pgsql pdo_sqlite pgsql phar posix pspell readline reflection session shmop simplexml snmp soap sockets sodium spl standard sysvmsg sysvsem sysvshm tidy tokenizer xml xmlreader xmlrpc xmlwriter xsl zend_test zip
 
 docker restart php-fpm1
 
-
 }
 
-deploy_tinyfilemanager(){
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
-docker exec -i tinyfilemanager1 wget -O /docker/${app_name}/adminer.php http://us.iapp.run/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
-domain_name=${1:-file.iapp.run}
-create_proxy ${domain_name} 8020
-}
+
 
 deploy_wordpress_fpm(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -1059,8 +1057,6 @@ EOF
 docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
 docker restart nginx1
 
-
-
 }
 
 deploy_wordpress(){
@@ -1072,7 +1068,6 @@ docker run -dp 127.0.0.1:8010:80 --name wordpress1 --network network1 -v /docker
 domain_name=${1:-blog.iapp.run}
 create_proxy ${domain_name} 8010
 create_database ${domain_name}
-
 
 }
 
@@ -1089,7 +1084,6 @@ docker run -d -p 9002:9000 --name portainer1 -v /var/run/docker.sock:/var/run/do
 
 domain_name=${1:-docker.iapp.run}
 create_proxy ${domain_name} 9002
-
 
 }
 
@@ -1123,9 +1117,7 @@ searxng/searxng
 # 在settings.yml文件中设置默认启用的搜索引擎
 create_proxy ${domain_name} 8012
 
-
 }
-
 
 deploy_gitea(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -1176,7 +1168,6 @@ cloudreve/cloudreve:latest
 
 domain_name=${1:-c.iapp.run}
 create_proxy ${domain_name} 5212
-
 
 }
 
@@ -1313,7 +1304,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
   
     install_aria2
     install_frp
-    install_v2ray
+
 
     # deploy_portainer
     # deploy_cloudreve
