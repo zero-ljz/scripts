@@ -1307,7 +1307,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 
     install_docker
     install_nodejs
-    install_php
+    install_phpfpm
   
     # install_aria2
     # install_frp
