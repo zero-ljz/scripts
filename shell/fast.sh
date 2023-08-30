@@ -1310,18 +1310,18 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     install_docker
     install_nodejs
     install_phpfpm
-  
+
+    apt -y install nginx
+
     # install_aria2
     # install_frp
-
 
     # deploy_portainer
     # deploy_cloudreve
     # deploy_searxng
     
-    
-    
-    
+    systemctl enable nginx
+    systemctl restart nginx
     
 }
 
