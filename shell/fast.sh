@@ -757,6 +757,7 @@ server {
         #proxy_pass http://my_upstream;
 
         #add_header Content-Security-Policy upgrade-insecure-requests;
+        proxy_http_version 1.1;
         proxy_pass_header Server;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header Host \$host;
@@ -1312,6 +1313,8 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     install_phpfpm
 
     apt -y install nginx
+
+    install_filebrowser
 
     # install_aria2
     # install_frp
