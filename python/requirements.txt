@@ -3,13 +3,13 @@
 fire
 click
 
-pyside6==6.4.3
-pyqt5
-pyqt5-tools
-pyinstaller
-pywinauto
-pyautogui
-autopy
+# pyside6==6.4.3
+# pyqt5
+# pyqt5-tools
+# pyinstaller
+# pywinauto
+# pyautogui
+# autopy
 
 bottle==0.12.25
 Django==3.2.20
@@ -21,6 +21,7 @@ twisted
 requests
 aiohttp
 httpx
+httpx[cli]
 gunicorn==20.1.0
 uvicorn
 
@@ -38,6 +39,7 @@ pandas
 
 sqlalchemy
 pymysql
+DBUtils==3.0.3
 pymongo
 psycopg2
 celery
