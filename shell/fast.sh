@@ -1302,6 +1302,8 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 function auto_mode(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     system_init
+
+    instll_python 3.9.13
     install_supervisor
     install_utils
 
