@@ -4,45 +4,6 @@
 echo -e "\n\n\n更新可用软件包列表"
 apt update
 
-echo -e "\n\n\n开启 rc.local"
-if [ ! -e "/etc/rc.local" ];then
-echo -e "\n\n\n配置 rc.local"
-touch /etc/rc.local
-chmod 755 /etc/rc.local
-
-cat>/etc/rc.local<<EOF
-#!/bin/sh -e
-#
-# rc.local
-#
-# This script is executed at the end of each multiuser runlevel.
-# Make sure that the script will "exit 0" on success or any other
-# value on error.
-#
-# In order to enable or disable this script just change the execution
-# bits.
-#
-# By default this script does nothing.
-
-EOF
-
-systemctl enable rc-local
-fi
-
-
-echo -e "\n\n\n安装 Git"
-apt -y install git
-echo -e "\n\n\n配置 Git"
-git config --global user.name "ljz"
-git config --global user.email "2267719005@qq.com"
-
-
-echo -e "\n\n\n安装 Micro 编辑器"
-apt -y install micro
-
-
-echo -e "\n\n\n安装 mc 文件管理器"
-apt -y install mc
 
 
 echo -e "\n\n\n安装 zsh"
@@ -53,44 +14,6 @@ chmod 755 install.sh
 ./install.sh --unattended
 
 
-echo -e "\n\n\n下载 Frp 二进制包"
-wget --no-check-certificate -O frp_0.44.0_linux_amd64.tar.gz http://47.87.214.106:666/?q=https://github.com/fatedier/frp/releases/download/v0.44.0/frp_0.44.0_linux_amd64.tar.gz
-tar xzvf frp_0.44.0_linux_amd64.tar.gz -C /usr/local/bin/
-mv /usr/local/bin/frp_0.44.0_linux_amd64 /usr/local/bin/frp
-
-echo -e "\n\n\n将启动命令添加到 rc.local 实现开机自启"
-sh -c 'echo "nohup /usr/local/bin/frp/frps -c /usr/local/bin/frp/frps.ini &" >> /etc/rc.local'
-# 防火墙需要放行7000和用于映射的公共端口
-
-
-echo -e "\n\n\n安装 Aria2"
-apt -y install aria2
-mkdir /etc/aria2/
-touch /etc/aria2/aria2.session
-wget -O /etc/aria2/aria2.conf http://47.87.214.106:666/?q=https://1fxdpq.dm.files.1drv.com/y4mIiwJL9lNeIdO8lXxaVlJ8CgaezUd3kIe7r8ZcAFytG78pUdSN0RprxwsYBW87AwMyXDAtEc3mLeTYBWHf_D4ngSWtjlCGvsoyA9YVs5Vs2X5taFFJmyl-5VgrMoj4EIKg0PsNXX-U6WC5INaaAK8fCrltwvj0lM0cRW0CuHSfxyAJZ0HaNph3kBqMCrtTwO5M_XR22RkpTRzolxlli3TxQ
-
-echo -e "\n\n\n设置 Aria2c RPC Server 自启"
-touch /etc/systemd/system/aria2c.service
-chmod 755 /etc/systemd/system/aria2c.service
-
-cat>/etc/systemd/system/aria2c.service<<EOF
-[Unit]
-Description = aria2c rpc server
-After = network.target syslog.target
-Wants = network.target
-
-[Service]
-Type = simple
-ExecStart = aria2c --conf-path=/etc/aria2/aria2.conf
-WorkingDirectory=/etc/aria2/
-
-[Install]
-WantedBy = multi-user.target
-
-EOF
-
-systemctl enable aria2c
-# 防火墙需要放行6800
 
 
 echo -e "\n\n\n下载并执行V2ray安装脚本"

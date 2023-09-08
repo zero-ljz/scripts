@@ -302,6 +302,21 @@ EOF
 
 }
 
+# vnc连接 密码123456 安装vscode后用code --user-data-dir ./ --no-sandbox 启动
+# docker run --name ud1 -d -p 22:22 -p 5900:5900 gotoeasy/ubuntu-desktop
+
+# 先安装Kasm Workspaces
+#https://www.kasmweb.com/docs/latest/install/single_server_install.html
+
+# cd /tmp
+# curl -O https://kasm-static-content.s3.amazonaws.com/kasm_release_1.13.0.002947.tar.gz
+# tar -xf kasm_release_1.13.0.002947.tar.gz
+# sudo bash kasm_release/install.sh -L 8443 --admin-password admin --user-password 123123
+
+
+# # 用户名 kasm_user ，用https协议访问6901端口
+# docker run -d --name kasm1 -it --shm-size=512m --name k1 -e KASM_PORT=4443 -p 4443:4443 -p 6901:6901 -e VNC_PW=123123 kasmweb/desktop:1.13.0
+
 
 start_v2ray(){
     #systemctl restart v2ray

@@ -139,9 +139,9 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 apt -y install mc
 
 # echo -e "\n\n\n 安装适用于 API 时代的现代、用户友好的命令行 HTTP 客户端"
-# apt -y install httpie
+pip3 install httpie
 # echo -e "\n\n\n 安装MySQL第三方命令行工具。"
-# apt -y install mycli
+pip3 install -U mycli
 
 # echo -e "\n\n\n 基于状态行（status line）的命令行提示符增强工具"
 # apt -y install powerline
@@ -238,7 +238,7 @@ pip3 install httpx
 pip3 install 'httpx[cli]'
 
 # echo -e "\n\n\n 安装跨平台系统监视工具，可以监视 CPU、内存、网络等方面的系统指标。"
-pip install --user glances
+pip3 install --user glances
 
 # 安装GoTTY - 将您的终端共享为 Web 应用程序
 wget https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz
@@ -419,7 +419,12 @@ export NVM_DIR="$HOME/.nvm"
 nvm install --lts
 # 全局安装yarn
 npm install -g yarn
-#npm config set registry https://registry.npm.taobao.org
+
+# 查看全局包，并且只显示顶级包，而不会列出其依赖项
+#npm list -g --depth 0
+
+# npm config set registry https://registry.npmjs.org/
+# npm config set registry https://registry.npm.taobao.org
 
 }
 
@@ -649,7 +654,7 @@ echo '请使用 ssh root@127.0.0.1 -p 22 连接'
 
 systeminfo()
 {
-uname -a && lsb_release -a && cat /etc/os-release && hostnamectl && df -h && free -h && timedatectl && curl ipinfo.io
+uname -a && lsb_release -a && lscpu && cat /etc/os-release && hostnamectl && df -h && free -h && timedatectl && curl ipinfo.io
 }
 
 
@@ -1207,25 +1212,6 @@ create_database ${domain_name}
 
 
 }
-
-
-# vnc连接 密码123456 安装vscode后用code --user-data-dir ./ --no-sandbox 启动
-# docker run --name ud1 -d -p 22:22 -p 5900:5900 gotoeasy/ubuntu-desktop
-
-# 先安装Kasm Workspaces
-#https://www.kasmweb.com/docs/latest/install/single_server_install.html
-
-# cd /tmp
-# curl -O https://kasm-static-content.s3.amazonaws.com/kasm_release_1.13.0.002947.tar.gz
-# tar -xf kasm_release_1.13.0.002947.tar.gz
-# sudo bash kasm_release/install.sh -L 8443 --admin-password admin --user-password 123123
-
-
-# # 用户名 kasm_user ，用https协议访问6901端口
-# docker run -d --name kasm1 -it --shm-size=512m --name k1 -e KASM_PORT=4443 -p 4443:4443 -p 6901:6901 -e VNC_PW=123123 kasmweb/desktop:1.13.0
-
-
-
 
 
 create_php_app()
