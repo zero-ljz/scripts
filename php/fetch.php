@@ -1,5 +1,7 @@
 <?php
-
+/*
+ * 具有和js中fetch函数类似api的curl封装
+*/
 function fetch($url, $options = array()) {
     $ch = curl_init();
 
