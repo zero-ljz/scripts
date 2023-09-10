@@ -744,6 +744,12 @@ server {
     access_log /var/log/nginx/${domain_name}.access.log;
     error_log /var/log/nginx/${domain_name}.error.log;
 
+    # 申请证书需要用到的配置
+    location /.well-known/acme-challenge/ {
+        alias /var/www/challenges/${domain_name}/;
+        try_files \$uri =404;
+    }
+
     location / {
         # 设置代理缓存
         #proxy_cache my_cache;
@@ -764,12 +770,6 @@ server {
         # 设置请求头
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    }
-
-    # 申请证书需要用到的配置
-    location /.well-known/acme-challenge/ {
-        alias /var/www/challenges/${domain_name}/;
-        try_files $uri =404;
     }
 
     # SSL/TLS 配置
