@@ -654,13 +654,13 @@ uname -a && lsb_release -a && lscpu && cat /etc/os-release && hostnamectl && df 
 create_ssl(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} domain_name [site_root_dir]"
+    echo "Usage: ${FUNCNAME} domain_name [acme_dir]"
     exit 0
 fi
 
 domain_name=$1
-# site_root_dir=/var/www/${domain_name}
-site_root_dir=${2:-/var/www/${domain_name}}
+
+acme_dir=${2:-/var/www/${domain_name}/.well-known/acme-challenge/} # /var/www/challenges/${domain_name}/
 
 SSL_DIR=/var/ssl
 if [ ! -d "$SSL_DIR" ]; then
@@ -698,11 +698,10 @@ if [ -f "$DOMAIN_CRT" ];then
     mv "$DOMAIN_CRT" "$DOMAIN_CRT-OLD-$(date +%y%m%d-%H%M%S)"
 fi
 
-DOMAIN_DIR="$site_root_dir/.well-known/acme-challenge/"
-mkdir -p "$DOMAIN_DIR"
+mkdir -p "$acme_dir"
 
 wget https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py -O $ACME_TINY -o /dev/null
-python3 $ACME_TINY --account-key "$ACCOUNT_KEY" --csr "${DOMAIN_CSR}" --acme-dir "$DOMAIN_DIR" > "$DOMAIN_CRT"
+python3 $ACME_TINY --account-key "$ACCOUNT_KEY" --csr "${DOMAIN_CSR}" --acme-dir "$acme_dir" > "$DOMAIN_CRT"
 
 
 if [ ! -f "lets-encrypt-x3-cross-signed.pem" ];then
@@ -765,6 +764,12 @@ server {
         # 设置请求头
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+    }
+
+    # 申请证书需要用到的配置
+    location /.well-known/acme-challenge/${domain_name}/ {
+        alias /var/www/challenges/${domain_name}/;
+        try_files $uri =404;
     }
 
     # SSL/TLS 配置
