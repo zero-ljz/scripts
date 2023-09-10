@@ -1311,6 +1311,16 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     
 }
 
+upgrade()
+{
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Description: Upgrade this script, Perform this operation in the working directory"
+    exit 0
+fi
+bash -c 'wget -O fast.sh http://us.iapp.run/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
+}
+
 # 获取函数名
 function_name=${1:-default}
 shift  # 移除第一个参数，剩下的参数会被传递给函数
@@ -1332,12 +1342,3 @@ function default()
 # 调用指定的函数，并传递参数
 "$function_name" "$@"
 
-upgrade()
-{
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Description: Upgrade this script, Perform this operation in the working directory"
-    exit 0
-fi
-bash -c 'wget -O fast.sh http://us.iapp.run/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
-}
