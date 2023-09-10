@@ -767,7 +767,7 @@ server {
     }
 
     # 申请证书需要用到的配置
-    location /.well-known/acme-challenge/${domain_name}/ {
+    location /.well-known/acme-challenge/ {
         alias /var/www/challenges/${domain_name}/;
         try_files $uri =404;
     }
