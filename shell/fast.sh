@@ -10,15 +10,7 @@
 #rm -rf /docker
 #docker rm -f $(docker ps -a -q)
 
-upgrade()
-{
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Description: Upgrade this script, Perform this operation in the working directory"
-    exit 0
-fi
-bash -c 'wget -O fast.sh http://us.iapp.run/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
-}
+
 
 system_init(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -1319,7 +1311,15 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     
 }
 
-
+upgrade()
+{
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Description: Upgrade this script, Perform this operation in the working directory"
+    exit 0
+fi
+bash -c 'wget -O fast.sh https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
+}
 
 # 获取函数名
 function_name=${1:-default}
