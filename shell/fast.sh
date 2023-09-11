@@ -660,7 +660,8 @@ fi
 
 domain_name=$1
 
-acme_dir=${2:-/var/www/${domain_name}/.well-known/acme-challenge/} # /var/www/challenges/${domain_name}/
+acme_dir=${2:-/var/www/${domain_name}/.well-known/acme-challenge/} 
+acme_dir2=/var/www/challenges/${domain_name}/
 
 SSL_DIR=/var/ssl
 if [ ! -d "$SSL_DIR" ]; then
