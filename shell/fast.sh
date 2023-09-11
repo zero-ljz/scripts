@@ -26,6 +26,7 @@ apt update
 
 echo -e "\n\n\n 安装必备组件"
 apt -y install sudo openssl aptitude zip unzip wget curl telnet sqlite3 perl lua5.3
+apt -y install python3 python3-pip python3-dev
 
 echo -e "\n\n\n 安装 Git"
 apt -y install git
@@ -376,7 +377,6 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
 return; fi
 echo -e "\n\n\n------------------------------安装 Python------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-# apt -y install python3 python3-pip python3-dev
 version=${1:-3.9.13}
 short_version=${version%%.*}
 apt -y install build-essential zlib1g zlib1g-dev libffi-dev
@@ -641,6 +641,7 @@ echo '请使用 ssh root@127.0.0.1 -p 22 连接'
 
 systeminfo()
 {
+apt -y install lsb-release curl
 uname -a && lsb_release -a && lscpu && cat /etc/os-release && hostnamectl && df -h && free -h && timedatectl && curl ipinfo.io
 }
 
@@ -654,8 +655,8 @@ return; fi
 
 domain_name=$1
 
-acme_dir=${2:-/var/www/${domain_name}/.well-known/acme-challenge/} 
-acme_dir2=/var/www/challenges/${domain_name}/
+# acme_dir=${2:-/var/www/${domain_name}/.well-known/acme-challenge/} 
+acme_dir=/var/www/challenges/${domain_name}/
 
 SSL_DIR=/var/ssl
 if [ ! -d "$SSL_DIR" ]; then
@@ -827,6 +828,12 @@ server {
     root   /var/www/${domain_name};
 
     #access_log  /var/log/nginx/${domain_name}.access.log  main;
+
+    # 申请证书需要用到的配置
+    location /.well-known/acme-challenge/ {
+        alias /var/www/challenges/${domain_name}/;
+        try_files \$uri =404;
+    }
 
     location / {
         index index.php index.html index.htm;
@@ -1043,6 +1050,12 @@ server {
     root   /var/www/${domain_name};
 
     #access_log  /var/log/nginx/host.access.log  main;
+
+    # 申请证书需要用到的配置
+    location /.well-known/acme-challenge/ {
+        alias /var/www/challenges/${domain_name}/;
+        try_files \$uri =404;
+    }
 
     location / {
         index index.php index.html index.htm;
@@ -1343,8 +1356,7 @@ function auto_mode(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     system_init
 
-    # install_python 3.9.13
-    # install_supervisor
+    install_supervisor
     # install_utils
 
     install_docker
