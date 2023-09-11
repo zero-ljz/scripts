@@ -1325,25 +1325,29 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 
     instll_python 3.9.13
     install_supervisor
-    install_utils
+    # install_utils
 
     install_docker
     install_nodejs
     install_phpfpm
 
-    apt -y install nginx
+    # apt -y install nginx
 
     install_filebrowser
 
     # install_aria2
     # install_frp
 
+    deploy_mysql
+    deploy_nginx
+    deploy_debian
+
     # deploy_portainer
     # deploy_cloudreve
     # deploy_searxng
     
-    systemctl enable nginx
-    systemctl restart nginx
+    # systemctl enable nginx
+    # systemctl restart nginx
     
 }
 
