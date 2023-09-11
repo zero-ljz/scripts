@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# https://github.com/zero-ljz/scripts/raw/main/shell/backup.sh
 # 0 */12 * * * /root/backup.sh
 
 apt -y install rsync sshpass
@@ -7,9 +7,9 @@ apt -y install rsync sshpass
 backup_dir="/backup" && mkdir -p $backup_dir
 mysql_root_password=$(cat /root/MYSQL_ROOT_PASSWORD.txt)
 
-remote_server="root@127.0.0.1"
-remote_password=""
-remote_dir="/"
+remote_server=$1 # root@127.0.0.1
+remote_password=$2
+remote_dir=${3:-"/"}
 
 # 指定要备份的文件目录
 backup_directories=(
