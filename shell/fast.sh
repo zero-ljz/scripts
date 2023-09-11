@@ -1297,18 +1297,26 @@ docker exec -it debian1 bash
 deploy_python_app() {
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} app_name http_port"
+    echo "Usage: ${FUNCNAME} app_name http_port repo_url command"
 return; fi
 
 app_name=$1
 http_port=${2:-8000}
+repo_url=${3}
+command=${4:-"python app.py"}
 docker run -d -p "${http_port}":8000 --name ${app_name} --network network1 python:3.9.13-bullseye tail -f /dev/null
 
 commands=$(cat <<EOF
 
 apt update
-apt -y install wget curl nano micro
-
+apt -y install git wget curl nano micro
+mkdir -p ~/repos
+cd ~/repos
+git clone ${repo_url}
+repo_name="${repo_url##*/}" && repo_name="${repo_name%.git}"
+cd ~/repos/${repo_name}
+python -m pip install -r requirements.txt
+${command}
 EOF
 )
 docker exec ${app_name} bash -c "$commands"
