@@ -1358,7 +1358,7 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Description: Upgrade this script, Perform this operation in the working directory"
     exit 0
 fi
-bash -c 'wget -O fast.sh https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
+bash -c 'wget --no-cache -O fast.sh https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
 }
 
 # 获取函数名
