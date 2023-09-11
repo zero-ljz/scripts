@@ -1335,7 +1335,7 @@ return; fi
 function reinstall_debian(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     read -p "请输入新的root密码：" password
-    curl -fLO https://raw.githubusercontent.com/bohanyang/debi/master/debi.sh && chmod a+rx debi.sh && ./debi.sh --cdn --network-console --ethx --bbr --timezone Asia/Shanghai --user root --password ${password}
+    curl -fLO https://raw.githubusercontent.com/bohanyang/debi/master/debi.sh && chmod a+rx debi.sh && ./debi.sh --version 11 --cdn --network-console --ethx --bbr --timezone Asia/Shanghai --user root --password ${password}
 }
 
 
@@ -1343,8 +1343,8 @@ function auto_mode(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     system_init
 
-    install_python 3.9.13
-    install_supervisor
+    # install_python 3.9.13
+    # install_supervisor
     # install_utils
 
     install_docker
