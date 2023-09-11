@@ -277,8 +277,7 @@ create_service(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name command working_dir"
-    exit 0
-fi
+return; fi
 app_name=$1
 command=$2
 working_dir=${3:-"/usr/local/bin/"}
@@ -305,8 +304,7 @@ create_supervisor(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name "command" working_dir"
-    exit 0
-fi
+return; fi
 app_name=$1
 command=$2
 working_dir=${3:-"/usr/local/bin/"}
@@ -375,8 +373,7 @@ install_python(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} version"
-    exit 0
-fi
+return; fi
 echo -e "\n\n\n------------------------------安装 Python------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -561,8 +558,7 @@ start_frpc()
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} local_port:remote_port local_port:remote_port ..."
-    exit 0
-fi
+return; fi
 file=/usr/local/bin/frp/frpc.ini
 
 # 重新生成配置文件
@@ -612,8 +608,7 @@ start_frpc2()
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} local_port remote_port server_addr"
-    exit 0
-fi
+return; fi
 local_port=$1
 remote_port=$2
 server_addr=${3:-42.193.229.54}
@@ -655,8 +650,7 @@ create_ssl(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} domain_name [acme_dir]"
-    exit 0
-fi
+return; fi
 
 domain_name=$1
 
@@ -724,7 +718,9 @@ EOF
 
 create_proxy(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-if [ $1 = "-h" ] || [ "$1" = "--help" ]; then echo "Usage: ${FUNCNAME} domain_name local_port"; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then 
+echo "Usage: ${FUNCNAME} domain_name local_port"; 
+return; fi
 
 domain_name=$1
 local_port=$2
@@ -810,8 +806,7 @@ create_vhost(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} domain_name"
-    exit 0
-fi
+return; fi
 
 domain_name=$1
     
@@ -896,8 +891,7 @@ create_database(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} domain_name"
-    exit 0
-fi
+return; fi
 domain_name=$1
 MYSQL_ROOT_PASSWORD=$(cat MYSQL_ROOT_PASSWORD.txt)
 
@@ -920,20 +914,24 @@ echo "在容器内创建需执行 docker exec -i mysql1 ${cmd}"
 
 deploy_mysql(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [port]"
+return; fi
+port={$1:-3306}
 docker network create network1
 
 MYSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
 echo "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
 
 echo "安装 MySQL"
-# docker run -dp 3306:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
+# docker run -dp ${port}:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
 # -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
 # -e MYSQL_USER=user1 \
 # -e MYSQL_PASSWORD=123 \
 # -e MYSQL_DATABASE=db1 \
 # mysql:5.7-debian
 
-docker run -dp 3306:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
+docker run -dp ${port}:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
 --env MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
 --env MARIADB_USER=user1 \
 --env MARIADB_PASSWORD=123 \
@@ -944,10 +942,14 @@ mariadb:10.3
 
 deploy_redis(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [port]"
+return; fi
+port={$1:-6379}
 docker network create network1
 
 echo "安装 Redis" 
-docker run -dp 6379:6379 --name redis1 --network network1 --network-alias redis -v /docker/redis1:/data \
+docker run -dp ${port}:6379 --name redis1 --network network1 --network-alias redis -v /docker/redis1:/data \
 redis:6-bullseye \
 redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 # 传给redis服务器的启动参数：若每60秒至少有一个键被修改了1次，就将数据持久化到磁盘，只记录警告及更高级别的日志
@@ -965,13 +967,17 @@ docker run -d --name nginx1 --network host -v /var/www:/var/www -v /var/ssl:/var
 
 deploy_php(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [local_port]"
+return; fi
+local_port={$1:-9000}
 echo -e "\n\n\n------------------------------部署PHP和扩展------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 docker network create network1
 
 echo "安装 PHP"
-docker run -d -p 127.0.0.1:9000:9000 --name php-fpm1 --network network1 -v /var/www:/var/www php:7.4-fpm-bullseye
+docker run -d -p 127.0.0.1:${local_port}:9000 --name php-fpm1 --network network1 -v /var/www:/var/www php:7.4-fpm-bullseye
 
 # 使用这个必须 -v /var/www:/var/www/html，否则nginx连不上php-fpm，日志报错[error] 20#20: *5 recv() failed (104: Connection reset by peer) while reading response header from upstream
 #docker run -d -p 127.0.0.1:9000:9000 --name php1 --network network1 -v /docker/php1:/usr/local/etc -v /var/www:/var/www/html webdevops/php:7.4-alpine
@@ -1010,13 +1016,17 @@ docker restart php-fpm1
 
 deploy_wordpress_fpm(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+return; fi
 echo -e "\n\n\n------------------------------部署 Wordpress FPM 和 Nginx 配合------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 domain_name=${1:-blog.iapp.run}
+local_port=${2:-9001}
 create_database ${domain_name}
 
-docker run -dp 127.0.0.1:9001:9000 --name wordpress1 --network network1 -v /var/www/${domain_name}:/var/www/html \
+docker run -dp 127.0.0.1:${local_port}:9000 --name wordpress1 --network network1 -v /var/www/${domain_name}:/var/www/html \
 -e WORDPRESS_DB_HOST=mysql \
 -e WORDPRESS_DB_USER=${db_user} \
 -e WORDPRESS_DB_PASSWORD=${db_password} \
@@ -1049,7 +1059,7 @@ server {
     # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
     #
     location ~ \.php$ {
-        fastcgi_pass   127.0.0.1:9001;
+        fastcgi_pass   127.0.0.1:${local_port};
         fastcgi_index  index.php;
         # 在fastcgi process manager 容器里的脚本文件 根目录
         fastcgi_param  SCRIPT_FILENAME  /var/www\$fastcgi_script_name;
@@ -1065,12 +1075,16 @@ docker restart nginx1
 
 deploy_wordpress(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+return; fi
 echo -e "\n\n\n------------------------------部署 Wordpress------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-docker run -dp 127.0.0.1:8010:80 --name wordpress1 --network network1 -v /docker/wordpress1:/var/www/html wordpress
 domain_name=${1:-blog.iapp.run}
-create_proxy ${domain_name} 8010
+local_port=${2:-8010}
+docker run -dp 127.0.0.1:${local_port}:80 --name wordpress1 --network network1 -v /docker/wordpress1:/var/www/html wordpress
+create_proxy ${domain_name} ${local_port}
 create_database ${domain_name}
 
 }
@@ -1093,12 +1107,16 @@ create_proxy ${domain_name} 9002
 
 deploy_nextcloud(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+return; fi
 echo -e "\n\n\n------------------------------部署 NextCloud------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-docker run -dp 127.0.0.1:8011:80 --name nextcloud1 --network network1  -v /docker/nextcloud:/var/www/html nextcloud
 domain_name=${1:-cloud.iapp.run}
-create_proxy ${domain_name} 8011
+local_port=${2:-8011}
+docker run -dp 127.0.0.1:${local_port}:80 --name nextcloud1 --network network1  -v /docker/nextcloud:/var/www/html nextcloud
+create_proxy ${domain_name} ${local_port}
 #create_database ${domain_name}
 # 用mysql性能不好
 
@@ -1106,12 +1124,16 @@ create_proxy ${domain_name} 8011
 
 deploy_searxng(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+return; fi
 echo -e "\n\n\n------------------------------部署 SearXNG------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 domain_name=${1:-s.iapp.run}
+local_port=${2:-8012}
 # https://docs.searxng.org/admin/installation-docker.html#searxng-searxng
 docker run --rm \
--d -p 127.0.0.1:8012:8080 \
+-d -p 127.0.0.1:${local_port}:8080 \
 --name searxng1 \
 -v "/docker/searxng:/etc/searxng" \
 -e "BASE_URL=http://${domain_name}/" \
@@ -1119,14 +1141,20 @@ docker run --rm \
 searxng/searxng
 
 # 在settings.yml文件中设置默认启用的搜索引擎
-create_proxy ${domain_name} 8012
+create_proxy ${domain_name} ${local_port}
 
 }
 
 deploy_gitea(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [domain_name] [local_port] [ssh_port]"
+return; fi
 echo -e "\n\n\n------------------------------部署 Gitea------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+domain_name=${1:-git.iapp.run}
+local_port=${2:-3000}
+ssh_port=${3:-222}
 adduser \
    --system \
    --shell /bin/bash \
@@ -1137,7 +1165,7 @@ adduser \
    git
 docker run -d \
 --name gitea1 \
--p 127.0.0.1:3000:3000 -p 222:22 \
+-p 127.0.0.1:${local_port}:3000 -p ${ssh_port}:22 \
 -e USER_UID=$(id -u git) \
 -e USER_GID=$(id -g git) \
 -v /docker/gitea:/data  \
@@ -1145,8 +1173,7 @@ docker run -d \
 -v /etc/localtime:/etc/localtime:ro  \
 gitea/gitea:1.19
 
-domain_name=${1:-git.iapp.run}
-create_proxy ${domain_name} 3000
+create_proxy ${domain_name} ${local_port}
 
 # 记得配置SSH_PORT=222，SSH_LISTEN_PORT=22
 
@@ -1156,13 +1183,17 @@ create_proxy ${domain_name} 3000
 
 deploy_cloudreve(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [domain_name] [port]"
+return; fi
 echo -e "\n\n\n------------------------------部署 CloudReve------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-
+domain_name=${1:-c.iapp.run}
+port=${2:-5212}
 mkdir -vp /docker/cloudreve/{uploads,avatar} && touch /docker/cloudreve/conf.ini && touch /docker/cloudreve/cloudreve.db
 
 docker run -d \
--p 5212:5212 \
+-p ${port}:5212 \
 --name cloudreve1 \
 --mount type=bind,source=/docker/cloudreve/conf.ini,target=/cloudreve/conf.ini \
 --mount type=bind,source=/docker/cloudreve/cloudreve.db,target=/cloudreve/cloudreve.db \
@@ -1170,20 +1201,23 @@ docker run -d \
 -v /docker/cloudreve/avatar:/cloudreve/avatar \
 cloudreve/cloudreve:latest
 
-domain_name=${1:-c.iapp.run}
-create_proxy ${domain_name} 5212
+create_proxy ${domain_name} ${port}
 
 }
 
 deploy_gocron(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+return; fi
 echo -e "\n\n\n------------------------------部署 GoCron------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-docker run --name gocron1 --network network1 -p 127.0.0.1:5920:5920 -d ouqg/gocron
-
 domain_name=${1:-cron.iapp.run}
-create_proxy ${domain_name} 5920
+local_port=${2:-5920}
+docker run --name gocron1 --network network1 -p 127.0.0.1:${local_port}:5920 -d ouqg/gocron
+
+create_proxy ${domain_name} ${local_port}
 create_database ${domain_name}
 
 }
@@ -1191,12 +1225,16 @@ create_database ${domain_name}
 
 deploy_hackmd(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+return; fi
 echo -e "\n\n\n------------------------------部署 HackMD------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-
+domain_name=${1:-md.iapp.run}
+local_port=${2:-3001}
 # https://hackmd.io/c/codimd-documentation/%2Fs%2Fcodimd-docker-deployment
 docker run -d \
--p 3001:3000 \
+-p 127.0.0.1:${local_port}:3000 \
 --name hackmd1 \
 --network network1 \
 -e CMD_DB_URL=mysql://user1:123@mysql:3306/db1 \
@@ -1204,8 +1242,7 @@ docker run -d \
 -v /docker/hackmd/upload-data:/home/hackmd/app/public/uploads \
 hackmdio/hackmd:2.4.2
 
-domain_name=${1:-md.iapp.run}
-create_proxy ${domain_name} 3001
+create_proxy ${domain_name} ${local_port}
 create_database ${domain_name}
 
 
@@ -1217,8 +1254,7 @@ create_php_app()
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name http_port"
-    exit 0
-fi
+return; fi
 
 app_name=$1
 http_port=$2
@@ -1257,8 +1293,7 @@ function run_from_git(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} repo_url port_port"
-    exit 0
-fi
+return; fi
   url=$1
   p=$2
 
