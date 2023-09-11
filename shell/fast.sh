@@ -255,7 +255,7 @@ install_supervisor(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Supervisor 进程管理器------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-pip3 install supervisor --break-system-packages
+pip3 install supervisor
 echo -e "\n\n\n 生成配置文件"
 mkdir /etc/supervisor
 echo_supervisord_conf > /etc/supervisor/supervisord.conf
