@@ -931,7 +931,7 @@ echo "安装 MySQL"
 # -e MYSQL_DATABASE=db1 \
 # mysql:5.7-debian
 
-docker run -dp ${port}:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
+docker run -dp $port:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
 --env MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
 --env MARIADB_USER=user1 \
 --env MARIADB_PASSWORD=123 \
@@ -1323,7 +1323,7 @@ function auto_mode(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     system_init
 
-    instll_python 3.9.13
+    install_python 3.9.13
     install_supervisor
     # install_utils
 
