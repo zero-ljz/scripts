@@ -917,7 +917,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} [port]"
 return; fi
-port={$1:-3306}
+port=${1:-3306}
 docker network create network1
 
 MYSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
@@ -931,7 +931,7 @@ echo "安装 MySQL"
 # -e MYSQL_DATABASE=db1 \
 # mysql:5.7-debian
 
-docker run -dp $port:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
+docker run -dp ${port}:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
 --env MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
 --env MARIADB_USER=user1 \
 --env MARIADB_PASSWORD=123 \
@@ -945,7 +945,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} [port]"
 return; fi
-port={$1:-6379}
+port=${1:-6379}
 docker network create network1
 
 echo "安装 Redis" 
@@ -970,7 +970,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} [local_port]"
 return; fi
-local_port={$1:-9000}
+local_port=${1:-9000}
 echo -e "\n\n\n------------------------------部署PHP和扩展------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
@@ -1340,7 +1340,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 
     deploy_mysql
     deploy_nginx
-    deploy_debian
+    # deploy_debian
 
     # deploy_portainer
     # deploy_cloudreve
