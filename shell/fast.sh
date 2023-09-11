@@ -1304,7 +1304,7 @@ app_name=$1
 http_port=${2:-8000}
 repo_url=${3}
 command=${4:-"python app.py"}
-docker run -d -p "${http_port}":8000 --name ${app_name} --network network1 python:3.9.13-bullseye tail -f /dev/null
+docker run -d -p "${http_port}":8000 --name ${app_name} python:3.9.13-bullseye tail -f /dev/null
 
 commands=$(cat <<EOF
 
@@ -1313,7 +1313,7 @@ apt -y install git wget curl nano micro
 mkdir -p ~/repos
 cd ~/repos
 git clone ${repo_url}
-repo_name="${repo_url##*/}" && repo_name="${repo_name%.git}"
+repo_name=$(basename "$repo_url" .git)
 cd ~/repos/${repo_name}
 python -m pip install -r requirements.txt
 ${command}
