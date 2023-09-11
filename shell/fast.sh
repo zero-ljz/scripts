@@ -1250,8 +1250,7 @@ create_database ${domain_name}
 }
 
 
-create_php_app()
-{
+deploy_php_app() {
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name http_port"
@@ -1268,20 +1267,40 @@ wget -P /docker/${app_name} http://us.iapp.run/proxy/https://raw.githubuserconte
 
 deploy_debian() {
 # 创建空的 Debian 容器并保持运行
-#docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/null
-docker run -d --name debian1 --network host python:3.9.13-bullseye tail -f /dev/null
+docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/null
 
 commands=$(cat <<EOF
 
 apt update
-apt -y install wget curl nano micro 
-wget -O fast.sh http://us.iapp.run/proxy/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh
+apt -y install wget curl nano micro
 
 EOF
 )
 docker exec debian1 bash -c "$commands"
 
 docker exec -it debian1 bash
+}
+
+deploy_python_app() {
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} app_name http_port"
+return; fi
+
+app_name=$1
+http_port=${2:-8000}
+docker run -d -p "${http_port}":8000 --name ${app_name} --network network1 python:3.9.13-bullseye tail -f /dev/null
+
+commands=$(cat <<EOF
+
+apt update
+apt -y install wget curl nano micro
+
+EOF
+)
+docker exec ${app_name} bash -c "$commands"
+
+docker exec -it ${app_name} bash
 }
 
 #docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-bullseye python app.py
