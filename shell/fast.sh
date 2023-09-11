@@ -1313,7 +1313,7 @@ apt -y install git wget curl nano micro
 mkdir -p ~/repos
 cd ~/repos
 git clone ${repo_url}
-repo_name=`basename $repo_url .git`
+repo_name=iapp
 cd ~/repos/${repo_name}
 python -m pip install -r requirements.txt
 ${command}
