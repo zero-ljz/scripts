@@ -1299,7 +1299,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name http_port repo_url command"
 return; fi
-
+# bash fast.sh deploy_python_app iapp1 8000 https://github.com/zero-ljz/iapp.git python /root/iapp/app.py
 app_name=$1
 http_port=${2:-8000}
 repo_url=${3}
@@ -1313,7 +1313,7 @@ apt -y install git wget curl nano micro
 mkdir -p ~/repos
 cd ~/repos
 git clone ${repo_url}
-repo_name=$(basename "$repo_url" .git)
+repo_name=`basename $repo_url .git`
 cd ~/repos/${repo_name}
 python -m pip install -r requirements.txt
 ${command}
