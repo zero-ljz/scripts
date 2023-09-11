@@ -25,7 +25,7 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 apt update
 
 echo -e "\n\n\n 安装必备组件"
-apt -y install sudo openssl aptitude zip unzip wget curl telnet sqlite3 python3 python3-pip python3-dev perl lua5.3
+apt -y install sudo openssl aptitude zip unzip wget curl telnet sqlite3 perl lua5.3
 
 echo -e "\n\n\n 安装 Git"
 apt -y install git
@@ -255,7 +255,7 @@ install_supervisor(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Supervisor 进程管理器------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-pip3 install supervisor
+pip3 install supervisor --break-system-packages
 echo -e "\n\n\n 生成配置文件"
 mkdir /etc/supervisor
 echo_supervisord_conf > /etc/supervisor/supervisord.conf
@@ -376,7 +376,7 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
 return; fi
 echo -e "\n\n\n------------------------------安装 Python------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-
+# apt -y install python3 python3-pip python3-dev
 version=${1:-3.9.13}
 short_version=${version%%.*}
 apt -y install build-essential zlib1g zlib1g-dev libffi-dev
@@ -712,7 +712,7 @@ cat << EOF
     ssl_certificate /var/ssl/${domain_name}.chained.crt;
     ssl_certificate_key /var/ssl/${domain_name}.key;
 EOF
-
+echo "Please restart nginx"
 }
 
 
@@ -800,6 +800,7 @@ EOF
 # docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
 cp ./${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
 # docker restart nginx1
+echo "Please restart nginx"
 }
 
 create_vhost(){
