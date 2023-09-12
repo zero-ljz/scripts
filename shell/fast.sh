@@ -1299,24 +1299,23 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name http_port repo_url command"
 return; fi
-# bash fast.sh deploy_python_app iapp1 8000 https://github.com/zero-ljz/iapp.git python /root/iapp/app.py
+# bash fast.sh deploy_python_app iapp1 8000 https://github.com/zero-ljz/iapp.git
 app_name=$1
 http_port=${2:-8000}
 repo_url=${3}
 repo_name=$(basename $repo_url .git)
-command=${4:-"python ~/repos/${repo_name}/app.py"}
+command=${4:-"python /app/app.py"}
 docker run -d -p "${http_port}":8000 --name ${app_name} python:3.9.13-bullseye tail -f /dev/null
 
 commands=$(cat <<EOF
 
 apt update
 apt -y install git wget
-mkdir -p ~/repos
-cd ~/repos
-git clone ${repo_url}
-cd ~/repos/${repo_name}/
-python -m pip install -r ~/repos/${repo_name}/requirements.txt
+mkdir -p /app
+git clone ${repo_url} /app
+python -m pip install -r /app/requirements.txt
 ${command}
+
 EOF
 )
 docker exec ${app_name} bash -c "$commands"
