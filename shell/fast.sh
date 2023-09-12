@@ -1310,7 +1310,7 @@ docker run -d -p "${http_port}":8000 --name ${app_name} python:3.9.13-bullseye t
 commands=$(cat <<EOF
 
 apt update
-apt -y install git wget curl nano micro
+apt -y install git wget
 mkdir -p ~/repos
 cd ~/repos
 git clone ${repo_url}
