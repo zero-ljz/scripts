@@ -26,6 +26,29 @@ docker exec -i mysql1 mysqldump -u root -p"$mysql_root_password" --all-databases
 [ $? -ne 0 ] && echo "MySQL数据库备份失败！" && exit 1
 
 
+# 容器备份 右边是镜像名
+# docker commit nginx1 nginx1
+# docker save -o nginx1_backup.tar nginx1
+
+# docker load -i nginx1_backup.tar
+# docker run -dp 80:80 --name nginx1 
+
+containers=$(docker ps -q)
+for container_id in $containers; do
+    container_name=$(docker inspect --format '{{.Name}}' $container_id | cut -c 2-)
+    backup_image="${container_name}-image-backup_$(date +\%Y\%m\%d_\%H\%M\%S)"
+    backup_file="${container_name}-image-backup_$(date +\%Y\%m\%d_\%H\%M\%S).tar"
+
+    # 备份容器的镜像
+    docker commit "$container_name" "$backup_image"
+    docker save -o "$backup_file" "$backup_image"
+
+    # 保存容器镜像到备份目录
+    docker save -o "$backup_dir/$timestamp/container_image.tar" "$backup_dir/$timestamp/container_image"
+
+    echo "容器备份完成"
+
+
 # 如果不加-o StrictHostKeyChecking=no，就一定要先用ssh命令登录一次目标服务器，并输入yes将远程服务器地址永久添加到known hosts list（已知主机列表）
 # ssh root@host
 

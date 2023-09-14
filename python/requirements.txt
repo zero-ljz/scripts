@@ -37,7 +37,7 @@ numpy
 matplotlib
 pandas
 
-sqlalchemy
+sqlalchemy==1.4.49
 pymysql
 DBUtils==3.0.3
 pymongo
