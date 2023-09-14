@@ -10,7 +10,7 @@
 #rm -rf /docker
 #docker rm -f $(docker ps -a -q)
 
-
+OSID=$(grep '^ID=' /etc/os-release | cut -d= -f2)
 
 system_init(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -26,7 +26,7 @@ apt update
 
 echo -e "\n\n\n 安装必备组件"
 apt -y install sudo openssl aptitude zip unzip wget curl telnet sqlite3 perl lua5.3
-apt -y install python3 python3-pip python3-dev
+apt -y install python3 python3-pip python3-dev python3-setuptools
 
 echo -e "\n\n\n 安装 Git"
 apt -y install git
@@ -133,8 +133,8 @@ apt -y install mc
 
 # echo -e "\n\n\n 安装适用于 API 时代的现代、用户友好的命令行 HTTP 客户端"
 pip3 install httpie
-# echo -e "\n\n\n 安装MySQL第三方命令行工具。"
-pip3 install -U mycli
+# echo -e "\n\n\n 安装数据库第三方命令行工具。"
+pip3 install mycli litecli iredis
 
 # echo -e "\n\n\n 基于状态行（status line）的命令行提示符增强工具"
 # apt -y install powerline
@@ -219,7 +219,6 @@ apt -y install rlwrap
 curl -s https://cht.sh/:cht.sh | tee /usr/local/bin/cht.sh && chmod +x /usr/local/bin/cht.sh
 
 echo -e "\n\n\n 安装 thefuck 命令行自动纠正"
-apt -y install python3-dev python3-pip python3-setuptools
 pip3 install thefuck --user
 
 echo -e "\n\n\n 安装 bpytop资源监视器"
@@ -389,6 +388,8 @@ ln -s  /usr/local/bin/python/bin/python${short_version} /usr/bin/python3
 ln -s  /usr/local/bin/python/bin/pip3 /usr/bin/pip3
 cd ..
 
+pip install --upgrade certifi
+pip install pyopenssl
 
 }
 
@@ -524,7 +525,7 @@ curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bas
 deploy_tinyfilemanager(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
-docker exec -i tinyfilemanager1 wget -O /docker/${app_name}/adminer.php http://us.iapp.run/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+docker exec -i tinyfilemanager1 wget -O /docker/${app_name}/adminer.php https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
 domain_name=${1:-file.iapp.run}
 create_proxy ${domain_name} 8020
 }
@@ -543,7 +544,7 @@ install_frp(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Frp------------------------------"
 echo -e "\n\n\n下载 Frp 二进制包"
-wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz http://us.iapp.run/proxy/https://github.com/fatedier/frp/releases/download/v0.48.0/frp_0.48.0_linux_amd64.tar.gz
+wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz https://github.com/fatedier/frp/releases/download/v0.48.0/frp_0.48.0_linux_amd64.tar.gz
 tar xzvf frp_0.48.0_linux_amd64.tar.gz -C /usr/local/bin/
 mv /usr/local/bin/frp_0.48.0_linux_amd64 /usr/local/bin/frp
 
@@ -624,8 +625,14 @@ server_addr=${3:-42.193.229.54}
 
 install_ssh(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-# alpine 安装ssh服务
-apk add openssh-server 
+
+if [ "$OSID" = "debian" ] || [ "$OSID" = "ubuntu" ]; then
+    apt -y install openssh-server
+elif [ "$OSID" = "alpine" ]; then
+    apk add openssh-server
+elif [ "$OSID" = "arch" ]; then
+    pacman -S openssh-server
+fi
 
 sed -i "s/#PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config && \
     ssh-keygen -t dsa -P "" -f /etc/ssh/ssh_host_dsa_key && \
@@ -973,7 +980,7 @@ echo "安装 Nginx"
 docker run -d --name nginx1 --network host -v /var/www:/var/www -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:stable-bullseye
 }
 
-deploy_php(){
+deploy_php_fpm(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} [local_port]"
@@ -1272,8 +1279,8 @@ return; fi
 app_name=$1
 http_port=$2
 docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
-wget -O /docker/${app_name}/adminer.php http://us.iapp.run/proxy/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
-wget -P /docker/${app_name} http://us.iapp.run/proxy/https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+wget -O /docker/${app_name}/adminer.php https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+wget -P /docker/${app_name} https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
 }
 
 # docker restart nginx1
@@ -1299,7 +1306,8 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name http_port repo_url command"
 return; fi
-# bash fast.sh deploy_python_app iapp1 8000 https://github.com/zero-ljz/iapp.git
+# docker rm -f iapp2
+# bash fast.sh deploy_python_app iapp2 8000 https://github.com/zero-ljz/iapp.git
 app_name=$1
 http_port=${2:-8000}
 repo_url=${3}
