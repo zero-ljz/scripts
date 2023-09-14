@@ -2,6 +2,7 @@
 # https://github.com/zero-ljz/scripts/raw/main/shell/backup.sh
 # 0 */12 * * * /root/backup.sh
 
+
 apt -y install rsync sshpass
 
 save_dir="/backup"
