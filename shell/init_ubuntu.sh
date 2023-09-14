@@ -19,12 +19,7 @@ echo -e "\n\n\n------------------------------------------------------------"
 
 
 
-# 容器备份 右边是镜像名
-# docker commit nginx1 nginx1
-# docker save -o nginx1_backup.tar nginx1
 
-# docker load -i nginx1_backup.tar
-# docker run -dp 80:80 --name nginx1 
 
 
 # 安装X Window系统
