@@ -47,7 +47,6 @@ done
 containers=$(docker ps -q)
 for container_id in $containers; do
     container_name=$(docker inspect --format '{{.Name}}' $container_id | cut -c 2-)
-    echo "备份容器: $container_name"
     backup_image="${container_name}-image"
     backup_file="${container_name}_image_backup_$(date +\%Y\%m\%d_\%H\%M\%S).tar"
 
