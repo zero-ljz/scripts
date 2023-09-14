@@ -3,6 +3,8 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     powershell -Command "Add-AppPackage -Path Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
 }
 
+# Install Chocolatey
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
 winget install -e --id OpenJS.NodeJS.LTS
 winget install -e --id Python.Python.3.9 --version 3.9.13
