@@ -15,6 +15,16 @@ def run_cmd(command, wait=True):
     else:
         return None
 
+def run_python(script, wait=True):
+    """
+    执行 Python 脚本
+    :param script: Python 脚本字符串
+    :param wait: 是否等待脚本执行完成，则为 True
+    :return: 如果等待，返回脚本的输出；否则返回 None
+    """
+    command = f"python {script}"
+    return run_cmd(command, wait)
+
 def run_powershell(script, wait=True):
     """
     执行 PowerShell 脚本
@@ -44,12 +54,10 @@ def run_autohotkey(script, wait=True):
     """
     ahk_exe = r"C:\Program Files\AutoHotkey\AutoHotkey.exe"  # AutoHotkey 执行文件的路径，请根据实际情况修改
     command = f'"{ahk_exe}" /ErrorStdOut *'
-    
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, text=True)
     
-    stdout, stderr = process.communicate(input=script)
-    
     if wait:
+        stdout, stderr = process.communicate(input=script)
         process.wait()
         return process.returncode
     else:
@@ -78,11 +86,9 @@ def ahk_ExecScript(script, wait=True):
     if wait:
         # 等待脚本执行完成
         process.wait()
-        
         # 读取标准输出和标准错误
         stdout = process.stdout.read()
         stderr = process.stderr.read()
-
         return stdout, stderr
     else:
         return None

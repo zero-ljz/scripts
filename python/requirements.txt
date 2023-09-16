@@ -1,51 +1,48 @@
 # pip install -r requirements.txt
 
+# 命令行
 fire
 click
+rich
 
+# 桌面
 # pyside6==6.4.3
-# pyqt5
-# pyqt5-tools
 # pyinstaller
 # pywinauto
 # pyautogui
 # autopy
 
-bottle==0.12.25
-Django==3.2.20
+# Web
 fastapi
-flask==1.1.2
-
-gevent
-twisted
-requests
-aiohttp
+starlette
+uvicorn
 httpx
 httpx[cli]
-gunicorn==20.1.0
-uvicorn
 
-ipython
+Django==3.2.20
+flask==1.1.2
+gevent
+gunicorn==20.1.0
+requests
+
+# 开发工具
 python-dotenv
+ipython
 pytest
 black
 flake8
-pylint
-rich
+sphinx
 
-numpy
-matplotlib
-pandas
-
+# 数据相关
+aiomysql
 sqlalchemy==1.4.49
 pymysql
 DBUtils==3.0.3
-pymongo
-psycopg2
 celery
 redis
+pandas
 
-sphinx
+
 ansible
 
 schedule

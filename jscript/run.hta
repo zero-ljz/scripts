@@ -38,10 +38,13 @@ function listFiles() {
         
         var editButton = "<td><button onclick=\"editFile('" + file.Name + "')\">编辑</button></td>";
         
-        if (extension === "exe" || extension === "bat" || extension === "cmd" || extension === "py") {
+        if (extension === "exe" || extension === "bat" || extension === "py" || extension === "ps1" || extension === "sh") {
             var isRunning = FindProcess(file.Name);
             status = isRunning ? "运行中" : "未运行";
-            buttons = "<td><button onclick=\"runFile('" + file.Name + "')\">运行</button></td><td><button onclick=\"killFile('" + file.Name + "')\">终止</button></td>";
+            var objShell = new ActiveXObject("WScript.Shell");
+            command = readCommand(file.Name) ? readCommand(file.Name) : objShell.CurrentDirectory + "\\" + file.Name;
+            //alert(command);
+            buttons = "<td><button onclick=\"runFile('" + file.Name + "')\">运行</button></td><td><button onclick=\"terminateProcess('" + command.replace(/\\/g, "\\\\") + "')\">终止</button></td>";
         }
 
         var setStartupButton = "<td><button onclick=\"setStartup('" + file.Name + "')\">开机自启</button></td>";
@@ -78,7 +81,7 @@ function runFile(fileName) {
     }
     
     var objShell = new ActiveXObject("WScript.Shell");
-    var command =  command ? command : fileName; // 仅当 command 不为 null 时才添加参数
+    var command =  command ? command : objShell.CurrentDirectory + "\\" + fileName; // 仅当 command 不为 null 时才添加参数
     objShell.Run(command, 1);
     
     // 将本次执行的命令保存到文件
@@ -107,7 +110,31 @@ var command = stream.ReadText();
 
 function killFile(fileName) {
     var objShell = new ActiveXObject("WScript.Shell");
-    objShell.Run("taskkill /IM " + fileName + " /T /F", 0, true);
+    var cmd = "taskkill /IM \"" + objShell.CurrentDirectory + "\\" + fileName + "\" /T /F";
+    alert(cmd);
+    objShell.Run(cmd, 0, true);
+}
+
+function terminateProcess(commandLine) {
+    commandLine = commandLine.replace(/\\/g, "\\\\");
+    var locator = new ActiveXObject("WbemScripting.SWbemLocator");
+    var service = locator.ConnectServer(".");
+    var processes = service.ExecQuery("SELECT * FROM Win32_Process WHERE CommandLine LIKE '%" + commandLine + "%'");
+
+    var result = "";
+
+    var enumProcesses = new Enumerator(processes);
+    for (; !enumProcesses.atEnd(); enumProcesses.moveNext()) {
+        var process = enumProcesses.item();
+        try {
+            process.Terminate();
+            result += "终止进程成功：" + process.ProcessId + "\n";
+        } catch (e) {
+            result += "终止进程失败：" + process.ProcessId + "\n";
+        }
+    }
+
+    alert(result);
 }
 
 function FindProcess(strProcess) { //查询指定进程
