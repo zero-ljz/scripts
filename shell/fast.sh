@@ -200,6 +200,13 @@ apt -y install fio
 # 运行随机读取测试
 # fio --name=random-read --ioengine=libaio --direct=1 --rw=randread --bs=4k --size=1G --numjobs=1 --runtime=60s
 
+apt -y install apache2-utils
+# Apache Benchmarking Tool，t最大持续时间 n总请求数 c并发连接数 v信息详细程度
+#ab -t 30 -n 5000 -c 100 -v 1 http://example.com/
+
+apt -y install wrk
+# WRK，t线程数 c并发连接数 d最大持续时间
+# wrk -t12 -c600 -d60s http://example.com
 
 # echo -e "\n\n\n 安装 fd 文件搜索工具，一个更好的 find 命令替代品，可以帮助你更快地查找文件，支持快速查找和过滤。"
 # wget -O fd_8.4.0_amd64.deb https://github.com/sharkdp/fd/releases/download/v8.4.0/fd_8.4.0_amd64.deb
