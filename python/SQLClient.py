@@ -228,17 +228,18 @@ class SQLClient(QMainWindow):
             elif sql_type == "CREATE TABLE":
                 sql = """\
 CREATE TABLE IF NOT EXISTS table_name (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_active BOOLEAN NOT NULL DEFAULT 1,
+    is_deleted BOOLEAN,
+    name VARCHAR(255),
     username VARCHAR(255) NOT NULL UNIQUE,
     age INT,
     hire_date DATE,
     price DECIMAL(10, 2),
-    content TEXT,
-    is_deleted BOOLEAN,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);\
+    content TEXT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;\
 """
             # 将语句插入到输入框中
             cursor = self.query_text.textCursor()

@@ -922,6 +922,8 @@ db_password=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
 db_user=${domain_name//./_}
 cat>${domain_name}.sql<<EOF
 CREATE DATABASE ${db_user}_db;
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
 CREATE USER '${db_user}'@'%' IDENTIFIED BY '${db_password}';
 GRANT ALL PRIVILEGES ON ${db_user}_db.* TO '${db_user}'@'%';
 FLUSH PRIVILEGES;
@@ -948,17 +950,28 @@ echo "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
 echo "安装 MySQL"
 # docker run -dp ${port}:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
 # -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+# -e TZ=Asia/Shanghai \
 # -e MYSQL_USER=user1 \
 # -e MYSQL_PASSWORD=123 \
 # -e MYSQL_DATABASE=db1 \
-# mysql:5.7-debian
+# -e MYSQL_CHARSET=utf8mb4 \
+# -e MYSQL_COLLATION=utf8mb4_unicode_ci \
+# -e TZ=Asia/Shanghai \
+# mysql:5.7-debian \
+# --character-set-server=utf8mb4 \
+# --collation-server=utf8mb4_unicode_ci
 
 docker run -dp ${port}:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
 --env MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+--env TZ=Asia/Shanghai \
 --env MARIADB_USER=user1 \
 --env MARIADB_PASSWORD=123 \
 --env MARIADB_DATABASE=db1 \
-mariadb:10.3
+--env MARIADB_CHARSET=utf8mb4 \
+--env MARIADB_COLLATION=utf8mb4_unicode_ci \
+mariadb:10.3-focal \
+--character-set-server=utf8mb4 \
+--collation-server=utf8mb4_unicode_ci
 
 }
 
@@ -1336,8 +1349,8 @@ docker exec ${app_name} bash -c "$commands"
 
 docker exec -it ${app_name} bash
 }
-
-#docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-bullseye python app.py
+# 3.11-alpine3.17
+#docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-slim-bullseye python app.py
 #docker run -it --rm --name php1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli php app.php
 #docker run -it --rm --name node1 -v "$PWD":/usr/src/app -w /usr/src/app node:18-bullseye-slim node app.js
 
