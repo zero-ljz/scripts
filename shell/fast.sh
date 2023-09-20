@@ -790,7 +790,7 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     }
 
-    # if ($scheme = http ) {
+    # if (\$scheme = http ) {
     #     return 301 https://\$host\$request_uri;
     # }
 
