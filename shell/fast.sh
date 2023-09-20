@@ -1024,6 +1024,16 @@ docker network create network1
 echo "安装 PHP"
 docker run -d -p 127.0.0.1:${local_port}:9000 --name php-fpm1 --restart=always --network network1 -v /var/www:/var/www php:7.4-fpm-bullseye
 
+docker exec -t php-fpm1 sh -c 'cat <<EOF > /etc/apt/sources.list
+# deb http://snapshot.debian.org/archive/debian/20221114T000000Z bullseye main
+deb http://p.ljz.one/http://deb.debian.org/debian bullseye main
+# deb http://snapshot.debian.org/archive/debian-security/20221114T000000Z bullseye-security main
+deb http://p.ljz.one/http://deb.debian.org/debian-security bullseye-security main
+# deb http://snapshot.debian.org/archive/debian/20221114T000000Z bullseye-updates main
+deb http://p.ljz.one/http://deb.debian.org/debian bullseye-updates main
+EOF'
+
+
 # 使用这个必须 -v /var/www:/var/www/html，否则nginx连不上php-fpm，日志报错[error] 20#20: *5 recv() failed (104: Connection reset by peer) while reading response header from upstream
 #docker run -d -p 127.0.0.1:9000:9000 --name php1 --network network1 -v /docker/php1:/usr/local/etc -v /var/www:/var/www/html webdevops/php:7.4-alpine
 
@@ -1405,12 +1415,12 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     install_docker
     install_frp
     # install_aria2
-    install_nodejs
+    # install_nodejs
 
     deploy_mysql
     deploy_redis
     deploy_nginx
-    deploy_php_fpm
+    # deploy_php_fpm
     deploy_tinyfilemanager
     deploy_adminer
 
