@@ -956,7 +956,7 @@ MYSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
 echo "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
 
 echo "安装 MySQL"
-# docker run -dp ${port}:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
+# docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
 # -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
 # -e TZ=Asia/Shanghai \
 # -e MYSQL_USER=user1 \
@@ -992,7 +992,7 @@ port=${1:-6379}
 docker network create network1
 
 echo "安装 Redis" 
-docker run -dp ${port}:6379 --name redis1 --network network1 --network-alias redis -v /docker/redis1:/data \
+docker run -dp ${port}:6379 --name redis1 --restart=always --network network1 --network-alias redis -v /docker/redis1:/data \
 redis:6-bullseye \
 redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 # 传给redis服务器的启动参数：若每60秒至少有一个键被修改了1次，就将数据持久化到磁盘，只记录警告及更高级别的日志
@@ -1005,7 +1005,7 @@ redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 deploy_nginx(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo "安装 Nginx"
-docker run -d --name nginx1 --network host -v /var/www:/var/www -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:stable-bullseye
+docker run -d --name nginx1 --restart=always --network host -v /var/www:/var/www -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:stable-bullseye
 }
 
 deploy_php_fpm(){
@@ -1020,7 +1020,7 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 docker network create network1
 
 echo "安装 PHP"
-docker run -d -p 127.0.0.1:${local_port}:9000 --name php-fpm1 --network network1 -v /var/www:/var/www php:7.4-fpm-bullseye
+docker run -d -p 127.0.0.1:${local_port}:9000 --name php-fpm1 --restart=always --network network1 -v /var/www:/var/www php:7.4-fpm-bullseye
 
 # 使用这个必须 -v /var/www:/var/www/html，否则nginx连不上php-fpm，日志报错[error] 20#20: *5 recv() failed (104: Connection reset by peer) while reading response header from upstream
 #docker run -d -p 127.0.0.1:9000:9000 --name php1 --network network1 -v /docker/php1:/usr/local/etc -v /var/www:/var/www/html webdevops/php:7.4-alpine
@@ -1069,7 +1069,7 @@ domain_name=${1:-blog.iapp.run}
 local_port=${2:-9001}
 create_database ${domain_name}
 
-docker run -dp 127.0.0.1:${local_port}:9000 --name wordpress1 --network network1 -v /var/www/${domain_name}:/var/www/html \
+docker run -dp 127.0.0.1:${local_port}:9000 --name wordpress1 --restart=always --network network1 -v /var/www/${domain_name}:/var/www/html \
 -e WORDPRESS_DB_HOST=mysql \
 -e WORDPRESS_DB_USER=${db_user} \
 -e WORDPRESS_DB_PASSWORD=${db_password} \
@@ -1132,7 +1132,7 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 
 domain_name=${1:-blog.iapp.run}
 local_port=${2:-8010}
-docker run -dp 127.0.0.1:${local_port}:80 --name wordpress1 --network network1 -v /docker/wordpress1:/var/www/html wordpress
+docker run -dp 127.0.0.1:${local_port}:80 --name wordpress1 --restart=always --network network1 -v /docker/wordpress1:/var/www/html wordpress
 create_proxy ${domain_name} ${local_port}
 create_database ${domain_name}
 
@@ -1147,7 +1147,7 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 docker volume create portainer_data
 #docker run -d -p 127.0.0.1:9002:9000 --name portainer1 -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data portainer/portainer
 # 汉化版
-docker run -d -p 9002:9000 --name portainer1 -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data 6053537/portainer
+docker run -d -p 9002:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data 6053537/portainer
 
 domain_name=${1:-docker.iapp.run}
 create_proxy ${domain_name} 9002
@@ -1164,7 +1164,7 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 
 domain_name=${1:-cloud.iapp.run}
 local_port=${2:-8011}
-docker run -dp 127.0.0.1:${local_port}:80 --name nextcloud1 --network network1  -v /docker/nextcloud:/var/www/html nextcloud
+docker run -dp 127.0.0.1:${local_port}:80 --name nextcloud1 --restart=always --network network1  -v /docker/nextcloud:/var/www/html nextcloud
 create_proxy ${domain_name} ${local_port}
 #create_database ${domain_name}
 # 用mysql性能不好
@@ -1214,6 +1214,7 @@ adduser \
    git
 docker run -d \
 --name gitea1 \
+--restart=always \
 -p 127.0.0.1:${local_port}:3000 -p ${ssh_port}:22 \
 -e USER_UID=$(id -u git) \
 -e USER_GID=$(id -g git) \
@@ -1244,6 +1245,7 @@ mkdir -vp /docker/cloudreve/{uploads,avatar} && touch /docker/cloudreve/conf.ini
 docker run -d \
 -p ${port}:5212 \
 --name cloudreve1 \
+--restart=always \
 --mount type=bind,source=/docker/cloudreve/conf.ini,target=/cloudreve/conf.ini \
 --mount type=bind,source=/docker/cloudreve/cloudreve.db,target=/cloudreve/cloudreve.db \
 -v /docker/cloudreve/uploads:/cloudreve/uploads \
@@ -1264,7 +1266,7 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 
 domain_name=${1:-cron.iapp.run}
 local_port=${2:-5920}
-docker run --name gocron1 --network network1 -p 127.0.0.1:${local_port}:5920 -d ouqg/gocron
+docker run --name gocron1 --restart=always --network network1 -p 127.0.0.1:${local_port}:5920 -d ouqg/gocron
 
 create_proxy ${domain_name} ${local_port}
 create_database ${domain_name}
