@@ -536,7 +536,7 @@ curl -fsSL https://p.ljz.one/https://raw.githubusercontent.com/filebrowser/get/m
 deploy_tinyfilemanager(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
-docker exec -i tinyfilemanager1 wget -O /docker/${app_name}/adminer.php https://p.ljz.one/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+docker exec -i tinyfilemanager1 wget -O /var/www/html/adminer.php https://p.ljz.one/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
 domain_name=${1:-file.iapp.run}
 create_proxy ${domain_name} 8020
 }
