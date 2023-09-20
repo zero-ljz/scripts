@@ -25,7 +25,8 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 apt update
 
 echo -e "\n\n\n 安装必备组件"
-apt -y install sudo openssl aptitude zip unzip wget curl telnet sqlite3 perl lua5.3
+apt -y install sudo openssl aptitude unzip wget curl telnet perl
+apt -y install sqlite3 lua5.3 zip
 apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
 
 echo -e "\n\n\n 安装 Git"
@@ -787,6 +788,10 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     }
 
+    # if ($scheme = http ) {
+    #     return 301 https://$host$request_uri;
+    # }
+
     # SSL/TLS 配置
     # listen 443 ssl;
     # ssl_certificate /var/ssl/${domain_name}.chained.crt;
@@ -964,7 +969,7 @@ echo "安装 MySQL"
 # --character-set-server=utf8mb4 \
 # --collation-server=utf8mb4_unicode_ci
 
-docker run -dp ${port}:3306 --name mysql1 --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
+docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
 --env MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
 --env TZ=Asia/Shanghai \
 --env MARIADB_USER=user1 \
