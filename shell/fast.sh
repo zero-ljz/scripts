@@ -791,7 +791,7 @@ server {
     }
 
     # if ($scheme = http ) {
-    #     return 301 https://$host$request_uri;
+    #     return 301 https://\$host\$request_uri;
     # }
 
     # SSL/TLS 配置
