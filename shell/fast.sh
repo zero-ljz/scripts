@@ -1415,12 +1415,12 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     install_docker
     install_frp
     # install_aria2
-    # install_nodejs
+    install_nodejs
 
     deploy_mysql
     deploy_redis
     deploy_nginx
-    # deploy_php_fpm
+    deploy_php_fpm
     deploy_tinyfilemanager
     deploy_adminer
 
