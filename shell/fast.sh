@@ -26,7 +26,7 @@ apt update
 
 echo -e "\n\n\n 安装必备组件"
 apt -y install sudo openssl aptitude zip unzip wget curl telnet sqlite3 perl lua5.3
-apt -y install python3 python3-pip python3-dev python3-setuptools
+apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
 
 echo -e "\n\n\n 安装 Git"
 apt -y install git
@@ -63,8 +63,11 @@ fi
 
 if [ ! -f "/swapfile" ];then
 echo -e "\n\n\n设置 Swap"
+
+total_memory_mb=$(grep MemTotal /proc/meminfo | awk '{print int($2 / 1024)}')
+swapfile_length=$(($total_memory_mb * 2))
 # 创建swap文件
-fallocate -l 2G /swapfile
+fallocate -l ${swapfile_length}M /swapfile
 # 格式化为交换分区
 mkswap /swapfile
 # 将文件添加到系统的/etc/fstab文件中，以便在系统启动时自动挂载
@@ -921,7 +924,7 @@ MYSQL_ROOT_PASSWORD=$(cat MYSQL_ROOT_PASSWORD.txt)
 db_password=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
 db_user=${domain_name//./_}
 cat>${domain_name}.sql<<EOF
-CREATE DATABASE ${db_user}_db;
+CREATE DATABASE ${db_user}_db
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 CREATE USER '${db_user}'@'%' IDENTIFIED BY '${db_password}';
