@@ -410,7 +410,7 @@ echo -e "\n\n\n------------------------------安装 Nodejs----------------------
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 apt -y install npm
 # 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
-curl -o- https://p.ljz.one/https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
+curl -o- https://p.ljz.one/https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | sed 's|https://|https://p.ljz.one/https://|' | bash
 
 # 运行以下操作可以不用重启终端就能使用nvm
 export NVM_DIR="$HOME/.nvm"
