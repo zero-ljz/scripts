@@ -69,11 +69,6 @@ while true; do
   esac
 done
 
-# 检查是否提供了必需的选项
-if [ -z "$remote_server" ] || [ -z "$remote_password" ]; then
-  echo "必需的选项未提供."
-  usage
-fi
 
 apt -y install rsync sshpass
 save_dir="/backup"
@@ -129,12 +124,14 @@ if [ "$backup_containers" = true ]; then
   done
 fi
 
-# 输出选项的值
-echo "远程服务器: $remote_server"
-echo "远程目录: $remote_dir"
+if [ -n "$remote_server" ] && [ -n "$remote_password" ]; then
+  # 输出选项的值
+  echo "远程服务器: $remote_server"
+  echo "远程目录: $remote_dir"
 
-echo "开始同步备份文件到远程服务器"
-# 如果不加-o StrictHostKeyChecking=no，就一定要先用ssh命令登录一次目标服务器，并输入yes将远程服务器地址永久添加到known hosts list（已知主机列表）
-# 使用rsync上传备份文件到远程服务器（使用密码认证）
-rsync -avvvz -e "/usr/bin/sshpass -p $remote_password ssh -o StrictHostKeyChecking=no" "$save_dir" "$remote_server:$remote_dir"
-[ $? -ne 0 ] && echo "备份文件上传失败！"
+  echo "开始同步备份文件到远程服务器"
+  # 如果不加-o StrictHostKeyChecking=no，就一定要先用ssh命令登录一次目标服务器，并输入yes将远程服务器地址永久添加到known hosts list（已知主机列表）
+  # 使用rsync上传备份文件到远程服务器（使用密码认证）
+  rsync -avvvz -e "/usr/bin/sshpass -p $remote_password ssh -o StrictHostKeyChecking=no" "$save_dir" "$remote_server:$remote_dir"
+  [ $? -ne 0 ] && echo "备份文件上传失败！"
+fi
