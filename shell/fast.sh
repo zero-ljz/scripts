@@ -540,7 +540,7 @@ docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfil
 
 deploy_adminer(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-docker run -d --link mysql1:db --network network1 -p 8021:8080 adminer
+docker run -d --link mysql1:db --network network1 -p 8021:8080 --restart=always --name adminer1 adminer
 }
 
 install_alist(){
