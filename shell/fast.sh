@@ -833,8 +833,9 @@ EOF
 
 # docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
 cp ./${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
-# docker restart nginx1
-echo "Please restart nginx"
+
+systemctl restart nginx
+docker restart nginx1
 }
 
 create_vhost(){
@@ -926,6 +927,9 @@ wget -O /var/www/${domain_name}/index.php ${proxy}https://raw.githubusercontent.
 
 chown -R www-data:www-data /var/www/${domain_name}
 chmod -R 777 /var/www/${domain_name}
+
+systemctl restart nginx
+docker restart nginx1
 }
 
 create_database(){
@@ -1146,8 +1150,9 @@ server {
 }
 EOF
 docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
-docker restart nginx1
 
+systemctl restart nginx
+docker restart nginx1
 }
 
 deploy_wordpress(){
@@ -1323,8 +1328,6 @@ hackmdio/hackmd:2.4.2
 
 create_proxy ${domain_name} ${local_port}
 create_database ${domain_name}
-
-
 }
 
 
