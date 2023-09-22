@@ -921,7 +921,7 @@ wget -O /var/www/${domain_name}/index.php ${proxy}https://raw.githubusercontent.
 # sed -i "s/localhost/mysql/g" /var/www/${domain_name}/phpMyAdmin/config.inc.php
 
 #https://cn.wordpress.org/latest-zh_CN.zip
-#${proxy}https://github.com/typecho/typecho/releases/latest/download/typecho.zip
+#https://github.com/typecho/typecho/releases/latest/download/typecho.zip
 
 
 chown -R www-data:www-data /var/www/${domain_name}
@@ -1365,7 +1365,7 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name http_port repo_url command"
 return; fi
 # docker rm -f iapp2
-# bash fast.sh deploy_python_app iapp2 8000 ${proxy}https://github.com/zero-ljz/iapp.git
+# bash fast.sh deploy_python_app iapp2 8000 https://github.com/zero-ljz/iapp.git
 app_name=$1
 http_port=${2:-8000}
 repo_url=${3}
@@ -1402,7 +1402,7 @@ return; fi
   url=$1
   p=$2
 
-  # bash /root/fast.sh run_from_git ${proxy}https://github.com/zero-ljz/iapp.git 777:8000
+  # bash /root/fast.sh run_from_git https://github.com/zero-ljz/iapp.git 777:8000
   # 请在repos目录使用此函数
   repo=$(echo "$url" | sed 's|.*/\([^/]*\)\.git|\1|')
   docker rm -f ${repo}1
