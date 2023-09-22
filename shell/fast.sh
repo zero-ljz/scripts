@@ -881,8 +881,8 @@ server {
     # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
     #
     location ~ \.php$ {
-        # 本地安装的php-fpm默认是只能通过套接字通信
-        #fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        # 本地安装的php-fpm默认是只能通过套接字通信，且只能和本地安装的nginx通信，非nginx容器
+        #fastcgi_pass unix:/run/php/php-fpm.sock;
         fastcgi_pass   127.0.0.1:9000;
         fastcgi_index  index.php;
         # PHP脚本文件路径，document_root表示使用静态资源相同目录，目录路径必须是在php-fpm容器内有效的目录路径
@@ -1067,15 +1067,15 @@ docker restart php-fpm1
 }
 
 
-install_phpfpm(){
+install_php_fpm(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 PHP FPM------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 apt -y install php-fpm composer 
 # 安装php扩展
 apt -y install php-json php-mbstring php-mysql php-xml php-zip php-curl php-imagick php-gd file php-pear php-redis php-sqlite3 php-mongodb php-bcmath php-soap php-intl php-igbinary php-xdebug
-# systemctl enable php8.2-fpm
-# systemctl start php8.2-fpm
+systemctl enable php7.4-fpm
+systemctl start php7.4-fpm
 
 #curl -sS https://getcomposer.org/installer | php
 
