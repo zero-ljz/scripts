@@ -393,10 +393,10 @@ apt -y install build-essential zlib1g zlib1g-dev libffi-dev
 wget https://www.python.org/ftp/python/${version}/Python-${version}.tgz
 tar xzvf Python-${version}.tgz
 cd Python-${version}
-./configure --prefix=/usr/local/bin/python --with-ssl
+./configure --prefix=/usr/local/bin --with-ssl
 make && make install
-ln -s  /usr/local/bin/python/bin/python${short_version} /usr/bin/python3
-ln -s  /usr/local/bin/python/bin/pip3 /usr/bin/pip3
+ln -s  /usr/local/bin/python${short_version} /usr/bin/python3
+ln -s  /usr/local/bin/pip3 /usr/bin/pip3
 cd ..
 
 pip install --upgrade certifi
@@ -561,10 +561,29 @@ wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz https://p.ljz.one/h
 tar xzvf frp_0.48.0_linux_amd64.tar.gz -C /usr/local/bin/
 mv /usr/local/bin/frp_0.48.0_linux_amd64 /usr/local/bin/frp
 
-# echo -e "\n\n\n 使用 systemd 守护 Frps 进程"
-# create_service frps "/usr/local/bin/frp/frps -c /usr/local/bin/frp/frps.ini" /usr/local/bin/frp
-# systemctl enable frps
-# systemctl restart frps
+cat <<EOF > /usr/local/bin/frp/frps.ini
+[common]
+bind_addr = 0.0.0.0
+bind_port = 7000
+
+vhost_http_port = 8080
+
+dashboard_port = 7500
+dashboard_user = admin
+dashboard_pwd = admin
+
+EOF
+
+}
+
+install_frps()
+{
+install_frp
+
+echo -e "\n\n\n 使用 systemd 守护 Frps 进程"
+create_service frps "/usr/local/bin/frp/frps -c /usr/local/bin/frp/frps.ini" /usr/local/bin/frp
+systemctl enable frps
+systemctl restart frps
 }
 
 start_frpc()
@@ -966,7 +985,6 @@ echo "安装 MySQL"
 # -e MYSQL_DATABASE=db1 \
 # -e MYSQL_CHARSET=utf8mb4 \
 # -e MYSQL_COLLATION=utf8mb4_unicode_ci \
-# -e TZ=Asia/Shanghai \
 # mysql:5.7-debian \
 # --character-set-server=utf8mb4 \
 # --collation-server=utf8mb4_unicode_ci
@@ -1413,7 +1431,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     system_init
     install_supervisor
     install_docker
-    install_frp
+    install_frps
     # install_aria2
     install_nodejs
 

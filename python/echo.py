@@ -1,7 +1,7 @@
 from bottle import Bottle, request, response
 app = Bottle()
 
-@app.route('/<path:re:.*>', method=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
+@app.route('/<path:re:.*>', method=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'])
 def echo(path):
     request_line = f'{request.method} {request.path}{"?" + request.query_string if request.query_string else ""} {request.environ.get("SERVER_PROTOCOL")}'
     headers = '\n'.join([f'{key}: {value}' for key, value in sorted(request.headers.items())])
@@ -15,4 +15,4 @@ def echo(path):
     return response
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=False)
+    app.run(host='0.0.0.0', port=80, debug=True, reloader=True)
