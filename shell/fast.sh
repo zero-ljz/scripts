@@ -410,7 +410,7 @@ echo -e "\n\n\n------------------------------安装 Nodejs----------------------
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 apt -y install npm
 # 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
-curl -o- https://p.ljz.one/https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | sed 's|https://|https://p.ljz.one/https://|' | bash
+curl -o- https://p.ljz.one/https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | sed -E 's#(https?://)#https://p.ljz.one/\1#g' /etc/apt/sources.list | bash
 
 # 运行以下操作可以不用重启终端就能使用nvm
 export NVM_DIR="$HOME/.nvm"
@@ -426,19 +426,6 @@ npm install -g yarn
 
 # npm config set registry https://registry.npmjs.org/
 # npm config set registry https://registry.npm.taobao.org
-
-}
-
-install_phpfpm(){
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-echo -e "\n\n\n------------------------------安装 PHP FPM------------------------------"
-echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-apt -y install php-fpm composer php-json php-mbstring php-mysql php-xml php-zip php-curl php-imagick php-gd file php-pear php-redis php-sqlite3 php-mongodb php-bcmath php-soap php-intl php-igbinary php-xdebug
-# systemctl enable php8.2-fpm
-# systemctl start php8.2-fpm
-
-#curl -sS https://getcomposer.org/installer | php
-
 
 }
 
@@ -1042,14 +1029,7 @@ docker network create network1
 echo "安装 PHP"
 docker run -d -p 127.0.0.1:${local_port}:9000 --name php-fpm1 --restart=always --network network1 -v /var/www:/var/www php:7.4-fpm-bullseye
 
-docker exec -t php-fpm1 sh -c 'cat <<EOF > /etc/apt/sources.list
-# deb http://snapshot.debian.org/archive/debian/20221114T000000Z bullseye main
-deb http://p.ljz.one/http://deb.debian.org/debian bullseye main
-# deb http://snapshot.debian.org/archive/debian-security/20221114T000000Z bullseye-security main
-deb http://p.ljz.one/http://deb.debian.org/debian-security bullseye-security main
-# deb http://snapshot.debian.org/archive/debian/20221114T000000Z bullseye-updates main
-deb http://p.ljz.one/http://deb.debian.org/debian bullseye-updates main
-EOF'
+docker exec -t php-fpm1 sh -c "sed -i -E 's#(https?://)#https://p.ljz.one/\1#g' /etc/apt/sources.list"
 
 
 # 使用这个必须 -v /var/www:/var/www/html，否则nginx连不上php-fpm，日志报错[error] 20#20: *5 recv() failed (104: Connection reset by peer) while reading response header from upstream
@@ -1071,7 +1051,7 @@ docker exec -t php-fpm1 apt-get install -y --no-install-recommends libfreetype6-
 docker exec -t php-fpm1 docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp
 
 # 用 docker-php-ext-install 安装扩展
-docker exec -t php-fpm1 docker-php-ext-install -j "$(nproc)" bcmath exif gd intl mysqli zip
+docker exec -t php-fpm1 docker-php-ext-install -j "$(nproc)" bcmath exif gd intl mysqli zip pdo_mysql soap igbinary pdo_sqlite
 
 # 用 pecl 安装扩展
 docker exec php-fpm1 pecl install imagick-3.6.0 redis
@@ -1083,6 +1063,21 @@ docker exec -t php-fpm1 rm -r /tmp/pear
 #docker exec -t php-fpm1 docker-php-ext-install bcmath bz2 calendar ctype curl dba dom enchant exif ffi fileinfo filter ftp gd gettext gmp hash iconv imap intl json ldap mbstring mysqli oci8 odbc opcache pcntl pdo pdo_dblib pdo_firebird pdo_mysql pdo_oci pdo_odbc pdo_pgsql pdo_sqlite pgsql phar posix pspell readline reflection session shmop simplexml snmp soap sockets sodium spl standard sysvmsg sysvsem sysvshm tidy tokenizer xml xmlreader xmlrpc xmlwriter xsl zend_test zip
 
 docker restart php-fpm1
+
+}
+
+
+install_phpfpm(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+echo -e "\n\n\n------------------------------安装 PHP FPM------------------------------"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+apt -y install php-fpm composer 
+# 安装php扩展
+apt -y install php-json php-mbstring php-mysql php-xml php-zip php-curl php-imagick php-gd file php-pear php-redis php-sqlite3 php-mongodb php-bcmath php-soap php-intl php-igbinary php-xdebug
+# systemctl enable php8.2-fpm
+# systemctl start php8.2-fpm
+
+#curl -sS https://getcomposer.org/installer | php
 
 }
 
