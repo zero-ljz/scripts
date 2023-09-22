@@ -1,12 +1,33 @@
 ﻿import sys
-import asyncio
 import json
-import aiohttp
-from PySide6.QtCore import Qt, Slot
+import threading
+import requests
+from PySide6.QtCore import Qt, Slot, Signal, QObject
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
     QPushButton, QComboBox, QMessageBox, QTabWidget, QFileDialog, QSplitter, QStatusBar, QCheckBox
 from PySide6.QtGui import QAction
 
+class RequestThread(QObject):
+    finished = Signal(str, str, str, str)
+
+    def __init__(self, url, method, headers, body, allow_redirects):
+        super().__init__()
+        self.url = url
+        self.method = method
+        self.headers = headers
+        self.body = body
+        self.allow_redirects = allow_redirects
+
+    def run(self):
+        try:
+            response = requests.request(self.method, self.url, headers=self.headers, data=self.body, allow_redirects=self.allow_redirects)
+            status_message = f"{response.status_code} {response.reason}"
+            response_headers = response.headers
+            response_text = response.text
+
+            self.finished.emit(status_message, response_headers, response_text, self.body)
+        except Exception as e:
+            self.finished.emit(str(e), "", "", "")
 
 class HTTPClient(QMainWindow):
     def __init__(self):
@@ -204,8 +225,27 @@ class HTTPClient(QMainWindow):
         headers = self.parse_headers(request_headers_text)
         body = request_body_text.toPlainText()
 
-        asyncio.run(self.make_request(url, method, headers, body))
+        follow_redirect_checkbox = request_widget.findChild(QCheckBox, "follow_redirect_checkbox")
+        allow_redirects = follow_redirect_checkbox.isChecked()
 
+        request_thread = RequestThread(url, method, headers, body, allow_redirects)
+        request_thread.finished.connect(self.handle_request_result)
+        thread = threading.Thread(target=request_thread.run)
+        thread.start()
+
+    def handle_request_result(self, status_message, response_headers, response_text, request_body):
+        current_tab_index = self.tab_widget.currentIndex()
+        current_tab = self.tab_widget.widget(current_tab_index)
+        response_widget = current_tab.findChild(QWidget, "response_widget")
+
+        response_headers_text = current_tab.findChild(QWidget, "response_headers_text")
+        response_body_text = current_tab.findChild(QWidget, "response_body_text")
+
+        response_body_text.setPlainText(response_text)
+        response_headers_text.setPlainText(response_headers)
+
+        # Update status bar message
+        self.statusBar().showMessage(status_message)
 
     def parse_headers(self, headers_text):
         headers_text = headers_text.toPlainText().strip()
@@ -217,43 +257,43 @@ class HTTPClient(QMainWindow):
                 headers[key.strip()] = value.strip()
         return headers
 
-    async def make_request(self, url, method, headers, body):
-        current_tab_index = self.tab_widget.currentIndex()
-        current_tab = self.tab_widget.widget(current_tab_index)
-        allow_redirects = current_tab.findChild(QWidget, "follow_redirect_checkbox").isChecked()
+    # async def make_request(self, url, method, headers, body):
+    #     current_tab_index = self.tab_widget.currentIndex()
+    #     current_tab = self.tab_widget.widget(current_tab_index)
+    #     allow_redirects = current_tab.findChild(QWidget, "follow_redirect_checkbox").isChecked()
 
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.request(method, url, headers=headers, data=body, allow_redirects=allow_redirects) as response:
-                    response_text = await response.text()
+    #     try:
+    #         async with aiohttp.ClientSession() as session:
+    #             async with session.request(method, url, headers=headers, data=body, allow_redirects=allow_redirects) as response:
+    #                 response_text = await response.text()
 
-                    response_widget = current_tab.findChild(QWidget, "response_widget")
+    #                 response_widget = current_tab.findChild(QWidget, "response_widget")
 
-                    response_headers_text = current_tab.findChild(QWidget, "response_headers_text")
-                    response_body_text = current_tab.findChild(QWidget, "response_body_text")
+    #                 response_headers_text = current_tab.findChild(QWidget, "response_headers_text")
+    #                 response_body_text = current_tab.findChild(QWidget, "response_body_text")
 
-                    response_body_text.setPlainText(response_text)
+    #                 response_body_text.setPlainText(response_text)
 
-                    response_headers = response.headers
-                    headers_text = ""
-                    for header, value in response_headers.items():
-                        headers_text += f"{header}: {value}\n"
-                    response_headers_text.setPlainText(headers_text)
+    #                 response_headers = response.headers
+    #                 headers_text = ""
+    #                 for header, value in response_headers.items():
+    #                     headers_text += f"{header}: {value}\n"
+    #                 response_headers_text.setPlainText(headers_text)
 
-                    content_type = response.headers.get('Content-Type', '')
-                    if 'application/json' in content_type:
-                        try:
-                            json_data = json.loads(response_text)
-                            formatted_json = json.dumps(json_data, indent=4)
-                            response_body_text.setPlainText(formatted_json)
-                        except ValueError:
-                            pass
-                    # Update status bar message
-                    status_message = f"{response.status} {response.reason}"
-                    self.statusBar().showMessage(status_message)
+    #                 content_type = response.headers.get('Content-Type', '')
+    #                 if 'application/json' in content_type:
+    #                     try:
+    #                         json_data = json.loads(response_text)
+    #                         formatted_json = json.dumps(json_data, indent=4)
+    #                         response_body_text.setPlainText(formatted_json)
+    #                     except ValueError:
+    #                         pass
+    #                 # Update status bar message
+    #                 status_message = f"{response.status} {response.reason}"
+    #                 self.statusBar().showMessage(status_message)
 
-        except aiohttp.ClientError as e:
-            QMessageBox.warning(self, "Error", str(e))
+    #     except aiohttp.ClientError as e:
+    #         QMessageBox.warning(self, "Error", str(e))
 
     def close_tab(self, index):
         if self.tab_widget.count() > 1:
