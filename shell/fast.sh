@@ -1051,7 +1051,7 @@ docker exec -t php-fpm1 apt-get install -y --no-install-recommends libfreetype6-
 docker exec -t php-fpm1 docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp
 
 # 用 docker-php-ext-install 安装扩展
-docker exec -t php-fpm1 docker-php-ext-install -j "$(nproc)" bcmath exif gd intl mysqli zip # pdo_mysql soap igbinary pdo_sqlite
+docker exec -t php-fpm1 docker-php-ext-install -j "$(nproc)" bcmath exif gd intl mysqli zip pdo_mysql soap bz2 gettext sockets ldap
 
 # 用 pecl 安装扩展
 docker exec php-fpm1 pecl install imagick-3.6.0 redis
