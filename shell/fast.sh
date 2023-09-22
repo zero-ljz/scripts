@@ -12,6 +12,26 @@
 
 OSID=$(grep '^ID=' /etc/os-release | cut -d= -f2)
 
+# 默认代理设置
+proxy=""
+
+# 解析命令行参数
+while getopts ":p:" opt; do
+  case $opt in
+    p)
+      proxy="$OPTARG"
+      ;;
+    \?)
+      echo "无效的选项: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "选项 -$OPTARG 需要一个参数。" >&2
+      exit 1
+      ;;
+  esac
+done
+
 system_init(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装必备组件 && 系统配置------------------------------"
@@ -213,7 +233,7 @@ apt -y install wrk
 # wrk -t12 -c600 -d60s http://example.com
 
 # echo -e "\n\n\n 安装 fd 文件搜索工具，一个更好的 find 命令替代品，可以帮助你更快地查找文件，支持快速查找和过滤。"
-# wget -O fd_8.4.0_amd64.deb https://p.ljz.one/https://github.com/sharkdp/fd/releases/download/v8.4.0/fd_8.4.0_amd64.deb
+# wget -O fd_8.4.0_amd64.deb ${proxy}https://github.com/sharkdp/fd/releases/download/v8.4.0/fd_8.4.0_amd64.deb
 # dpkg -i  fd_8.4.0_amd64.deb
 
 # 安装命令行提示工具
@@ -244,7 +264,7 @@ pip3 install 'httpx[cli]'
 pip3 install --user glances
 
 # 安装GoTTY - 将您的终端共享为 Web 应用程序
-wget https://p.ljz.one/https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz
+wget ${proxy}https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz
 tar -xzf gotty_linux_amd64.tar.gz
 mv gotty /usr/local/bin/
 # 命令：gotty top
@@ -372,7 +392,7 @@ mkdir -m 0755 -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/${OSID}/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 chmod a+r /etc/apt/keyrings/docker.gpg
 echo -e "\n\n\n 设置存储库"
-echo  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://p.ljz.one/https://download.docker.com/linux/${OSID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+echo  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] ${proxy}https://download.docker.com/linux/${OSID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 echo -e "\n\n\n 更新APT包索引"
 apt-get update
 echo -e "\n\n\n 安装 Docker Engine、containerd 和 Docker Compose"
@@ -410,7 +430,7 @@ echo -e "\n\n\n------------------------------安装 Nodejs----------------------
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 apt -y install npm
 # 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
-curl -o- https://p.ljz.one/https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | sed -E 's#(https?://)#https://p.ljz.one/\1#g' /etc/apt/sources.list | bash
+curl -o- ${proxy}https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | sed -E 's#(https?://)#${proxy}\1#g' /etc/apt/sources.list | bash
 
 # 运行以下操作可以不用重启终端就能使用nvm
 export NVM_DIR="$HOME/.nvm"
@@ -514,7 +534,7 @@ install_filebrowser(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Web filebrowser------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-curl -fsSL https://p.ljz.one/https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash 
+curl -fsSL ${proxy}https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash 
 # filebrowser -r / -a 0.0.0.0 -p 8080
 # 默认账户 admin / admin
 
@@ -544,7 +564,7 @@ install_frp(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装 Frp------------------------------"
 echo -e "\n\n\n下载 Frp 二进制包"
-wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz https://p.ljz.one/https://github.com/fatedier/frp/releases/download/v0.48.0/frp_0.48.0_linux_amd64.tar.gz
+wget --no-check-certificate -O frp_0.48.0_linux_amd64.tar.gz ${proxy}https://github.com/fatedier/frp/releases/download/v0.48.0/frp_0.48.0_linux_amd64.tar.gz
 tar xzvf frp_0.48.0_linux_amd64.tar.gz -C /usr/local/bin/
 mv /usr/local/bin/frp_0.48.0_linux_amd64 /usr/local/bin/frp
 
@@ -722,7 +742,7 @@ fi
 
 mkdir -p "$acme_dir"
 
-wget https://p.ljz.one/https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py -O $ACME_TINY -o /dev/null
+wget ${proxy}https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py -O $ACME_TINY -o /dev/null
 python3 $ACME_TINY --account-key "$ACCOUNT_KEY" --csr "${DOMAIN_CSR}" --acme-dir "$acme_dir" > "$DOMAIN_CRT"
 
 
@@ -905,11 +925,11 @@ cp ${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
 
 echo "远程下载默认网站 源码文件"
 echo '<?php echo phpinfo(); ?>' >> /var/www/${domain_name}/phpinfo.php
-wget -O /var/www/${domain_name}/adminer.php https://p.ljz.one/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
-wget -O /var/www/${domain_name}/editor.php https://p.ljz.one/https://github.com/vrana/adminer/releases/download/v4.8.1/editor-4.8.1.php
-wget -O /var/www/${domain_name}/tinyfilemanager.php https://p.ljz.one/https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
-wget -O /var/www/${domain_name}/index.php https://p.ljz.one/https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
-# wget -O /var/www/${domain_name}/shell.php https://p.ljz.one/https://raw.githubusercontent.com/artyuum/simple-php-web-shell/master/index.php
+wget -O /var/www/${domain_name}/adminer.php ${proxy}https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+wget -O /var/www/${domain_name}/editor.php ${proxy}https://github.com/vrana/adminer/releases/download/v4.8.1/editor-4.8.1.php
+wget -O /var/www/${domain_name}/tinyfilemanager.php ${proxy}https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+wget -O /var/www/${domain_name}/index.php ${proxy}https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
+# wget -O /var/www/${domain_name}/shell.php ${proxy}https://raw.githubusercontent.com/artyuum/simple-php-web-shell/master/index.php
 
 # wget -O phpMyAdmin.zip https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
 # unzip -d /var/www/${domain_name} phpMyAdmin.zip > /dev/null
@@ -918,7 +938,7 @@ wget -O /var/www/${domain_name}/index.php https://p.ljz.one/https://raw.githubus
 # sed -i "s/localhost/mysql/g" /var/www/${domain_name}/phpMyAdmin/config.inc.php
 
 #https://cn.wordpress.org/latest-zh_CN.zip
-#https://p.ljz.one/https://github.com/typecho/typecho/releases/latest/download/typecho.zip
+#${proxy}https://github.com/typecho/typecho/releases/latest/download/typecho.zip
 
 
 chown -R www-data:www-data /var/www/${domain_name}
@@ -1029,7 +1049,7 @@ docker network create network1
 echo "安装 PHP"
 docker run -d -p 127.0.0.1:${local_port}:9000 --name php-fpm1 --restart=always --network network1 -v /var/www:/var/www php:7.4-fpm-bullseye
 
-docker exec -t php-fpm1 sh -c "sed -i -E 's#(https?://)#https://p.ljz.one/\1#g' /etc/apt/sources.list"
+docker exec -t php-fpm1 sh -c "sed -i -E 's#(https?://)#${proxy}\1#g' /etc/apt/sources.list"
 
 
 # 使用这个必须 -v /var/www:/var/www/html，否则nginx连不上php-fpm，日志报错[error] 20#20: *5 recv() failed (104: Connection reset by peer) while reading response header from upstream
@@ -1334,8 +1354,8 @@ return; fi
 app_name=$1
 http_port=$2
 docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
-wget -O /docker/${app_name}/adminer.php https://p.ljz.one/https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
-wget -P /docker/${app_name} https://p.ljz.one/https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+wget -O /docker/${app_name}/adminer.php ${proxy}https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+wget -P /docker/${app_name} ${proxy}https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
 }
 
 # docker restart nginx1
@@ -1362,7 +1382,7 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name http_port repo_url command"
 return; fi
 # docker rm -f iapp2
-# bash fast.sh deploy_python_app iapp2 8000 https://p.ljz.one/https://github.com/zero-ljz/iapp.git
+# bash fast.sh deploy_python_app iapp2 8000 ${proxy}https://github.com/zero-ljz/iapp.git
 app_name=$1
 http_port=${2:-8000}
 repo_url=${3}
@@ -1399,7 +1419,7 @@ return; fi
   url=$1
   p=$2
 
-  # bash /root/fast.sh run_from_git https://p.ljz.one/https://github.com/zero-ljz/iapp.git 777:8000
+  # bash /root/fast.sh run_from_git ${proxy}https://github.com/zero-ljz/iapp.git 777:8000
   # 请在repos目录使用此函数
   repo=$(echo "$url" | sed 's|.*/\([^/]*\)\.git|\1|')
   docker rm -f ${repo}1
@@ -1417,7 +1437,7 @@ return; fi
 function reinstall_debian(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     read -p "请输入新的root密码：" password
-    curl -fLO https://p.ljz.one/https://raw.githubusercontent.com/bohanyang/debi/master/debi.sh && chmod a+rx debi.sh && ./debi.sh --version 11 --cdn --network-console --ethx --bbr --timezone Asia/Shanghai --user root --password ${password}
+    curl -fLO ${proxy}https://raw.githubusercontent.com/bohanyang/debi/master/debi.sh && chmod a+rx debi.sh && ./debi.sh --version 11 --cdn --network-console --ethx --bbr --timezone Asia/Shanghai --user root --password ${password}
 }
 
 
@@ -1462,7 +1482,7 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Description: Upgrade this script, Perform this operation in the working directory"
     exit 0
 fi
-bash -c 'wget --no-cache -O fast.sh https://p.ljz.one/https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
+bash -c 'wget --no-cache -O fast.sh ${proxy}https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
 }
 
 # 获取函数名
