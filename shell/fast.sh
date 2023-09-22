@@ -13,24 +13,7 @@
 OSID=$(grep '^ID=' /etc/os-release | cut -d= -f2)
 
 # 默认代理设置
-proxy=""
-
-# 解析命令行参数
-while getopts ":p:" opt; do
-  case $opt in
-    p)
-      proxy="$OPTARG"
-      ;;
-    \?)
-      echo "无效的选项: -$OPTARG" >&2
-      exit 1
-      ;;
-    :)
-      echo "选项 -$OPTARG 需要一个参数。" >&2
-      exit 1
-      ;;
-  esac
-done
+proxy="https://p.ljz.one/"
 
 system_init(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
