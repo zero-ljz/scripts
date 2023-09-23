@@ -918,6 +918,12 @@ wget -O /var/www/${domain_name}/tinyfilemanager.php ${proxy}https://raw.githubus
 wget -O /var/www/${domain_name}/index.php ${proxy}https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
 # wget -O /var/www/${domain_name}/shell.php ${proxy}https://raw.githubusercontent.com/artyuum/simple-php-web-shell/master/index.php
 
+wget -P /var/www/${domain_name} ${proxy}https://github.com/nickola/web-console/releases/download/v0.9.7/webconsole-0.9.7.zip
+unzip -d /var/www/${domain_name} /var/www/${domain_name}/webconsole-0.9.7.zip
+mv /var/www/${domain_name}/webconsole/webconsole.php /var/www/${domain_name}/webconsole.php
+sed -i "s/NO_LOGIN = false/NO_LOGIN = true/g" /var/www/${domain_name}/webconsole.php # 开启免登录
+rm -rf /var/www/${domain_name}/webconsole-0.9.7.zip /var/www/${domain_name}/webconsole
+
 # wget -O phpMyAdmin.zip https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
 # unzip -d /var/www/${domain_name} phpMyAdmin.zip > /dev/null
 # mv /var/www/${domain_name}/phpMyAdmin-5.2.1-all-languages /var/www/${domain_name}/phpMyAdmin
