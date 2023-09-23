@@ -396,14 +396,16 @@ apt -y install build-essential zlib1g zlib1g-dev libffi-dev
 wget https://www.python.org/ftp/python/${version}/Python-${version}.tgz
 tar xzvf Python-${version}.tgz
 cd Python-${version}
-./configure --prefix=/usr/local --with-ssl
+./configure --prefix=/usr/local --with-ssl --with-openssl
 make && make install
 ln -s  /usr/local/bin/python${short_version} /usr/bin/python3
 ln -s  /usr/local/bin/pip3 /usr/bin/pip3
 cd ..
 
-pip install --upgrade certifi
-pip install pyopenssl
+pip3 install --upgrade certifi
+pip3 install pyopenssl
+
+# wget https://bootstrap.pypa.io/get-pip.py -o get-pip.py | python3
 
 }
 
@@ -771,6 +773,15 @@ server {
     access_log /var/log/nginx/${domain_name}.access.log;
     error_log /var/log/nginx/${domain_name}.error.log;
 
+    # if (\$scheme = http ) {
+    #     return 301 https://\$host\$request_uri;
+    # }
+
+    # SSL/TLS 配置
+    # listen 443 ssl;
+    # ssl_certificate /var/ssl/${domain_name}.chained.crt;
+    # ssl_certificate_key /var/ssl/${domain_name}.key;
+
     # 申请证书需要用到的配置
     location /.well-known/acme-challenge/ {
         alias /var/www/challenges/${domain_name}/;
@@ -781,9 +792,6 @@ server {
         # 设置代理缓存
         #proxy_cache my_cache;
         #proxy_cache_valid 200 10m;
-
-        # 负载均衡算法
-        #proxy_pass http://my_upstream;
 
         #add_header Content-Security-Policy upgrade-insecure-requests;
         proxy_http_version 1.1;
@@ -798,15 +806,6 @@ server {
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     }
-
-    # if (\$scheme = http ) {
-    #     return 301 https://\$host\$request_uri;
-    # }
-
-    # SSL/TLS 配置
-    # listen 443 ssl;
-    # ssl_certificate /var/ssl/${domain_name}.chained.crt;
-    # ssl_certificate_key /var/ssl/${domain_name}.key;
 
     # 设置请求大小限制
     # client_max_body_size 10m;
@@ -854,14 +853,18 @@ server {
     #server_name  localhost;
     server_name  ${domain_name};
 
-    #listen 443 ssl;
-    #ssl_certificate /var/ssl/${domain_name}.chained.crt;
-    #ssl_certificate_key /var/ssl/${domain_name}.key;
-
     # 静态资源路径，必须是在nginx容器内有效的路径
     root   /var/www/${domain_name};
 
     #access_log  /var/log/nginx/${domain_name}.access.log  main;
+
+    # if (\$scheme = http ) {
+    #     return 301 https://\$host\$request_uri;
+    # }
+
+    #listen 443 ssl;
+    #ssl_certificate /var/ssl/${domain_name}.chained.crt;
+    #ssl_certificate_key /var/ssl/${domain_name}.key;
 
     # 申请证书需要用到的配置
     location /.well-known/acme-challenge/ {
@@ -886,8 +889,8 @@ server {
     #
     location ~ \.php$ {
         # 本地安装的php-fpm默认是只能通过套接字通信，且只能和本地安装的nginx通信，非nginx容器
-        #fastcgi_pass unix:/run/php/php-fpm.sock;
-        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_pass unix:/run/php/php-fpm.sock;
+        # fastcgi_pass   127.0.0.1:9000;
         fastcgi_index  index.php;
         # PHP脚本文件路径，document_root表示使用静态资源相同目录，目录路径必须是在php-fpm容器内有效的目录路径
         fastcgi_param  SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
