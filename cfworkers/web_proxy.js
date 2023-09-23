@@ -1,5 +1,5 @@
 /**
- * HTTP Proxy Worker
+ * Web Proxy Worker
  *
  * - Run "npm run dev" in your terminal to start a development server
  * - Open a browser tab at http://localhost:8787/ to see your worker in action
@@ -151,7 +151,7 @@ addEventListener('fetch', event => {
     } else {
       const html = `
       <h2>
-  HTTP Proxy
+  Web Proxy
   </h2>
   
   <form id="form1">

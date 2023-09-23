@@ -1118,7 +1118,7 @@ echo -e "\n\n\n------------------------------部署 Wordpress FPM 和 Nginx 配�
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 domain_name=${1:-blog.iapp.run}
-local_port=${2:-9001}
+local_port=${2:-9000}
 create_database ${domain_name}
 
 docker run -dp 127.0.0.1:${local_port}:9000 --name wordpress1 --restart=always --network network1 -v /var/www/${domain_name}:/var/www/html -e TZ=Asia/Shanghai \
@@ -1184,7 +1184,7 @@ echo -e "\n\n\n------------------------------部署 Wordpress-------------------
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 domain_name=${1:-blog.iapp.run}
-local_port=${2:-8010}
+local_port=${2:-8000}
 docker run -dp 127.0.0.1:${local_port}:80 --name wordpress1 --restart=always --network network1 -v /docker/wordpress1:/var/www/html -e TZ=Asia/Shanghai wordpress
 create_proxy ${domain_name} ${local_port}
 create_database ${domain_name}
@@ -1193,17 +1193,21 @@ create_database ${domain_name}
 
 deploy_portainer(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+return; fi
 echo -e "\n\n\n------------------------------部署 Portainer------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
+domain_name=${1:-docker.iapp.run}
+local_port=${2:-9000}
 # https://docs.portainer.io/start/install/server/docker/linux
 docker volume create portainer_data
-#docker run -d -p 127.0.0.1:9002:9000 --name portainer1 -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data -e TZ=Asia/Shanghai portainer/portainer
+#docker run -d -p 127.0.0.1:${local_port}:9000 --name portainer1 -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data -e TZ=Asia/Shanghai portainer/portainer
 # 汉化版
-docker run -d -p 9002:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data -e TZ=Asia/Shanghai 6053537/portainer
+docker run -d -p ${local_port}:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data -e TZ=Asia/Shanghai 6053537/portainer
 
-domain_name=${1:-docker.iapp.run}
-create_proxy ${domain_name} 9002
+create_proxy ${domain_name} ${local_port}
 
 }
 
@@ -1216,7 +1220,7 @@ echo -e "\n\n\n------------------------------部署 NextCloud-------------------
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
 domain_name=${1:-cloud.iapp.run}
-local_port=${2:-8011}
+local_port=${2:-8000}
 docker run -dp 127.0.0.1:${local_port}:80 --name nextcloud1 --restart=always --network network1  -v /docker/nextcloud:/var/www/html -e TZ=Asia/Shanghai nextcloud
 create_proxy ${domain_name} ${local_port}
 #create_database ${domain_name}
@@ -1224,28 +1228,6 @@ create_proxy ${domain_name} ${local_port}
 
 }
 
-deploy_searxng(){
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
-return; fi
-echo -e "\n\n\n------------------------------部署 SearXNG------------------------------"
-echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-domain_name=${1:-s.iapp.run}
-local_port=${2:-8012}
-# https://docs.searxng.org/admin/installation-docker.html#searxng-searxng
-docker run --rm \
--d -p 127.0.0.1:${local_port}:8080 \
---name searxng1 \
--v "/docker/searxng:/etc/searxng" \
--e "BASE_URL=http://${domain_name}/" \
--e "INSTANCE_NAME=元搜索" \
-searxng/searxng
-
-# 在settings.yml文件中设置默认启用的搜索引擎
-create_proxy ${domain_name} ${local_port}
-
-}
 
 deploy_gitea(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -1254,6 +1236,7 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
 return; fi
 echo -e "\n\n\n------------------------------部署 Gitea------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
 domain_name=${1:-git.iapp.run}
 local_port=${2:-3000}
 ssh_port=${3:-222}
@@ -1284,6 +1267,7 @@ create_proxy ${domain_name} ${local_port}
 
 }
 
+
 deploy_cloudreve(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
@@ -1291,6 +1275,7 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
 return; fi
 echo -e "\n\n\n------------------------------部署 CloudReve------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
 domain_name=${1:-c.iapp.run}
 port=${2:-5212}
 mkdir -vp /docker/cloudreve/{uploads,avatar} && touch /docker/cloudreve/conf.ini && touch /docker/cloudreve/cloudreve.db
@@ -1306,6 +1291,30 @@ docker run -d \
 cloudreve/cloudreve:latest
 
 create_proxy ${domain_name} ${port}
+
+}
+
+deploy_searxng(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+return; fi
+echo -e "\n\n\n------------------------------部署 SearXNG------------------------------"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+domain_name=${1:-s.iapp.run}
+local_port=${2:-8080}
+# https://docs.searxng.org/admin/installation-docker.html#searxng-searxng
+docker run --rm \
+-d -p 127.0.0.1:${local_port}:8080 \
+--name searxng1 \
+-v "/docker/searxng:/etc/searxng" \
+-e "BASE_URL=http://${domain_name}/" \
+-e "INSTANCE_NAME=元搜索" \
+searxng/searxng
+
+# 在settings.yml文件中设置默认启用的搜索引擎
+create_proxy ${domain_name} ${local_port}
 
 }
 
@@ -1334,8 +1343,9 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
 return; fi
 echo -e "\n\n\n------------------------------部署 HackMD------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
 domain_name=${1:-md.iapp.run}
-local_port=${2:-3001}
+local_port=${2:-3000}
 # https://hackmd.io/c/codimd-documentation/%2Fs%2Fcodimd-docker-deployment
 docker run -d \
 -p 127.0.0.1:${local_port}:3000 \
@@ -1351,21 +1361,6 @@ create_database ${domain_name}
 }
 
 
-deploy_php_app() {
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} app_name http_port"
-return; fi
-
-app_name=$1
-http_port=$2
-docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
-download_php_apps /docker/${app_name}
-
-}
-
-# docker restart nginx1
-
 deploy_debian() {
 # 创建空的 Debian 容器并保持运行
 docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/null
@@ -1380,6 +1375,19 @@ EOF
 docker exec debian1 bash -c "$commands"
 
 docker exec -it debian1 bash
+}
+
+deploy_php_app() {
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} app_name http_port"
+return; fi
+
+app_name=$1
+http_port=$2
+docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
+download_php_apps /docker/${app_name}
+
 }
 
 deploy_python_app() {
@@ -1493,7 +1501,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     install_php_fpm
 
 
-
+    install_utils
 
 
 
