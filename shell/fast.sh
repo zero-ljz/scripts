@@ -1343,15 +1343,11 @@ deploy_debian() {
 docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/null
 
 commands=$(cat <<EOF
-
 apt update
 apt -y install wget curl nano micro
-
 EOF
 )
 docker exec debian1 bash -c "$commands"
-
-docker exec -it debian1 bash
 }
 
 deploy_php_app() {
@@ -1367,7 +1363,7 @@ download_php_apps /docker/${app_name}
 
 }
 
-deploy_python_app() {
+deploy_python_app2() {
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name http_port repo_url command"
@@ -1381,20 +1377,46 @@ command=${4:-"python /app/app.py"}
 docker run -d -p "${http_port}":8000 --name ${app_name} python:3.9.13-bullseye tail -f /dev/null
 
 commands=$(cat <<EOF
-
 apt update
 apt -y install git wget
 mkdir -p /app
 git clone ${repo_url} /app
 python -m pip install -r /app/requirements.txt
 ${command}
-
 EOF
 )
 docker exec ${app_name} bash -c "$commands"
-
-docker exec -it ${app_name} bash
 }
+
+
+deploy_python_app() {
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} app_name http_port repo_url command"
+return; fi
+# docker rm -f iapp2
+# bash fast.sh deploy_python_app iapp2 8000 https://github.com/zero-ljz/iapp.git
+app_name=$1
+http_port=${2:-8000}
+repo_url=${3}
+command=${4:-"python3 -m gunicorn -w 2 -b 0.0.0.0:8000 -k gevent app:app"}
+docker run -d -p "${http_port}":8000 --name ${app_name} -w /usr/src/app python:3.9.13-bullseye tail -f /dev/null
+
+commands=$(cat <<EOF
+apt update && apt -y install git wget
+git clone ${repo_url} .
+python3 -m pip install -r requirements.txt
+${command}
+EOF
+)
+docker exec ${app_name} bash -c "$commands"
+}
+
+
+
+
+
+
 
 docker_run_script(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -1429,7 +1451,7 @@ elif [ "$interpreter" = "perl" ]; then
 fi
 }
 
-function run_from_git(){
+function docker_run_repo(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} repo_url port_port"
@@ -1437,7 +1459,7 @@ return; fi
   url=$1
   p=$2
 
-  # bash /root/fast.sh run_from_git https://github.com/zero-ljz/iapp.git 777:8000
+  # bash /root/fast.sh docker_run_repo https://github.com/zero-ljz/iapp.git 777:8000
   # 请在repos目录使用此函数
   repo=$(echo "$url" | sed 's|.*/\([^/]*\)\.git|\1|')
   docker rm -f ${repo}1
