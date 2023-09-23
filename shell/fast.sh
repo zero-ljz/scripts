@@ -1421,7 +1421,7 @@ interpreter=${1:-"python3"}
 
 shift 1
 if [ "$interpreter" = "python3" ]; then
-    command=${@:-pip3 install -r requirements.txt \&\& python3 app.py}
+    command=${@:-'pip3 install -r requirements.txt && python3 app.py'}
     echo $command
     # 3.11-alpine3.17
     docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-slim-bullseye ${command}
