@@ -1383,8 +1383,8 @@ return; fi
 # docker rm -f iapp && fast deploy_python_app https://github.com/zero-ljz/iapp.git
 repo_url=${1}
 http_port=${2:-8000}
-repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
 command=${3:-"python3 -m gunicorn -w 2 -b 0.0.0.0:8000 -k gevent app:app"}
+repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
 docker run -d -p "${http_port}":8000 --name ${repo} --restart=always -v "/docker/${repo}":/usr/src/app -w /usr/src/app -e TZ=Asia/Shanghai python:3.9.13-bullseye tail -f /dev/null
 
 commands=$(cat <<EOF
