@@ -2,6 +2,9 @@
 
 # sudo bash ./fast.sh
 
+# 将脚本链接到全局命令
+# ln -sf $(pwd)/fast.sh /usr/local/bin/fast && chmod +x /usr/local/bin/fast
+
 # 允许root用户登录
 #sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' "/etc/ssh/sshd_config"
 # 允许使用密码登录
@@ -1416,24 +1419,27 @@ return; fi
 
 interpreter=${1:-"python"}
 
+shift 1
+command1=${@:-"python app.py"}
+echo $command1
 if [ "$interpreter" = "python" ]; then
-    command=${2:-"python app.py"}
+    command=${@:-"python app.py"}
     # 3.11-alpine3.17
     docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-slim-bullseye ${command}
 elif [ "$interpreter" = "python2" ]; then
-    command=${2:-"python app.py"}
+    command=${@:-"python app.py"}
     docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:2.7.18-slim-buster ${command}
 elif [ "$interpreter" = "php" ]; then
-    command=${2:-"php app.php"}
+    command=${@:-"php app.php"}
     docker run -it --rm --name php1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli ${command}
 elif [ "$interpreter" = "node" ]; then
-    command=${2:-"node app.js"}
+    command=${@:-"node app.js"}
     docker run -it --rm --name node1 -v "$PWD":/usr/src/app -w /usr/src/app node:18-bullseye-slim ${command}
 elif [ "$interpreter" = "ruby" ]; then
-    command=${2:-"ruby app.rb"}
+    command=${@:-"ruby app.rb"}
     docker run -it --rm --name ruby1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp ruby:2.7.2-bullseye ${command}
 elif [ "$interpreter" = "perl" ]; then
-    command=${2:-"perl app.pl"}
+    command=${@:-"perl app.pl"}
     docker run -it --rm --name perl1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp perl:5.34.0-bullseye ${command}
 fi
 }
