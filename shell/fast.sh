@@ -129,6 +129,7 @@ ufw allow 1024:65535/tcp
 }
 
 
+
 install_utils(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo -e "\n\n\n------------------------------安装一些实用的命令行程序------------------------------"
@@ -142,6 +143,29 @@ apt -y install mc
 pip3 install httpie
 # echo -e "\n\n\n 安装数据库第三方命令行工具。"
 pip3 install mycli litecli iredis
+
+# filebrowser
+curl -fsSL ${proxy}https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash 
+# filebrowser -r / -a 0.0.0.0 -p 8080
+# 默认账户 admin / admin
+
+# webssh
+pip install webssh
+# wssh --address='0.0.0.0' --port=8888 --fbidhttp=False
+
+# 文件发送工具：轻松安全地将内容从一台计算机发送到另一台计算机
+curl https://getcroc.schollz.com | bash
+
+# alist
+curl -fsSL "https://alist.nn.ci/v3.sh" | bash -s install /opt
+systemctl restart alist
+# 默认账号密码 admin/admin，端口5244
+
+# tinyfilemanager
+docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
+
+# adminer
+docker run -d --link mysql1:db --network network1 -p 8021:8080 --restart=always --name adminer1 adminer
 
 # echo -e "\n\n\n 基于状态行（status line）的命令行提示符增强工具"
 # apt -y install powerline
@@ -255,10 +279,6 @@ mv gotty /usr/local/bin/
 
 # 部署theia ide 
 # https://theia--ide-org.translate.goog/docs/composing_applications?_x_tr_hist=true&_x_tr_sl=auto&_x_tr_tl=zh-CN&_x_tr_hl=zh-CN
-
-
-# 文件发送工具：轻松安全地将内容从一台计算机发送到另一台计算机
-curl https://getcroc.schollz.com | bash
 
 }
 
@@ -515,35 +535,8 @@ systemctl restart aria2c
 
 }
 
-install_filebrowser(){
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-echo -e "\n\n\n------------------------------安装 Web filebrowser------------------------------"
-echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-curl -fsSL ${proxy}https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash 
-# filebrowser -r / -a 0.0.0.0 -p 8080
-# 默认账户 admin / admin
 
-}
 
-deploy_tinyfilemanager(){
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
-}
-
-deploy_adminer(){
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-docker run -d --link mysql1:db --network network1 -p 8021:8080 --restart=always --name adminer1 adminer
-}
-
-install_alist(){
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-echo -e "\n\n\n------------------------------安装 AList------------------------------"
-echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-curl -fsSL "https://alist.nn.ci/v3.sh" | bash -s install /opt
-systemctl restart alist
-# 默认账号密码 admin/admin，端口5244
-
-}
 
 install_frp(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -1409,12 +1402,36 @@ docker exec ${app_name} bash -c "$commands"
 
 docker exec -it ${app_name} bash
 }
-# 3.11-alpine3.17
-#docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-slim-bullseye python app.py
-#docker run -it --rm --name php1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli php app.php
-#docker run -it --rm --name node1 -v "$PWD":/usr/src/app -w /usr/src/app node:18-bullseye-slim node app.js
 
+docker_run_script(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [interpreter] [command]"
+return; fi
 
+interpreter=${1:-"python"}
+
+if [ "$interpreter" = "python" ]; then
+    command=${2:-"python app.py"}
+    # 3.11-alpine3.17
+    docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-slim-bullseye ${command}
+elif [ "$interpreter" = "python2" ]; then
+    command=${2:-"python app.py"}
+    docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:2.7.18-slim-buster ${command}
+elif [ "$interpreter" = "php" ]; then
+    command=${2:-"php app.php"}
+    docker run -it --rm --name php1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli ${command}
+elif [ "$interpreter" = "node" ]; then
+    command=${2:-"node app.js"}
+    docker run -it --rm --name node1 -v "$PWD":/usr/src/app -w /usr/src/app node:18-bullseye-slim ${command}
+elif [ "$interpreter" = "ruby" ]; then
+    command=${2:-"ruby app.rb"}
+    docker run -it --rm --name ruby1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp ruby:2.7.2-bullseye ${command}
+elif [ "$interpreter" = "perl" ]; then
+    command=${2:-"perl app.pl"}
+    docker run -it --rm --name perl1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp perl:5.34.0-bullseye ${command}
+fi
+}
 
 function run_from_git(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -1464,8 +1481,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     apt -y install nginx
     install_php_fpm
 
-    deploy_tinyfilemanager
-    deploy_adminer
+
 
 
 
