@@ -1427,9 +1427,12 @@ if [ "$interpreter" = "python3" ]; then
 elif [ "$interpreter" = "python" ]; then
     command=${@:-"pip install -r requirements.txt && python app.py"}
     docker run -it --rm -p 8000:8000 --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:2.7.18-slim-buster ${command}
-elif [ "$interpreter" = "php" ]; then
+elif [ "$interpreter" = "php-cli" ]; then
     command=${@:-"php app.php"}
-    docker run -it --rm -p 8000:8000 --name php1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli ${command}
+    docker run -it --rm -p 8000:8000 --name php-cli1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli ${command}
+elif [ "$interpreter" = "php" ]; then
+    command=${@:-""}
+    docker run -it --rm -p 8000:80 --name php-httpd1 -v "$PWD":/var/www/html php:7.4-apache ${command}
 elif [ "$interpreter" = "node" ]; then
     command=${@:-"node app.js"}
     docker run -it --rm -p 8000:8000 --name node1 -v "$PWD":/usr/src/app -w /usr/src/app node:18-bullseye-slim ${command}
