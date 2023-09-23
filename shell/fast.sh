@@ -1338,6 +1338,28 @@ hackmdio/hackmd:2.4.2
 }
 
 
+function docker_build_run(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} repo_url port_port"
+return; fi
+  url=$1
+  p=$2
+
+  # bash /root/fast.sh docker_build_run https://github.com/zero-ljz/iapp.git 777:8000
+  # 请在repos目录使用此函数
+  repo=$(echo "$url" | sed 's|.*/\([^/]*\)\.git|\1|')
+  docker rm -f ${repo}1
+  docker image rm ${repo}
+  rm -rf ${repo}
+
+  git clone ${url}
+  docker build -t ${repo} ${repo}
+  docker run -p ${p} --name ${repo}1 ${repo}
+  docker exec -it ${repo}1 sh
+}
+
+
 deploy_debian() {
 # 创建空的 Debian 容器并保持运行
 docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/null
@@ -1390,7 +1412,6 @@ download_php_apps /docker/${app_name}
 }
 
 
-
 docker_run_script(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
@@ -1422,28 +1443,6 @@ elif [ "$interpreter" = "perl" ]; then
     command=${@:-"perl app.pl"}
     docker run -it --rm --name perl1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp perl:5.34.0-bullseye ${command}
 fi
-}
-
-function docker_run_repo(){
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} repo_url port_port"
-return; fi
-  url=$1
-  p=$2
-
-  # bash /root/fast.sh docker_run_repo https://github.com/zero-ljz/iapp.git 777:8000
-  # 请在repos目录使用此函数
-  repo=$(echo "$url" | sed 's|.*/\([^/]*\)\.git|\1|')
-  docker rm -f ${repo}1
-  docker image rm ${repo}
-  rm -rf ${repo}
-
-  git clone ${url}
-  docker build -t ${repo} ${repo}
-  docker run -p ${p} --name ${repo}1 ${repo}
-  docker exec -it ${repo}1 sh
-
 }
 
 
