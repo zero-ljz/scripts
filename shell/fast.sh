@@ -1411,7 +1411,6 @@ docker exec ${app_name} bash -c "$commands"
 docker exec -it ${app_name} bash
 }
 
-# 3.11-alpine3.17
 docker_run_script(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
@@ -1419,10 +1418,10 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
 return; fi
 
 interpreter=${1:-"python3"}
-
 shift 1
 if [ "$interpreter" = "python3" ]; then
     command=${@:-"pip3 install -r requirements.txt && python3 app.py"}
+    # 3.11-alpine3.17
     docker run -it --rm -p 8000:8000 --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-slim-bullseye bash -c "${command}"
 elif [ "$interpreter" = "python" ]; then
     command=${@:-"pip install -r requirements.txt && python app.py"}
