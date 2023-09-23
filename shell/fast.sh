@@ -1378,14 +1378,14 @@ docker exec debian1 bash -c "$commands"
 deploy_python_app() {
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} app_name http_port repo_url command"
+    echo "Usage: ${FUNCNAME} repo_url http_port command"
 return; fi
-# docker rm -f iapp2 && bash fast.sh deploy_python_app iapp2 8000 https://github.com/zero-ljz/iapp.git
-app_name=$1
+# docker rm -f iapp && fast deploy_python_app https://github.com/zero-ljz/iapp.git
+repo_url=${1}
 http_port=${2:-8000}
-repo_url=${3}
-command=${4:-"python3 -m gunicorn -w 2 -b 0.0.0.0:8000 -k gevent app:app"}
-docker run -d -p "${http_port}":8000 --name ${app_name} --restart=always -v "/docker/${app_name}":/usr/src/app -w /usr/src/app -e TZ=Asia/Shanghai python:3.9.13-bullseye tail -f /dev/null
+repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
+command=${3:-"python3 -m gunicorn -w 2 -b 0.0.0.0:8000 -k gevent app:app"}
+docker run -d -p "${http_port}":8000 --name ${repo} --restart=always -v "/docker/${repo}":/usr/src/app -w /usr/src/app -e TZ=Asia/Shanghai python:3.9.13-bullseye tail -f /dev/null
 
 commands=$(cat <<EOF
 # sed -i -E 's#(https?://)#${proxy}\1#g' /etc/apt/sources.list
@@ -1396,7 +1396,7 @@ python3 -m pip install -r requirements.txt
 ${command}
 EOF
 )
-docker exec ${app_name} bash -c "$commands"
+docker exec ${repo} bash -c "$commands"
 }
 
 
