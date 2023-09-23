@@ -1422,8 +1422,7 @@ interpreter=${1:-"python3"}
 
 shift 1
 if [ "$interpreter" = "python3" ]; then
-    # command=${@:-"pip3 install -r requirements.txt && python3 app.py"}
-    command="pip install -r requirements.txt && python3 app.py"
+    command=${@:-"pip3 install -r requirements.txt && python3 app.py"}
     docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-slim-bullseye bash -c "${command}"
 elif [ "$interpreter" = "python" ]; then
     command=${@:-"pip install -r requirements.txt && python app.py"}
