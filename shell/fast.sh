@@ -1400,11 +1400,13 @@ app_name=$1
 http_port=${2:-8000}
 repo_url=${3}
 command=${4:-"python3 -m gunicorn -w 2 -b 0.0.0.0:8000 -k gevent app:app"}
-docker run -d -p "${http_port}":8000 --name ${app_name} -w /usr/src/app python:3.9.13-bullseye tail -f /dev/null
+docker run -d -p "${http_port}":8000 --name ${app_name} -w /usr/src/app -e TZ=Asia/Shanghai python:3.9.13-bullseye tail -f /dev/null
 
 commands=$(cat <<EOF
+# sed -i -E 's#(https?://)#${proxy}\1#g' /etc/apt/sources.list
 apt update && apt -y install git wget
 git clone ${repo_url} .
+# pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 python3 -m pip install -r requirements.txt
 ${command}
 EOF
