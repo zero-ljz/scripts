@@ -155,11 +155,16 @@ pip install webssh
 
 # 文件发送工具：轻松安全地将内容从一台计算机发送到另一台计算机
 curl https://getcroc.schollz.com | bash
+# 发 croc send --code 123123 [file(s)-or-folder]
+# 收 croc 123123
 
 # alist
-curl -fsSL "https://alist.nn.ci/v3.sh" | bash -s install /opt
-systemctl restart alist
-# 默认账号密码 admin/admin，端口5244
+# curl -fsSL "https://alist.nn.ci/v3.sh" | bash -s install /opt
+# cd /opt/alist
+# ./alist admin set 123123
+# systemctl restart alist
+# nano /opt/alist/data/config.json
+# 默认端口5244
 
 # tinyfilemanager
 docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
