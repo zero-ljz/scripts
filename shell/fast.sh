@@ -1350,57 +1350,18 @@ EOF
 docker exec debian1 bash -c "$commands"
 }
 
-deploy_php_app() {
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} app_name http_port"
-return; fi
-
-app_name=$1
-http_port=$2
-docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
-download_php_apps /docker/${app_name}
-
-}
-
-deploy_python_app2() {
-if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} app_name http_port repo_url command"
-return; fi
-# docker rm -f iapp2
-# bash fast.sh deploy_python_app iapp2 8000 https://github.com/zero-ljz/iapp.git
-app_name=$1
-http_port=${2:-8000}
-repo_url=${3}
-command=${4:-"python /app/app.py"}
-docker run -d -p "${http_port}":8000 --name ${app_name} python:3.9.13-bullseye tail -f /dev/null
-
-commands=$(cat <<EOF
-apt update
-apt -y install git wget
-mkdir -p /app
-git clone ${repo_url} /app
-python -m pip install -r /app/requirements.txt
-${command}
-EOF
-)
-docker exec ${app_name} bash -c "$commands"
-}
-
 
 deploy_python_app() {
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} app_name http_port repo_url command"
 return; fi
-# docker rm -f iapp2
-# bash fast.sh deploy_python_app iapp2 8000 https://github.com/zero-ljz/iapp.git
+# docker rm -f iapp2 && bash fast.sh deploy_python_app iapp2 8000 https://github.com/zero-ljz/iapp.git
 app_name=$1
 http_port=${2:-8000}
 repo_url=${3}
 command=${4:-"python3 -m gunicorn -w 2 -b 0.0.0.0:8000 -k gevent app:app"}
-docker run -d -p "${http_port}":8000 --name ${app_name} -w /usr/src/app -e TZ=Asia/Shanghai python:3.9.13-bullseye tail -f /dev/null
+docker run -d -p "${http_port}":8000 --name ${app_name} --restart=always -v "/docker/${app_name}":/usr/src/app -w /usr/src/app -e TZ=Asia/Shanghai python:3.9.13-bullseye tail -f /dev/null
 
 commands=$(cat <<EOF
 # sed -i -E 's#(https?://)#${proxy}\1#g' /etc/apt/sources.list
@@ -1415,8 +1376,18 @@ docker exec ${app_name} bash -c "$commands"
 }
 
 
+deploy_php_app() {
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} app_name http_port"
+return; fi
 
+app_name=$1
+http_port=$2
+docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
+download_php_apps /docker/${app_name}
 
+}
 
 
 
