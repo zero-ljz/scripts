@@ -1414,7 +1414,7 @@ docker exec -it ${app_name} bash
 docker_run_script(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} [interpreter] [command]"
+    echo "Usage: ${FUNCNAME} [interpreter] [command]..."
 return; fi
 
 interpreter=${1:-"python3"}
