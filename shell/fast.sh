@@ -426,7 +426,7 @@ apt -y install build-essential zlib1g zlib1g-dev libffi-dev
 wget https://www.python.org/ftp/python/${version}/Python-${version}.tgz
 tar xzvf Python-${version}.tgz
 cd Python-${version}
-./configure --prefix=/usr/local --with-ssl --with-openssl
+./configure --prefix=/usr/local --with-ssl
 make && make install
 ln -s  /usr/local/bin/python${short_version} /usr/bin/python3
 ln -s  /usr/local/bin/pip3 /usr/bin/pip3
