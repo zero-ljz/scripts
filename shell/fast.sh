@@ -934,7 +934,6 @@ wget -O ${root_dir}/tinyfilemanager.php ${proxy}https://raw.githubusercontent.co
 sed -i "s/use_auth = true/use_auth = false/g" ${root_dir}/tinyfilemanager.php
 
 wget -O ${root_dir}/index.php ${proxy}https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
-# wget -O ${root_dir}/shell.php ${proxy}https://raw.githubusercontent.com/artyuum/simple-php-web-shell/master/index.php
 
 wget -P ${root_dir} ${proxy}https://github.com/nickola/web-console/releases/download/v0.9.7/webconsole-0.9.7.zip
 unzip -d ${root_dir} ${root_dir}/webconsole-0.9.7.zip
@@ -1026,7 +1025,7 @@ port=${1:-6379}
 docker network create network1
 
 echo "安装 Redis" 
-docker run -dp ${port}:6379 --name redis1 --restart=always --network network1 --network-alias redis -v /docker/redis1:/data \
+docker run -dp ${port}:6379 --name redis1 --restart=always --network network1 --network-alias redis -v /docker/redis1:/data -e TZ=Asia/Shanghai \
 redis:6-bullseye \
 redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 # 传给redis服务器的启动参数：若每60秒至少有一个键被修改了1次，就将数据持久化到磁盘，只记录警告及更高级别的日志
@@ -1039,7 +1038,7 @@ redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 deploy_nginx(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo "安装 Nginx"
-docker run -d --name nginx1 --restart=always --network host -v /var/www:/var/www -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d nginx:stable-bullseye
+docker run -d --name nginx1 --restart=always --network host -v /var/www:/var/www -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d -e TZ=Asia/Shanghai nginx:stable-bullseye
 }
 
 deploy_php_fpm(){
@@ -1054,7 +1053,7 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 docker network create network1
 
 echo "安装 PHP"
-docker run -d -p 127.0.0.1:${local_port}:9000 --name php-fpm1 --restart=always --network network1 -v /var/www:/var/www php:7.4-fpm-bullseye
+docker run -d -p 127.0.0.1:${local_port}:9000 --name php-fpm1 --restart=always --network network1 -v /var/www:/var/www -e TZ=Asia/Shanghai php:7.4-fpm-bullseye
 
 docker exec -t php-fpm1 sh -c "sed -i -E 's#(https?://)#${proxy}\1#g' /etc/apt/sources.list"
 
@@ -1121,7 +1120,7 @@ domain_name=${1:-blog.iapp.run}
 local_port=${2:-9001}
 create_database ${domain_name}
 
-docker run -dp 127.0.0.1:${local_port}:9000 --name wordpress1 --restart=always --network network1 -v /var/www/${domain_name}:/var/www/html \
+docker run -dp 127.0.0.1:${local_port}:9000 --name wordpress1 --restart=always --network network1 -v /var/www/${domain_name}:/var/www/html -e TZ=Asia/Shanghai \
 -e WORDPRESS_DB_HOST=mysql \
 -e WORDPRESS_DB_USER=${db_user} \
 -e WORDPRESS_DB_PASSWORD=${db_password} \
@@ -1185,7 +1184,7 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 
 domain_name=${1:-blog.iapp.run}
 local_port=${2:-8010}
-docker run -dp 127.0.0.1:${local_port}:80 --name wordpress1 --restart=always --network network1 -v /docker/wordpress1:/var/www/html wordpress
+docker run -dp 127.0.0.1:${local_port}:80 --name wordpress1 --restart=always --network network1 -v /docker/wordpress1:/var/www/html -e TZ=Asia/Shanghai wordpress
 create_proxy ${domain_name} ${local_port}
 create_database ${domain_name}
 
@@ -1198,9 +1197,9 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 
 # https://docs.portainer.io/start/install/server/docker/linux
 docker volume create portainer_data
-#docker run -d -p 127.0.0.1:9002:9000 --name portainer1 -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data portainer/portainer
+#docker run -d -p 127.0.0.1:9002:9000 --name portainer1 -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data -e TZ=Asia/Shanghai portainer/portainer
 # 汉化版
-docker run -d -p 9002:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data 6053537/portainer
+docker run -d -p 9002:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data -e TZ=Asia/Shanghai 6053537/portainer
 
 domain_name=${1:-docker.iapp.run}
 create_proxy ${domain_name} 9002
@@ -1217,7 +1216,7 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 
 domain_name=${1:-cloud.iapp.run}
 local_port=${2:-8011}
-docker run -dp 127.0.0.1:${local_port}:80 --name nextcloud1 --restart=always --network network1  -v /docker/nextcloud:/var/www/html nextcloud
+docker run -dp 127.0.0.1:${local_port}:80 --name nextcloud1 --restart=always --network network1  -v /docker/nextcloud:/var/www/html -e TZ=Asia/Shanghai nextcloud
 create_proxy ${domain_name} ${local_port}
 #create_database ${domain_name}
 # 用mysql性能不好
