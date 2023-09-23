@@ -1423,19 +1423,19 @@ interpreter=${1:-"python3"}
 shift 1
 if [ "$interpreter" = "python3" ]; then
     command=${@:-"pip3 install -r requirements.txt && python3 app.py"}
-    docker run -it --rm -p 8000:8000 -p 8080:8080 --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-slim-bullseye bash -c "${command}"
+    docker run -it --rm -p 8000:8000 --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-slim-bullseye bash -c "${command}"
 elif [ "$interpreter" = "python" ]; then
     command=${@:-"pip install -r requirements.txt && python app.py"}
-    docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:2.7.18-slim-buster ${command}
+    docker run -it --rm -p 8000:8000 --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:2.7.18-slim-buster ${command}
 elif [ "$interpreter" = "php" ]; then
     command=${@:-"php app.php"}
-    docker run -it --rm --name php1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli ${command}
+    docker run -it --rm -p 8000:8000 --name php1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli ${command}
 elif [ "$interpreter" = "node" ]; then
     command=${@:-"node app.js"}
-    docker run -it --rm --name node1 -v "$PWD":/usr/src/app -w /usr/src/app node:18-bullseye-slim ${command}
+    docker run -it --rm -p 8000:8000 --name node1 -v "$PWD":/usr/src/app -w /usr/src/app node:18-bullseye-slim ${command}
 elif [ "$interpreter" = "ruby" ]; then
     command=${@:-"ruby app.rb"}
-    docker run -it --rm --name ruby1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp ruby:2.7.2-bullseye ${command}
+    docker run -it --rm -p 8000:8000 --name ruby1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp ruby:2.7.2-bullseye ${command}
 elif [ "$interpreter" = "perl" ]; then
     command=${@:-"perl app.pl"}
     docker run -it --rm --name perl1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp perl:5.34.0-bullseye ${command}
