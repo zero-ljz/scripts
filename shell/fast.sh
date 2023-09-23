@@ -2,8 +2,10 @@
 
 # sudo bash ./fast.sh
 
-# 将脚本链接到全局命令
-# ln -sf $(pwd)/fast.sh /usr/local/bin/fast && chmod +x /usr/local/bin/fast
+if [ ! -e "/usr/local/bin/fast" ]; then
+echo -e "已将脚本链接到全局命令 fast"
+ln -sf $(pwd)/fast.sh /usr/local/bin/fast && chmod +x /usr/local/bin/fast
+fi
 
 # 允许root用户登录
 #sed -i 's/^#*PermitRootLogin.*/PermitRootLogin yes/' "/etc/ssh/sshd_config"
