@@ -1417,17 +1417,15 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} [interpreter] [command]"
 return; fi
 
-interpreter=${1:-"python"}
+interpreter=${1:-"python3"}
 
 shift 1
-command1=${@:-"python app.py"}
-echo $command1
-if [ "$interpreter" = "python" ]; then
-    command=${@:-"python app.py"}
+if [ "$interpreter" = "python3" ]; then
+    command=${@:-"python3 app.py"}
     # 3.11-alpine3.17
     docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-slim-bullseye ${command}
-elif [ "$interpreter" = "python2" ]; then
-    command=${@:-"python app.py"}
+elif [ "$interpreter" = "python" ]; then
+    command=${@:-"pip install -r requirements.txt && python app.py"}
     docker run -it --rm --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:2.7.18-slim-buster ${command}
 elif [ "$interpreter" = "php" ]; then
     command=${@:-"php app.php"}
@@ -1514,7 +1512,7 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Description: Upgrade this script, Perform this operation in the working directory"
     exit 0
 fi
-bash -c 'wget --no-cache -O fast.sh ${proxy}https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
+bash -c 'wget --no-cache -O /root/fast.sh ${proxy}https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh && bash fast.sh'
 }
 
 # 获取函数名
