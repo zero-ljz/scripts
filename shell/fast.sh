@@ -1178,52 +1178,44 @@ docker restart nginx1
 deploy_wordpress(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+    echo "Usage: ${FUNCNAME} [local_port]"
 return; fi
 echo -e "\n\n\n------------------------------部署 Wordpress------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-domain_name=${1:-blog.iapp.run}
-local_port=${2:-8000}
+local_port=${1:-8000}
 docker run -dp 127.0.0.1:${local_port}:80 --name wordpress1 --restart=always --network network1 -v /docker/wordpress1:/var/www/html -e TZ=Asia/Shanghai wordpress
-create_proxy ${domain_name} ${local_port}
-create_database ${domain_name}
 
 }
 
 deploy_portainer(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+    echo "Usage: ${FUNCNAME} [local_port]"
 return; fi
 echo -e "\n\n\n------------------------------部署 Portainer------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-domain_name=${1:-docker.iapp.run}
-local_port=${2:-9000}
+local_port=${1:-9000}
 # https://docs.portainer.io/start/install/server/docker/linux
 docker volume create portainer_data
 #docker run -d -p 127.0.0.1:${local_port}:9000 --name portainer1 -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data -e TZ=Asia/Shanghai portainer/portainer
 # 汉化版
 docker run -d -p ${local_port}:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data -e TZ=Asia/Shanghai 6053537/portainer
 
-create_proxy ${domain_name} ${local_port}
-
 }
 
 deploy_nextcloud(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+    echo "Usage: ${FUNCNAME} [local_port]"
 return; fi
 echo -e "\n\n\n------------------------------部署 NextCloud------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-domain_name=${1:-cloud.iapp.run}
-local_port=${2:-8000}
+local_port=${1:-8000}
 docker run -dp 127.0.0.1:${local_port}:80 --name nextcloud1 --restart=always --network network1  -v /docker/nextcloud:/var/www/html -e TZ=Asia/Shanghai nextcloud
-create_proxy ${domain_name} ${local_port}
-#create_database ${domain_name}
+
 # 用mysql性能不好
 
 }
@@ -1232,14 +1224,13 @@ create_proxy ${domain_name} ${local_port}
 deploy_gitea(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} [domain_name] [local_port] [ssh_port]"
+    echo "Usage: ${FUNCNAME} [local_port] [ssh_port]"
 return; fi
 echo -e "\n\n\n------------------------------部署 Gitea------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-domain_name=${1:-git.iapp.run}
-local_port=${2:-3000}
-ssh_port=${3:-222}
+local_port=${1:-3000}
+ssh_port=${2:-222}
 adduser \
    --system \
    --shell /bin/bash \
@@ -1259,8 +1250,6 @@ docker run -d \
 -v /etc/localtime:/etc/localtime:ro  \
 gitea/gitea:1.19
 
-create_proxy ${domain_name} ${local_port}
-
 # 记得配置SSH_PORT=222，SSH_LISTEN_PORT=22
 
 # ssh://git@git.iapp.run:222/zero-ljz/repo.git
@@ -1271,13 +1260,12 @@ create_proxy ${domain_name} ${local_port}
 deploy_cloudreve(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} [domain_name] [port]"
+    echo "Usage: ${FUNCNAME} [port]"
 return; fi
 echo -e "\n\n\n------------------------------部署 CloudReve------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-domain_name=${1:-c.iapp.run}
-port=${2:-5212}
+port=${1:-5212}
 mkdir -vp /docker/cloudreve/{uploads,avatar} && touch /docker/cloudreve/conf.ini && touch /docker/cloudreve/cloudreve.db
 
 docker run -d \
@@ -1290,20 +1278,17 @@ docker run -d \
 -v /docker/cloudreve/avatar:/cloudreve/avatar \
 cloudreve/cloudreve:latest
 
-create_proxy ${domain_name} ${port}
-
 }
 
 deploy_searxng(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+    echo "Usage: ${FUNCNAME} [local_port]"
 return; fi
 echo -e "\n\n\n------------------------------部署 SearXNG------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-domain_name=${1:-s.iapp.run}
-local_port=${2:-8080}
+local_port=${1:-8080}
 # https://docs.searxng.org/admin/installation-docker.html#searxng-searxng
 docker run --rm \
 -d -p 127.0.0.1:${local_port}:8080 \
@@ -1314,24 +1299,19 @@ docker run --rm \
 searxng/searxng
 
 # 在settings.yml文件中设置默认启用的搜索引擎
-create_proxy ${domain_name} ${local_port}
 
 }
 
 deploy_gocron(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+    echo "Usage: ${FUNCNAME} [local_port]"
 return; fi
 echo -e "\n\n\n------------------------------部署 GoCron------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-domain_name=${1:-cron.iapp.run}
-local_port=${2:-5920}
+local_port=${1:-5920}
 docker run --name gocron1 --restart=always --network network1 -p 127.0.0.1:${local_port}:5920 -d ouqg/gocron
-
-create_proxy ${domain_name} ${local_port}
-create_database ${domain_name}
 
 }
 
@@ -1339,13 +1319,12 @@ create_database ${domain_name}
 deploy_hackmd(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-    echo "Usage: ${FUNCNAME} [domain_name] [local_port]"
+    echo "Usage: ${FUNCNAME} [local_port]"
 return; fi
 echo -e "\n\n\n------------------------------部署 HackMD------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-domain_name=${1:-md.iapp.run}
-local_port=${2:-3000}
+local_port=${1:-3000}
 # https://hackmd.io/c/codimd-documentation/%2Fs%2Fcodimd-docker-deployment
 docker run -d \
 -p 127.0.0.1:${local_port}:3000 \
@@ -1356,8 +1335,6 @@ docker run -d \
 -v /docker/hackmd/upload-data:/home/hackmd/app/public/uploads \
 hackmdio/hackmd:2.4.2
 
-create_proxy ${domain_name} ${local_port}
-create_database ${domain_name}
 }
 
 
@@ -1500,16 +1477,27 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     apt -y install nginx
     install_php_fpm
 
+    domain_name=a.iapp.run
+    create_vhost ${domain_name}
+    create_ssl ${domain_name}
+    create_database ${domain_name}
 
     install_utils
 
+    deploy_debian
 
+    deploy_portainer 9001
+    create_proxy docker.iapp.run 9001
 
+    domain_name=blog.iapp.run
+    port=8010
+    deploy_wordpress ${port}
+    create_database ${domain_name}
+    create_proxy ${domain_name} ${port}
+    create_ssl ${domain_name}
 
+    
 
-    # deploy_debian
-
-    # deploy_portainer
     # deploy_cloudreve
     # deploy_searxng
     
