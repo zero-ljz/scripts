@@ -908,37 +908,48 @@ server {
 EOF
 #docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
 cp ${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
-#docker restart nginx1
 
-echo "远程下载默认网站 源码文件"
-echo '<?php echo phpinfo(); ?>' >> /var/www/${domain_name}/phpinfo.php
-wget -O /var/www/${domain_name}/adminer.php ${proxy}https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
-wget -O /var/www/${domain_name}/editor.php ${proxy}https://github.com/vrana/adminer/releases/download/v4.8.1/editor-4.8.1.php
-wget -O /var/www/${domain_name}/tinyfilemanager.php ${proxy}https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
-wget -O /var/www/${domain_name}/index.php ${proxy}https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
-# wget -O /var/www/${domain_name}/shell.php ${proxy}https://raw.githubusercontent.com/artyuum/simple-php-web-shell/master/index.php
-
-wget -P /var/www/${domain_name} ${proxy}https://github.com/nickola/web-console/releases/download/v0.9.7/webconsole-0.9.7.zip
-unzip -d /var/www/${domain_name} /var/www/${domain_name}/webconsole-0.9.7.zip
-mv /var/www/${domain_name}/webconsole/webconsole.php /var/www/${domain_name}/webconsole.php
-sed -i "s/NO_LOGIN = false/NO_LOGIN = true/g" /var/www/${domain_name}/webconsole.php # 开启免登录
-rm -rf /var/www/${domain_name}/webconsole-0.9.7.zip /var/www/${domain_name}/webconsole
-
-# wget -O phpMyAdmin.zip https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
-# unzip -d /var/www/${domain_name} phpMyAdmin.zip > /dev/null
-# mv /var/www/${domain_name}/phpMyAdmin-5.2.1-all-languages /var/www/${domain_name}/phpMyAdmin
-# mv /var/www/${domain_name}/phpMyAdmin/config.sample.inc.php /var/www/${domain_name}/phpMyAdmin/config.inc.php && chmod 755 /var/www/${domain_name}/phpMyAdmin/config.inc.php
-# sed -i "s/localhost/mysql/g" /var/www/${domain_name}/phpMyAdmin/config.inc.php
-
-#https://cn.wordpress.org/latest-zh_CN.zip
-#https://github.com/typecho/typecho/releases/latest/download/typecho.zip
-
+download_php_apps /var/www/${domain_name}
 
 chown -R www-data:www-data /var/www/${domain_name}
 chmod -R 777 /var/www/${domain_name}
 
 systemctl restart nginx
 docker restart nginx1
+}
+
+download_php_apps(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} root_dir"
+return; fi
+
+root_dir=$1
+echo "远程下载默认网站 源码文件"
+echo '<?php echo phpinfo(); ?>' >> ${root_dir}/phpinfo.php
+wget -O ${root_dir}/adminer.php ${proxy}https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
+wget -O ${root_dir}/editor.php ${proxy}https://github.com/vrana/adminer/releases/download/v4.8.1/editor-4.8.1.php
+
+wget -O ${root_dir}/tinyfilemanager.php ${proxy}https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+sed -i "s/use_auth = true/use_auth = false/g" ${root_dir}/tinyfilemanager.php
+
+wget -O ${root_dir}/index.php ${proxy}https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
+# wget -O ${root_dir}/shell.php ${proxy}https://raw.githubusercontent.com/artyuum/simple-php-web-shell/master/index.php
+
+wget -P ${root_dir} ${proxy}https://github.com/nickola/web-console/releases/download/v0.9.7/webconsole-0.9.7.zip
+unzip -d ${root_dir} ${root_dir}/webconsole-0.9.7.zip
+mv ${root_dir}/webconsole/webconsole.php ${root_dir}/webconsole.php
+sed -i "s/NO_LOGIN = false/NO_LOGIN = true/g" ${root_dir}/webconsole.php # 开启免登录
+rm -rf ${root_dir}/webconsole-0.9.7.zip ${root_dir}/webconsole
+
+# wget -O phpMyAdmin.zip https://files.phpmyadmin.net/phpMyAdmin/5.2.1/phpMyAdmin-5.2.1-all-languages.zip
+# unzip -d ${root_dir} phpMyAdmin.zip > /dev/null
+# mv ${root_dir}/phpMyAdmin-5.2.1-all-languages ${root_dir}/phpMyAdmin
+# mv ${root_dir}/phpMyAdmin/config.sample.inc.php ${root_dir}/phpMyAdmin/config.inc.php && chmod 755 ${root_dir}/phpMyAdmin/config.inc.php
+# sed -i "s/localhost/mysql/g" ${root_dir}/phpMyAdmin/config.inc.php
+
+#https://cn.wordpress.org/latest-zh_CN.zip
+#https://github.com/typecho/typecho/releases/latest/download/typecho.zip
 }
 
 create_database(){
@@ -1349,8 +1360,8 @@ return; fi
 app_name=$1
 http_port=$2
 docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
-wget -O /docker/${app_name}/adminer.php ${proxy}https://github.com/vrana/adminer/releases/download/v4.8.1/adminer-4.8.1.php
-wget -P /docker/${app_name} ${proxy}https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php
+download_php_apps /docker/${app_name}
+
 }
 
 # docker restart nginx1
