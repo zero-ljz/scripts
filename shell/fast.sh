@@ -423,13 +423,13 @@ return; fi
 echo -e "\n\n\n------------------------------安装 Python------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 version=${1:-3.9.13}
-short_version=${version%%.*}
+short_version=${version%%.*} # 3
 # 启用源代码包
 sh -c 'echo "deb-src https://deb.debian.org/debian bullseye main" >> /etc/apt/sources.list'
 # 安装python所需的构建依赖项
 apt-get update
 apt-get build-dep python3
-apt-get install build-essential gdb lcov pkg-config \
+apt-get -y install build-essential gdb lcov pkg-config \
       libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
       libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev \
       lzma lzma-dev tk-dev uuid-dev zlib1g-dev
@@ -439,8 +439,9 @@ tar xzvf Python-${version}.tgz
 cd Python-${version}
 ./configure --prefix=/usr/local --with-ssl
 make && make install
-ln -s  /usr/local/bin/python${short_version} /usr/bin/python3
+ln -s  /usr/local/bin/python3 /usr/bin/python
 ln -s  /usr/local/bin/pip3 /usr/bin/pip3
+ln -s  /usr/local/bin/pip3 /usr/bin/pip
 
 # pip3 install --upgrade certifi
 # pip3 install pyopenssl
