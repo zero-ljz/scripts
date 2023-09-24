@@ -1515,7 +1515,9 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Description: Upgrade this script, Perform this operation in the working directory"
     exit 0
 fi
-bash -c "wget --no-cache -O /root/fast.sh ${proxy}https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh"
+url="${proxy}https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh"
+echo "正在从 ${url} 下载最新版本脚本..."
+bash -c "wget --no-cache -O /root/fast.sh ${url}"
 }
 
 # 获取函数名
