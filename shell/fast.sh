@@ -171,12 +171,6 @@ curl https://getcroc.schollz.com | bash
 # nano /opt/alist/data/config.json
 # 默认端口5244
 
-# tinyfilemanager
-docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
-
-# adminer
-docker run -d --link mysql1:db --network network1 -p 8021:8080 --restart=always --name adminer1 adminer
-
 # echo -e "\n\n\n 基于状态行（status line）的命令行提示符增强工具"
 # apt -y install powerline
 # echo -e "\n\n\n 安装一个更好的 cat 命令替代品，可以帮助你更好地查看文件的内容，支持语法高亮和分页显示。"
@@ -1471,17 +1465,11 @@ function auto_mode(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     system_init
     install_supervisor
-    install_docker
     install_frps
     # install_aria2
+    install_utils
+
     install_nodejs
-
-    deploy_mysql
-    deploy_redis
-    
-    # deploy_nginx
-    # deploy_php_fpm
-
     apt -y install nginx
     install_php_fpm
 
@@ -1490,12 +1478,21 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     create_ssl ${domain_name}
     create_database ${domain_name}
 
-    install_utils
-
-    deploy_debian
-
+    install_docker
     deploy_portainer 9001
     create_proxy docker.iapp.run 9001
+    deploy_debian
+
+    deploy_mysql
+    deploy_redis
+    # deploy_nginx
+    # deploy_php_fpm
+
+    # tinyfilemanager
+    docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
+
+    # adminer
+    docker run -d --link mysql1:db --network network1 -p 8021:8080 --restart=always --name adminer1 adminer
 
     domain_name=blog.iapp.run
     port=8010
