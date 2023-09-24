@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# sudo bash ./fast.sh
+# bash ./fast.sh
 
 if [ ! -e "/usr/local/bin/fast" ]; then
 echo -e "已将脚本链接到全局命令 fast"
@@ -80,7 +80,7 @@ fallocate -l ${swapfile_length}M /swapfile
 # 格式化为交换分区
 mkswap /swapfile
 # 将文件添加到系统的/etc/fstab文件中，以便在系统启动时自动挂载
-echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
 # 启用交换文件
 swapon /swapfile
 fi
@@ -96,8 +96,8 @@ fi
 
 echo -e "\n\n\n配置防火墙"
 
-# sudo apt-get update
-# sudo apt-get install iptables-persistent
+# apt-get update
+# apt-get install iptables-persistent
 
 # # root用户端口 1:1023
 # # 开放单个端口 -A INPUT -p tcp --dport 80 -j ACCEPT
@@ -418,11 +418,22 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} version"
 return; fi
+# https://devguide.python.org/getting-started/setup-building/index.html#install-dependencies
+# https://docs.python.org/dev/using/unix.html
 echo -e "\n\n\n------------------------------安装 Python------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 version=${1:-3.9.13}
 short_version=${version%%.*}
-apt -y install build-essential zlib1g zlib1g-dev libffi-dev
+# 启用源代码包
+sh -c 'echo "deb-src https://deb.debian.org/debian bullseye main" >> /etc/apt/sources.list'
+# 安装python所需的构建依赖项
+apt-get update
+apt-get build-dep python3
+apt-get install build-essential gdb lcov pkg-config \
+      libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
+      libncurses5-dev libreadline6-dev libsqlite3-dev libssl-dev \
+      lzma lzma-dev tk-dev uuid-dev zlib1g-dev
+# apt -y install build-essential zlib1g zlib1g-dev libffi-dev
 wget https://www.python.org/ftp/python/${version}/Python-${version}.tgz
 tar xzvf Python-${version}.tgz
 cd Python-${version}
@@ -430,10 +441,9 @@ cd Python-${version}
 make && make install
 ln -s  /usr/local/bin/python${short_version} /usr/bin/python3
 ln -s  /usr/local/bin/pip3 /usr/bin/pip3
-cd ..
 
-pip3 install --upgrade certifi
-pip3 install pyopenssl
+# pip3 install --upgrade certifi
+# pip3 install pyopenssl
 
 # wget https://bootstrap.pypa.io/get-pip.py -o get-pip.py | python3
 
@@ -474,10 +484,10 @@ if [ "$answer" = "y" ]; then
 
 # #https://mariadb.com/kb/en/getting-installing-and-upgrading-mariadb/
 # #安装MariaDB GPG密钥
-# sudo apt-get install software-properties-common dirmngr
-# sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
+# apt-get install software-properties-common dirmngr
+# apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
 # # 添加MariaDB官方软件包源
-# sudo add-apt-repository 'deb [arch=amd64] http://ftp.ubuntu-tw.org/mirror/mariadb/repo/10.3/debian buster main'
+# add-apt-repository 'deb [arch=amd64] http://ftp.ubuntu-tw.org/mirror/mariadb/repo/10.3/debian buster main'
 # echo -e "\n\n\n 安装 MariaDB"
 # apt -y install MariaDB-client mariadb-server
 # systemctl enable mariadb
@@ -521,7 +531,7 @@ echo -e "\n\n\n------------------------------安装 Redis-----------------------
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 echo -e "\n\n\n 安装 redis-server"
 apt -y install redis-server
-sudo sed -i 's/^bind .*/bind 0.0.0.0/' /etc/redis/redis.conf
+sed -i 's/^bind .*/bind 0.0.0.0/' /etc/redis/redis.conf
 
 systemctl enable redis-server
 systemctl restart redis-server
@@ -1368,7 +1378,8 @@ docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/nu
 
 commands=$(cat <<EOF
 apt update
-apt -y install wget curl nano micro
+apt-get install --no-install-recommends wget curl nano micro
+rm -rf /var/lib/apt/lists/*
 EOF
 )
 docker exec debian1 bash -c "$commands"
