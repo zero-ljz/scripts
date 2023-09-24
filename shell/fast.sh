@@ -12,6 +12,16 @@ fi
 # 允许使用密码登录
 #sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' "/etc/ssh/sshd_config"
 
+# 允许ssh端口转发
+#sed -i 's/^#*AllowTcpForwarding\s\+.*$/AllowTcpForwarding yes/' /etc/ssh/sshd_config
+#sed -i 's/^#*GatewayPorts\s\+.*$/GatewayPorts yes/' /etc/ssh/sshd_config
+#systemctl restart sshd
+# 内网穿透客户端连接方式，0代表随机分配端口，R表示远程转发，N表示禁止执行远程命令，T表示禁止分配伪终端
+#ssh -NTR 0:localhost:8000 root@iapp.run
+# 另一种方式，支持自动重连，-M 指定监视通道端口，以便监控SSH连接的状态
+#apt install autossh
+#sshpass -p "123123" autossh -o StrictHostKeyChecking=no -M 2345 -NTR 0:localhost:8000 root@iapp.run
+
 #rm -rf /docker
 #docker rm -f $(docker ps -a -q)
 
