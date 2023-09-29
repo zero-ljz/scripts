@@ -21,75 +21,68 @@
 (function () {
   "use strict";
 
-  // 添加毛玻璃框的 CSS 类
   GM_addStyle(`
+  .gm-acrylic-box {
+    background-color: rgba(255, 255, 255, 0.6);
+    color: #333;
+    box-shadow: inset 1px 1px rgb(255 255 255 / 20%), inset -1px -1px rgb(255 255 255 / 10%), 1px 3px 24px -1px rgb(0 0 0 / 15%);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); */
+    }
+  
     .gm-glass-box {
-      all: initial;
-
-      background: rgba(255, 255, 255, 0.6);
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(10px);
-      border-radius: 1.2rem;
+    background-image: linear-gradient(125deg, rgba(64, 64, 64, 0.3), rgba(64, 64, 64, 0.2) 70%); 
+    /* background-image: linear-gradient(125deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2) 70%); */
+    color: #ADADAD;
+    box-shadow: inset 1px 1px rgb(255 255 255 / 20%), inset -1px -1px rgb(255 255 255 / 10%), 1px 3px 24px -1px rgb(0 0 0 / 15%);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     }
   `);
 
-    // 添加半透明框的 CSS 类
-    GM_addStyle(`
-    .gm-blur-box {
-    all: initial;
 
-    background-image: linear-gradient(125deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2) 70%); /* color: #ADADAD */
-    background-image: linear-gradient(125deg, rgba(64, 64, 64, 0.3), rgba(64, 64, 64, 0.2) 70%);
-    color: white;
-    box-shadow: inset 1px 1px rgb(255 255 255 / 20%), inset -1px -1px rgb(255 255 255 / 10%), 1px 3px 24px -1px rgb(0 0 0 / 15%);
-    -webkit-backdrop-filter: blur(5px);
-    backdrop-filter: blur(5px);
-    border-radius: 7px;
-  }
+// 使用 <script> 标签加载外部 JavaScript 文件
+// var scriptElement = document.createElement('script');
+// scriptElement.src = 'https://i.iapp.run/js/utils.js';
+// scriptElement.type = 'text/javascript';
+// document.head.appendChild(scriptElement);
+
+function showMessageBox(message, title = '提示') {
+  var messageBox = document.createElement("div");
+  messageBox.style.all = "initial";
+  messageBox.classList.add("gm-acrylic-box");
+  messageBox.style.cssText = `
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  /*background: #fff;*/
+  padding: 20px;
+  /*border: 1px solid #ccc;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);*/
+
+  min-width: 200px;
+  max-width: 600px;
+  min-height: 100px;
+  z-index: 9999;
+
+  border-radius: 10px;
+  `;
+  messageBox.insertAdjacentHTML('beforeend', `
+  <p><b>${title}</b></p>
+  <p style="all: initial; whiteSpace: pre-line;" contenteditable="true">${message.replace(/\n/g, "\r\n")}</p>
   `);
-
-  // 创建消息框元素
-  function createMessageBox(message) {
-    var messageBox = document.createElement("div");
-    messageBox.classList.add("gm-glass-box");
-
-    messageBox.style.position = "fixed";
-    messageBox.style.top = "20px"; // 将消息框的位置移到屏幕的上方
-    messageBox.style.left = "50%";
-    messageBox.style.zIndex = "9999";
-    messageBox.style.minWidth = "200px"; // 设置最小宽度
-    messageBox.style.minHeight = "100px"; // 设置最小高度
-
-    var messageText = document.createElement("span");
-    messageText.textContent = message.replace(/\n/g, "\r\n"); // 替换换行符为回车换行
-    messageText.style.whiteSpace = "pre-line"; // 设置样式以支持换行
-    messageText.style.color = "blue"; // 设置固定的文字颜色
-    messageBox.appendChild(messageText);
-
-    var closeButton = document.createElement("button");
-    closeButton.textContent = "关闭";
-    closeButton.style.all = "initial";
-    closeButton.style.marginLeft = "10px";
-    closeButton.style.position = "absolute";
-    closeButton.style.bottom = "10px";
-    closeButton.style.right = "10px";
-    closeButton.addEventListener("click", function () {
-      messageBox.style.display = "none";
-    });
-    messageBox.appendChild(closeButton);
-
-    document.body.appendChild(messageBox);
-
-    return messageBox;
-  }
-
-  // 显示消息框
-  function showMessage(message, duration='3000') {
-    var messageBox = createMessageBox(message);
-    setTimeout(function () {
-      messageBox.style.display = "none";
-    }, duration);
-  }
+  messageBox.insertAdjacentHTML('beforeend', `
+  <button id="messageBoxclose" style="all: initial; cursor: pointer; position: absolute; margin-left: 10px; top: 10px; right: 10px;">╳</button>
+  `);
+  document.body.appendChild(messageBox);
+  document.getElementById("messageBoxclose").addEventListener("click", function () {
+    document.body.removeChild(messageBox);
+  })
+  return messageBox;
+}
 
   var menuItems = [
     { name: "隐藏按钮", action: toggleButton },
@@ -136,108 +129,12 @@
       },
     },
     {
-      name: "屏蔽元素",
-      action: function () {
-        let selection = window.getSelection();
-        if (selection.toString()) {
-          var range = selection.getRangeAt(0); // 获取范围内的节点
-
-          // 递归遍历节点，查找最近的元素节点
-          function findClosestElement(node) {
-            if (node.nodeType === Node.ELEMENT_NODE) {
-              return node; // 当前节点是元素节点，返回
-            } else if (node.parentNode) {
-              return findClosestElement(node.parentNode); // 继续向上查找父节点
-            } else {
-              return null; // 未找到包含文本的元素节点
-            }
-          }
-
-          // 查找包含所选文本的最近的元素节点
-          findClosestElement(range.commonAncestorContainer).style.display =
-            "none";
-        } else {
-          document.activeElement.style.display = "none";
-        }
-      },
-    },
-
-    {
       name: "朗读文本",
       action: function () {
         let q = window.getSelection().toString();
         if (!q) q = prompt("你没有选中任何文本，请输入：", "");
         if (q != null)
           window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(q));
-      },
-    },
-
-    {
-      name: "显示密码",
-      action: function () {
-        /*window.top.document.activeElement.type = "text"; */ !(function () {
-          for (
-            var t = document.getElementsByTagName("input"), e = 0;
-            e < t.length;
-            e++
-          )
-            "password" === t[e].getAttribute("type") &&
-              t[e].setAttribute("type", "text");
-        })();
-      },
-    },
-    {
-      name: "执行JS代码",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "alert()");
-        if (q != null) eval(q);
-      },
-    },
-    {
-      name: "解除网页限制",
-      action: function () {
-        !(function () {
-          function t(e) {
-            e.stopPropagation(),
-              e.stopImmediatePropagation && e.stopImmediatePropagation();
-          }
-          document.querySelectorAll("*").forEach((e) => {
-            "none" ===
-              window
-                .getComputedStyle(e, null)
-                .getPropertyValue("user-select") &&
-              e.style.setProperty("user-select", "text", "important");
-          }),
-            [
-              "copy",
-              "cut",
-              "contextmenu",
-              "selectstart",
-              //"mousedown",
-              "mouseup",
-              "mousemove",
-              "keydown",
-              "keypress",
-              "keyup",
-            ].forEach(function (e) {
-              document.documentElement.addEventListener(e, t, { capture: !0 });
-            }),
-            showMessage("解除限制成功啦！");
-        })();
-      },
-    },
-
-    {
-      name: "自由编辑网页",
-      action: function () {
-        !(function () {
-          "true" === document.body.getAttribute("contenteditable")
-            ? (document.body.setAttribute("contenteditable", !1),
-              showMessage("网页不能编辑啦！"))
-            : (document.body.setAttribute("contenteditable", !0),
-              showMessage("网页可以编辑啦！"));
-        })();
       },
     },
 
@@ -284,7 +181,7 @@
               for (const [key, value] of Object.entries(obj.sentences)) {
                 res += value.trans + "\r\n";
               }
-              showMessage(res, 5000);
+              showMessageBox(res);
             },
           });
         }
@@ -321,6 +218,39 @@
     },
 
     {
+      name: "搜索-谷歌",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
+        if (q != null)
+          window.open(
+            "https://www.google.com/search?q=" +
+              encodeURIComponent(q).replace(/ /g, "+")
+          );
+      },
+    },
+    {
+      name: "搜索-谷歌搜中文",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
+        if (q != null)
+          window.open(
+            "https://www.google.com/search?lr=lang_zh-CN&q=" +
+              encodeURIComponent(q).replace(/ /g, "+")
+          );
+      },
+    },
+    {
+      name: "搜索-维基百科",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
+        if (q != null)
+          window.open("https://zh.wikipedia.org/wiki/" + encodeURIComponent(q));
+      },
+    },
+    {
       name: "搜索-谷歌搜本站",
       action: function () {
         let q = window.getSelection().toString();
@@ -336,19 +266,6 @@
       },
     },
     {
-      name: "搜索-谷歌搜中文",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
-        if (q != null)
-          window.open(
-            "https://www.google.com/search?lr=lang_zh-CN&q=" +
-              encodeURIComponent(q).replace(/ /g, "+")
-          );
-      },
-    },
-
-    {
       name: "搜索-百度",
       action: function () {
         let q = window.getSelection().toString();
@@ -362,15 +279,100 @@
     },
 
     {
-      name: "搜索-维基百科",
+      name: "显示密码",
       action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
-        if (q != null)
-          window.open("https://zh.wikipedia.org/wiki/" + encodeURIComponent(q));
+        /*window.top.document.activeElement.type = "text"; */ !(function () {
+          for (
+            var t = document.getElementsByTagName("input"), e = 0;
+            e < t.length;
+            e++
+          )
+            "password" === t[e].getAttribute("type") &&
+              t[e].setAttribute("type", "text");
+        })();
+      },
+    },
+    {
+      name: "屏蔽元素",
+      action: function () {
+        let selection = window.getSelection();
+        if (selection.toString()) {
+          var range = selection.getRangeAt(0); // 获取范围内的节点
+
+          // 递归遍历节点，查找最近的元素节点
+          function findClosestElement(node) {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              return node; // 当前节点是元素节点，返回
+            } else if (node.parentNode) {
+              return findClosestElement(node.parentNode); // 继续向上查找父节点
+            } else {
+              return null; // 未找到包含文本的元素节点
+            }
+          }
+
+          // 查找包含所选文本的最近的元素节点
+          findClosestElement(range.commonAncestorContainer).style.display =
+            "none";
+        } else {
+          document.activeElement.style.display = "none";
+        }
       },
     },
 
+    {
+      name: "执行JS代码",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "alert()");
+        if (q != null) eval(q);
+      },
+    },
+    {
+      name: "解除网页限制",
+      action: function () {
+        !(function () {
+          function t(e) {
+            e.stopPropagation(),
+              e.stopImmediatePropagation && e.stopImmediatePropagation();
+          }
+          document.querySelectorAll("*").forEach((e) => {
+            "none" ===
+              window
+                .getComputedStyle(e, null)
+                .getPropertyValue("user-select") &&
+              e.style.setProperty("user-select", "text", "important");
+          }),
+            [
+              "copy",
+              "cut",
+              "contextmenu",
+              "selectstart",
+              //"mousedown",
+              "mouseup",
+              "mousemove",
+              "keydown",
+              "keypress",
+              "keyup",
+            ].forEach(function (e) {
+              document.documentElement.addEventListener(e, t, { capture: !0 });
+            }),
+            showMessageBox("解除限制成功啦！");
+        })();
+      },
+    },
+
+    {
+      name: "自由编辑网页",
+      action: function () {
+        !(function () {
+          "true" === document.body.getAttribute("contenteditable")
+            ? (document.body.setAttribute("contenteditable", !1),
+              showMessageBox("网页不能编辑啦！"))
+            : (document.body.setAttribute("contenteditable", !0),
+              showMessageBox("网页可以编辑啦！"));
+        })();
+      },
+    },
     {
       name: "网页标注",
       action: function () {
@@ -379,7 +381,7 @@
             eval(await res.text())
           );
         })();
-        showMessage("按住Alt即可使用");
+        showMessageBox("按住Alt即可使用");
       },
     },
     {
@@ -516,7 +518,7 @@
 
   // 创建菜单容器
   var menuContainer = document.createElement("div");
-  menuContainer.classList.add("gm-blur-box");
+  menuContainer.classList.add("gm-glass-box");
   menuContainer.style.cssText = `
   position: fixed;
   padding: 10px;
@@ -524,6 +526,7 @@
   display: none;
   max-height: 80%; /* 设置最大高度为父元素高度的50% */
   overflow-y: auto; /* 显示滚动条，仅在内容溢出时显示 */
+  border-radius: 7px;
 `;
 
   // 创建菜单项

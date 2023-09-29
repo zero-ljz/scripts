@@ -12,14 +12,12 @@ EOF
 
 cat>README.md<<EOF
 # ${project_name}
- project_description
-
 EOF
 
 
 cat>Dockerfile<<EOF
 # 如需更多资料，请参阅 https://aka.ms/vscode-docker-python
-FROM python:3.10-slim
+FROM python:3.9.13-slim
 
 EXPOSE 8000
 
