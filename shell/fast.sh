@@ -430,7 +430,7 @@ version=${1:-3.9.13}
 short_version=${version%%.*} # 3
 # 启用源代码包
 sh -c 'echo "deb-src https://deb.debian.org/debian bullseye main" >> /etc/apt/sources.list'
-# 安装python所需的构建依赖项
+# 安装python运行时依赖项
 apt-get update
 apt-get build-dep python3
 apt-get -y install build-essential gdb lcov pkg-config \
@@ -1430,7 +1430,7 @@ download_php_apps /docker/${app_name}
 }
 
 
-docker_run_script(){
+docker_run_app(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} [interpreter] [command]..."
@@ -1439,18 +1439,18 @@ return; fi
 interpreter=${1:-"python3"}
 shift 1
 if [ "$interpreter" = "python3" ]; then
-    command=${@:-"pip3 install -r requirements.txt && python3 app.py"}
+    command=${@:-"python3 -m pip install -r requirements.txt && python3 app.py"}
     # 3.11-alpine3.17
     docker run -it --rm -p 8000:8000 --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.9.13-slim-bullseye bash -c "${command}"
 elif [ "$interpreter" = "python" ]; then
-    command=${@:-"pip install -r requirements.txt && python app.py"}
+    command=${@:-"python -m pip install -r requirements.txt && python app.py"}
     docker run -it --rm -p 8000:8000 --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:2.7.18-slim-buster bash -c "${command}"
-elif [ "$interpreter" = "php-cli" ]; then
-    command=${@:-"php app.php"}
-    docker run -it --rm -p 8000:8000 --name php-cli1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli ${command}
 elif [ "$interpreter" = "php" ]; then
     command=${@:-""}
     docker run -it --rm -p 8000:80 --name php-httpd1 -v "$PWD":/var/www/html php:7.4-apache ${command}
+elif [ "$interpreter" = "php-cli" ]; then
+    command=${@:-"php app.php"}
+    docker run -it --rm -p 8000:8000 --name php-cli1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli ${command}
 elif [ "$interpreter" = "node" ]; then
     command=${@:-"node app.js"}
     docker run -it --rm -p 8000:8000 --name node1 -v "$PWD":/usr/src/app -w /usr/src/app node:18-bullseye-slim ${command}
@@ -1528,6 +1528,7 @@ fi
 url="${proxy}https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh"
 echo "正在从 ${url} 下载最新版本脚本..."
 bash -c "wget --no-cache -O /root/fast.sh ${url}"
+bash -c "curl -LkO https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh"
 }
 
 # 获取函数名
