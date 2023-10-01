@@ -1527,7 +1527,7 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
 fi
 url="${proxy}https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh"
 echo "正在从 ${url} 下载最新版本脚本..."
-bash -c "wget --no-cache -O /root/fast.sh ${url}"
+# bash -c "wget --no-cache -O /root/fast.sh ${url}"
 bash -c "curl -LkO https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh"
 }
 

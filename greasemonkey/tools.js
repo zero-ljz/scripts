@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         全局工具箱
 // @namespace    http://iapp.run
-// @version      0.1
+// @version      0.2
 // @description  添加一个按钮到每个网页左上方的位置，点击后显示工具箱的菜单
 // @author       zero-ljz
 // @homepage     https://github.com/zero-ljz/scripts/blob/main/greasemonkey/tools.js
@@ -94,42 +94,7 @@ function showMessageBox(message, title = '提示') {
     },
 
     {
-      name: "调试信息",
-      action: function () {
-        console.log(`
-          script.name: ${GM_info.script.name}
-          script.version: ${GM_info.script.name} ${GM_info.script.version}
-          script.description: ${GM_info.script.description}
-          script.homepage: ${GM_info.script.homepage}
-          script.author: ${GM_info.script.author}
-
-          activeElement: ${document.activeElement}
-          activeElement tagName: ${document.activeElement.tagName}
-          activeElement type: ${document.activeElement.type}
-          activeElement value: ${document.activeElement.value}
-          activeElement name: ${document.activeElement.name}
-          activeElement id: ${document.activeElement.id}
-          activeElement className: ${document.activeElement.className}
-
-          selectedText: ${window.getSelection().toString()}
-
-          URL: ${window.document.URL}
-          location.href: ${window.document.location.href}
-          location.host: ${window.document.location.host}
-          location.pathname: ${window.document.location.pathname}
-          location.search: ${window.document.location.search}
-          referrer: ${window.document.referrer}
-          title: ${window.document.title}
-          characterSet: ${window.document.characterSet}
-          contentType: ${window.document.contentType}
-          doctype: ${window.document.doctype}
-          readyState: ${window.document.readyState}
-          lastModified: ${window.document.lastModified}
-        `);
-      },
-    },
-    {
-      name: "朗读文本",
+      name: "朗读",
       action: function () {
         let q = window.getSelection().toString();
         if (!q) q = prompt("你没有选中任何文本，请输入：", "");
@@ -137,27 +102,8 @@ function showMessageBox(message, title = '提示') {
           window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(q));
       },
     },
-
     {
-      name: "翻译页面-谷歌",
-      action: function () {
-        location.href =
-          "https://translate.google.com/translate?sl=auto&tl=zh-CN&u=" +
-          encodeURIComponent(location.href);
-      },
-    },
-
-    {
-      name: "翻译页面-有道",
-      action: function () {
-        location.href =
-          "http://webtrans.yodao.com/webTransPc/index.html#/?from=auto&to=auto&type=1&url=" +
-          encodeURIComponent(location.href);
-      },
-    },
-
-    {
-      name: "翻译-谷歌",
+      name: "翻译",
       action: function () {
         let q = window.getSelection().toString();
         if (q == "") {
@@ -185,6 +131,47 @@ function showMessageBox(message, title = '提示') {
             },
           });
         }
+      },
+    },
+    {
+      name: "搜索",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
+        if (q != null)
+          window.open(
+            "https://www.google.com/search?q=" +
+              encodeURIComponent(q).replace(/ /g, "+")
+          );
+      },
+    },
+    {
+      name: "搜索-中文结果",
+      action: function () {
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
+        if (q != null)
+          window.open(
+            "https://www.google.com/search?lr=lang_zh-CN&q=" +
+              encodeURIComponent(q).replace(/ /g, "+")
+          );
+      },
+    },
+    {
+      name: "翻译页面-谷歌",
+      action: function () {
+        location.href =
+          "https://translate.google.com/translate?sl=auto&tl=zh-CN&u=" +
+          encodeURIComponent(location.href);
+      },
+    },
+
+    {
+      name: "翻译页面-有道",
+      action: function () {
+        location.href =
+          "http://webtrans.yodao.com/webTransPc/index.html#/?from=auto&to=auto&type=1&url=" +
+          encodeURIComponent(location.href);
       },
     },
     {
@@ -217,30 +204,7 @@ function showMessageBox(message, title = '提示') {
       },
     },
 
-    {
-      name: "搜索-谷歌",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
-        if (q != null)
-          window.open(
-            "https://www.google.com/search?q=" +
-              encodeURIComponent(q).replace(/ /g, "+")
-          );
-      },
-    },
-    {
-      name: "搜索-谷歌搜中文",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
-        if (q != null)
-          window.open(
-            "https://www.google.com/search?lr=lang_zh-CN&q=" +
-              encodeURIComponent(q).replace(/ /g, "+")
-          );
-      },
-    },
+
     {
       name: "搜索-维基百科",
       action: function () {
@@ -251,7 +215,7 @@ function showMessageBox(message, title = '提示') {
       },
     },
     {
-      name: "搜索-谷歌搜本站",
+      name: "搜索-当前站点",
       action: function () {
         let q = window.getSelection().toString();
         if (!q) q = prompt("你没有选中任何文本，请输入：", "");
@@ -263,18 +227,6 @@ function showMessageBox(message, title = '提示') {
             encodeURIComponent(q.replace(/\"/g, "")) +
             '"'
           ).replace(/ /g, "+");
-      },
-    },
-    {
-      name: "搜索-百度",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "");
-        if (q != null)
-          window.open(
-            "http://www.baidu.com/s?wd=" +
-              encodeURIComponent(q).replace(/ /g, "+")
-          );
       },
     },
 
@@ -318,17 +270,8 @@ function showMessageBox(message, title = '提示') {
         }
       },
     },
-
     {
-      name: "执行JS代码",
-      action: function () {
-        let q = window.getSelection().toString();
-        if (!q) q = prompt("你没有选中任何文本，请输入：", "alert()");
-        if (q != null) eval(q);
-      },
-    },
-    {
-      name: "解除网页限制",
+      name: "解除限制",
       action: function () {
         !(function () {
           function t(e) {
@@ -362,7 +305,7 @@ function showMessageBox(message, title = '提示') {
     },
 
     {
-      name: "自由编辑网页",
+      name: "编辑网页",
       action: function () {
         !(function () {
           "true" === document.body.getAttribute("contenteditable")
@@ -399,10 +342,18 @@ function showMessageBox(message, title = '提示') {
       },
     },
     {
-      name: "谷歌页面快照",
+      name: "页面快照",
       action: function () {
         document.location.href =
           "http://www.google.com/search?q=cache:" +
+          encodeURIComponent(document.location.href);
+      },
+    },
+    {
+      name: "网页存档",
+      action: function () {
+        document.location.href =
+          "http://web.archive.org/" +
           encodeURIComponent(document.location.href);
       },
     },
@@ -444,12 +395,48 @@ function showMessageBox(message, title = '提示') {
         );
       },
     },
+
     {
-      name: "网页存档",
+      name: "执行JS",
       action: function () {
-        document.location.href =
-          "http://web.archive.org/" +
-          encodeURIComponent(document.location.href);
+        let q = window.getSelection().toString();
+        if (!q) q = prompt("你没有选中任何文本，请输入：", "alert()");
+        if (q != null) eval(q);
+      },
+    },
+    {
+      name: "调试信息",
+      action: function () {
+        console.log(`
+          script.name: ${GM_info.script.name}
+          script.version: ${GM_info.script.name} ${GM_info.script.version}
+          script.description: ${GM_info.script.description}
+          script.homepage: ${GM_info.script.homepage}
+          script.author: ${GM_info.script.author}
+
+          activeElement: ${document.activeElement}
+          activeElement tagName: ${document.activeElement.tagName}
+          activeElement type: ${document.activeElement.type}
+          activeElement value: ${document.activeElement.value}
+          activeElement name: ${document.activeElement.name}
+          activeElement id: ${document.activeElement.id}
+          activeElement className: ${document.activeElement.className}
+
+          selectedText: ${window.getSelection().toString()}
+
+          URL: ${window.document.URL}
+          location.href: ${window.document.location.href}
+          location.host: ${window.document.location.host}
+          location.pathname: ${window.document.location.pathname}
+          location.search: ${window.document.location.search}
+          referrer: ${window.document.referrer}
+          title: ${window.document.title}
+          characterSet: ${window.document.characterSet}
+          contentType: ${window.document.contentType}
+          doctype: ${window.document.doctype}
+          readyState: ${window.document.readyState}
+          lastModified: ${window.document.lastModified}
+        `);
       },
     },
   ];
