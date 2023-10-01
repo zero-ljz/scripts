@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         全局工具箱
 // @namespace    http://iapp.run
-// @version      0.2
+// @version      0.2.1
 // @description  添加一个按钮到每个网页左上方的位置，点击后显示工具箱的菜单
 // @author       zero-ljz
 // @homepage     https://github.com/zero-ljz/scripts/blob/main/greasemonkey/tools.js
@@ -49,7 +49,13 @@
 // document.head.appendChild(scriptElement);
 
 function showMessageBox(message, title = '提示') {
-  var messageBox = document.createElement("div");
+  var messageBox = document.getElementById("gm-message-box");
+  if (!messageBox) {
+    messageBox = document.createElement("div");
+    messageBox.id = "gm-message-box";
+  }
+  messageBox.innerHTML = "";
+
   messageBox.style.all = "initial";
   messageBox.classList.add("gm-acrylic-box");
   messageBox.style.cssText = `
@@ -127,7 +133,7 @@ function showMessageBox(message, title = '提示') {
               for (const [key, value] of Object.entries(obj.sentences)) {
                 res += value.trans + "\r\n";
               }
-              showMessageBox(res);
+              showMessageBox(res, "翻译结果");
             },
           });
         }
