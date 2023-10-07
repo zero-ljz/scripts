@@ -28,7 +28,7 @@ fi
 OSID=$(grep '^ID=' /etc/os-release | cut -d= -f2)
 
 # 默认代理设置
-proxy="https://p.ljz.one/"
+proxy="https://p.iblog.site/"
 
 system_init(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -117,15 +117,15 @@ echo -e "\n\n\n配置防火墙"
 # service netfilter-persistent reload
 # #systemctl restart networking
 
-apt -y install ufw
-
-ufw allow ssh
-ufw allow http
-ufw allow https
-ufw allow mysql
-ufw allow 8000:8100/tcp
-ufw allow 10000:20000/tcp
-ufw allow 1024:65535/tcp
+#  apt -y install ufw
+ 
+#  ufw allow ssh
+#  ufw allow http
+#  ufw allow https
+#  ufw allow mysql
+#  ufw allow 8000:8100/tcp
+#  ufw allow 10000:20000/tcp
+#  ufw allow 1024:65535/tcp
 
 # ufw deny 9000
 
@@ -1031,6 +1031,8 @@ docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --
 mariadb:10.3-focal \
 --character-set-server=utf8mb4 \
 --collation-server=utf8mb4_unicode_ci
+
+docker exec -it mysql1 sed -i 's/max_connections\s*=\s*[0-9]\+/max_connections = 1000/' /etc/mysql/my.cnf
 
 }
 
