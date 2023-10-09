@@ -957,6 +957,8 @@ sed -i "s/use_auth = true/use_auth = false/g" ${root_dir}/tinyfilemanager.php
 
 wget -O ${root_dir}/index.php ${proxy}https://raw.githubusercontent.com/lorenzos/Minixed/master/index.php
 
+wget -O ${root_dir}/fast.php ${proxy}https://raw.githubusercontent.com/zero-ljz/scripts/main/php/fast.php
+
 wget -P ${root_dir} ${proxy}https://github.com/nickola/web-console/releases/download/v0.9.7/webconsole-0.9.7.zip
 unzip -d ${root_dir} ${root_dir}/webconsole-0.9.7.zip
 mv ${root_dir}/webconsole/webconsole.php ${root_dir}/webconsole.php
@@ -1330,7 +1332,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} repo_url http_port command"
 return; fi
-# docker rm -f iapp && fast deploy_python_app https://github.com/zero-ljz/iapp.git 8000 "python3 -m gunicorn -w 2 -b 0.0.0.0:8000 -k gevent app:app"
+# sudo docker rm -f iapp && sudo bash fast.sh deploy_python_app https://github.com/zero-ljz/iapp.git 8000 "python3 -m gunicorn -w 2 -b 0.0.0.0:8000 -k gevent app:app"
 repo_url=${1}
 http_port=${2:-8000}
 command=${3:-"python3 -m gunicorn -b 0.0.0.0:8000 app:app"}
@@ -1345,7 +1347,7 @@ ${command}
 EOF
 )
 docker run -d -p "${http_port}":8000 --name ${repo} --restart=always -v "/docker/${repo}":/usr/src/app -w /usr/src/app -e TZ=Asia/Shanghai python:3.9.13-slim-bullseye bash -c "$commands"
-
+docker logs ${repo}
 }
 
 
@@ -1444,11 +1446,6 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     create_proxy ${domain_name} ${port}
     create_ssl ${domain_name}
 
-    
-
-    # deploy_cloudreve
-    # deploy_searxng
-    
 }
 
 upgrade()
