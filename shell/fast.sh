@@ -1059,10 +1059,60 @@ redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 # docker run -it --network redis --rm redis redis-cli -h redis1
 }
 
+create_default_vhost(){
+
+cat>/var/www/html/index.html<<EOF
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:,">
+    <title>站点未找到</title>
+</head>
+<body>
+    <h1>站点未找到</h1>
+    <p>抱歉，您访问的站点不存在。</p>
+</body>
+</html>
+EOF
+
+cat>/etc/nginx/conf.d/default.conf<<EOF
+server {
+  listen 80 default_server;
+  listen [::]:80 default_server;
+
+  root /var/www/html;
+
+  index index.html index.htm index.nginx-debian.html;
+
+  server_name _;
+
+  location / {
+   try_files \$uri \$uri/ =404;
+  }
+}
+EOF
+}
+
+install_nginx(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+echo "安装 Nginx"
+apt -y install nginx
+# 选择conf.d为子配置文件夹，将sites-enabled注释掉
+find '/etc/nginx/nginx.conf' | xargs perl -pi -e 's|include /etc/nginx/sites-enabled/\*;|#include /etc/nginx/sites-enabled/*;|g'
+
+create_default_vhost
+systemctl restart nginx
+}
+
 deploy_nginx(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 echo "安装 Nginx"
 docker run -d --name nginx1 --restart=always --network host -v /var/www:/var/www -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d -e TZ=Asia/Shanghai nginx:stable-bullseye
+
+create_default_vhost
+docker restart nginx1
 }
 
 deploy_php_fpm(){
@@ -1487,7 +1537,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     install_utils
 
     install_nodejs
-    apt -y install nginx
+    install_nginx
     install_php_fpm
 
     domain_name=a.iapp.run
