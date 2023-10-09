@@ -1339,7 +1339,7 @@ commands=$(cat <<EOF
 # sed -i -E 's#(https?://)#${proxy}\1#g' /etc/apt/sources.list
 apt update && apt -y install git wget
 git clone ${repo_url} .
-pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+# pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 python3 -m pip install -r requirements.txt
 ${command}
 EOF
