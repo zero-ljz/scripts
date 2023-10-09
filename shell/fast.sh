@@ -206,13 +206,13 @@ apt -y install ncdu
 # apt -y install w3m
 # echo -e "\n\n\n 安装类似于 top 命令，但是具有更强的交互性和可读性，它可以显示更多有关进程的信息。"
 # apt -y install htop
-echo -e "\n\n\n 安装命令行 JSON 处理器，可以帮助您以可读的方式解析和格式化 JSON 数据。"
-apt -y install jq
+# echo -e "\n\n\n 安装命令行 JSON 处理器，可以帮助您以可读的方式解析和格式化 JSON 数据。"
+# apt -y install jq
 # echo -e "\n\n\n 安装实时网络带宽监控器。"
 # apt -y install bmon
 
-echo -e "\n\n\n 安装网络扫描工具，用于检测主机和服务。其他替代品：masscan"
-apt -y install nmap
+# echo -e "\n\n\n 安装网络扫描工具，用于检测主机和服务。其他替代品：masscan"
+# apt -y install nmap
 
 echo -e "\n\n\n 安装可帮助您在终端中以树形结构显示目录结构。"
 apt -y install tree
@@ -282,12 +282,12 @@ pip3 install httpx
 pip3 install 'httpx[cli]'
 
 # echo -e "\n\n\n 安装跨平台系统监视工具，可以监视 CPU、内存、网络等方面的系统指标。"
-pip3 install --user glances
+# pip3 install --user glances
 
 # 安装GoTTY - 将您的终端共享为 Web 应用程序
-wget ${proxy}https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz
-tar -xzf gotty_linux_amd64.tar.gz
-mv gotty /usr/local/bin/
+# wget ${proxy}https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz
+# tar -xzf gotty_linux_amd64.tar.gz
+# mv gotty /usr/local/bin/
 # 命令：gotty top
 
 
@@ -1103,7 +1103,7 @@ apt -y install nginx
 find '/etc/nginx/nginx.conf' | xargs perl -pi -e 's|include /etc/nginx/sites-enabled/\*;|#include /etc/nginx/sites-enabled/*;|g'
 
 create_default_vhost
-systemctl restart nginx
+service nginx restart
 }
 
 deploy_nginx(){
