@@ -1380,6 +1380,8 @@ return; fi
 
 
 deploy_debian() {
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
 # 创建空的 Debian 容器并保持运行
 docker run -d --name debian1 --network host debian:bullseye tail -f /dev/null
 
