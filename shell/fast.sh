@@ -1386,8 +1386,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 docker run -d --name debian1 --network host debian:bullseye tail -f /dev/null
 
 commands=$(cat <<EOF
-apt update
-apt-get install --no-install-recommends wget curl nano micro
+apt-get update && apt-get -y install --no-install-recommends wget curl nano micro
 rm -rf /var/lib/apt/lists/*
 EOF
 )
