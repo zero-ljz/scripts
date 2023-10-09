@@ -1060,7 +1060,7 @@ redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 }
 
 create_default_vhost(){
-
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 cat>/var/www/html/index.html<<EOF
 <!DOCTYPE html>
 <html lang="zh-Hans">
@@ -1174,6 +1174,10 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 apt -y install php-fpm composer 
 # 安装php扩展
 apt -y install php-json php-mbstring php-mysql php-xml php-zip php-curl php-imagick php-gd file php-pear php-redis php-sqlite3 php-mongodb php-bcmath php-soap php-intl php-igbinary php-xdebug
+
+mkdir -p /run/php/
+#直接后台启动命令 php-fpm7.4
+
 systemctl enable php7.4-fpm
 systemctl start php7.4-fpm
 
@@ -1584,7 +1588,7 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
 fi
 url="${proxy}https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh"
 echo "正在从 ${url} 下载最新版本脚本..."
-# bash -c "wget --no-cache -O /root/fast.sh ${url}"
+# bash -c "wget --no-cache --no-check-certificate -O /root/fast.sh ${url}"
 bash -c "curl -LkO ${url}"
 }
 
