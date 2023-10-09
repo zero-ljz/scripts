@@ -682,6 +682,8 @@ sed -i "s/#PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config && \
     ssh-keygen -t ecdsa -P "" -f /etc/ssh/ssh_host_ecdsa_key && \
     ssh-keygen -t ed25519 -P "" -f /etc/ssh/ssh_host_ed25519_key && \
     echo "root:123qwe123@" | chpasswd
+    
+# sed -i 's/#Port 22/Port 222/g' /etc/ssh/sshd_config
 
 /usr/sbin/sshd
 
