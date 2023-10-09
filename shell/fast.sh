@@ -1330,13 +1330,11 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
     echo "Usage: ${FUNCNAME} repo_url http_port command"
 return; fi
-# docker rm -f iapp && fast deploy_python_app https://github.com/zero-ljz/iapp.git
+# docker rm -f iapp && fast deploy_python_app https://github.com/zero-ljz/iapp.git 8000 "python3 -m gunicorn -w 2 -b 0.0.0.0:8000 -k gevent app:app"
 repo_url=${1}
 http_port=${2:-8000}
 command=${3:-"python3 -m gunicorn -b 0.0.0.0:8000 app:app"}
 repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
-docker run -d -p "${http_port}":8000 --name ${repo} --restart=always -v "/docker/${repo}":/usr/src/app -w /usr/src/app -e TZ=Asia/Shanghai python:3.9.13-slim-bullseye tail -f /dev/null
-
 commands=$(cat <<EOF
 # sed -i -E 's#(https?://)#${proxy}\1#g' /etc/apt/sources.list
 apt update && apt -y install git wget
@@ -1346,7 +1344,8 @@ python3 -m pip install -r requirements.txt
 ${command}
 EOF
 )
-docker exec ${repo} bash -c "$commands"
+docker run -d -p "${http_port}":8000 --name ${repo} --restart=always -v "/docker/${repo}":/usr/src/app -w /usr/src/app -e TZ=Asia/Shanghai python:3.9.13-slim-bullseye bash -c "$commands"
+
 }
 
 
