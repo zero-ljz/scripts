@@ -1,4 +1,148 @@
 
+
+
+
+deploy_nextcloud(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [local_port]"
+return; fi
+echo -e "\n\n\n------------------------------部署 NextCloud------------------------------"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+local_port=${1:-8000}
+docker run -dp 127.0.0.1:${local_port}:80 --name nextcloud1 --restart=always --network network1  -v /docker/nextcloud:/var/www/html -e TZ=Asia/Shanghai nextcloud
+
+# 用mysql性能不好
+
+}
+
+
+deploy_gitea(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [local_port] [ssh_port]"
+return; fi
+echo -e "\n\n\n------------------------------部署 Gitea------------------------------"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+local_port=${1:-3000}
+ssh_port=${2:-222}
+adduser \
+   --system \
+   --shell /bin/bash \
+   --gecos 'Git Version Control' \
+   --group \
+   --disabled-password \
+   --home /home/git \
+   git
+docker run -d \
+--name gitea1 \
+--restart=always \
+-p 127.0.0.1:${local_port}:3000 -p ${ssh_port}:22 \
+-e USER_UID=$(id -u git) \
+-e USER_GID=$(id -g git) \
+-v /docker/gitea:/data  \
+-v /etc/timezone:/etc/timezone:ro \
+-v /etc/localtime:/etc/localtime:ro  \
+gitea/gitea:1.19
+
+# 记得配置SSH_PORT=222，SSH_LISTEN_PORT=22
+
+# ssh://git@git.iapp.run:222/zero-ljz/repo.git
+
+}
+
+
+
+
+
+
+
+
+
+
+deploy_cloudreve(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [port]"
+return; fi
+echo -e "\n\n\n------------------------------部署 CloudReve------------------------------"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+port=${1:-5212}
+mkdir -vp /docker/cloudreve/{uploads,avatar} && touch /docker/cloudreve/conf.ini && touch /docker/cloudreve/cloudreve.db
+
+docker run -d \
+-p ${port}:5212 \
+--name cloudreve1 \
+--restart=always \
+--mount type=bind,source=/docker/cloudreve/conf.ini,target=/cloudreve/conf.ini \
+--mount type=bind,source=/docker/cloudreve/cloudreve.db,target=/cloudreve/cloudreve.db \
+-v /docker/cloudreve/uploads:/cloudreve/uploads \
+-v /docker/cloudreve/avatar:/cloudreve/avatar \
+cloudreve/cloudreve:latest
+
+}
+
+deploy_searxng(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [local_port]"
+return; fi
+echo -e "\n\n\n------------------------------部署 SearXNG------------------------------"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+local_port=${1:-8080}
+# https://docs.searxng.org/admin/installation-docker.html#searxng-searxng
+docker run --rm \
+-d -p 127.0.0.1:${local_port}:8080 \
+--name searxng1 \
+-v "/docker/searxng:/etc/searxng" \
+-e "BASE_URL=http://${domain_name}/" \
+-e "INSTANCE_NAME=元搜索" \
+searxng/searxng
+
+# 在settings.yml文件中设置默认启用的搜索引擎
+
+}
+
+deploy_gocron(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [local_port]"
+return; fi
+echo -e "\n\n\n------------------------------部署 GoCron------------------------------"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+local_port=${1:-5920}
+docker run --name gocron1 --restart=always --network network1 -p 127.0.0.1:${local_port}:5920 -d ouqg/gocron
+
+}
+
+
+deploy_hackmd(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [local_port]"
+return; fi
+echo -e "\n\n\n------------------------------部署 HackMD------------------------------"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+local_port=${1:-3000}
+# https://hackmd.io/c/codimd-documentation/%2Fs%2Fcodimd-docker-deployment
+docker run -d \
+-p 127.0.0.1:${local_port}:3000 \
+--name hackmd1 \
+--network network1 \
+-e CMD_DB_URL=mysql://user1:123@mysql:3306/db1 \
+-e CMD_USECDN=false \
+-v /docker/hackmd/upload-data:/home/hackmd/app/public/uploads \
+hackmdio/hackmd:2.4.2
+
+}
+
+
 install_trojan(){
 echo -e "\n\n\n------------------------------安装 Trojan------------------------------"
 echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
