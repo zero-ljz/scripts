@@ -684,6 +684,8 @@ sed -i "s/#PermitRootLogin.*/PermitRootLogin yes/g" /etc/ssh/sshd_config && \
     echo "root:123qwe123@" | chpasswd
     
 # sed -i 's/#Port 22/Port 222/g' /etc/ssh/sshd_config
+# chmod 0755 /var/run/sshd
+# service ssh restart
 
 /usr/sbin/sshd
 
