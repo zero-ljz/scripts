@@ -1381,7 +1381,7 @@ return; fi
 
 deploy_debian() {
 # 创建空的 Debian 容器并保持运行
-docker run -d --name debian1 --network host debian:bullseye-slim tail -f /dev/null
+docker run -d --name debian1 --network host debian:bullseye tail -f /dev/null
 
 commands=$(cat <<EOF
 apt update
@@ -1530,7 +1530,7 @@ fi
 url="${proxy}https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh"
 echo "正在从 ${url} 下载最新版本脚本..."
 # bash -c "wget --no-cache -O /root/fast.sh ${url}"
-bash -c "curl -LkO https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/fast.sh"
+bash -c "curl -LkO ${url}"
 }
 
 # 获取函数名
