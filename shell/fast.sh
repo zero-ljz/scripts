@@ -104,7 +104,7 @@ sysctl -p
 fi
 
 
-echo -e "\n\n\n配置防火墙"
+# echo -e "\n\n\n配置防火墙"
 
 # apt-get update
 # apt-get install iptables-persistent
