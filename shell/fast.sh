@@ -1418,14 +1418,12 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     install_nginx
     install_php_fpm
 
-    domain_name=a.iapp.run
-    create_vhost ${domain_name}
-    create_ssl ${domain_name}
-    create_database ${domain_name}
+    # domain_name=a.iapp.run
+    # create_vhost ${domain_name}
+    # create_ssl ${domain_name}
+    # create_database ${domain_name}
 
     install_docker
-    deploy_portainer 9001
-    create_proxy docker.iapp.run 9001
     deploy_debian
 
     deploy_mysql
@@ -1439,12 +1437,15 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     # adminer
     docker run -d --link mysql1:db --network network1 -p 8021:8080 --restart=always --name adminer1 adminer
 
-    domain_name=blog.iapp.run
-    port=8010
-    deploy_wordpress ${port}
-    create_database ${domain_name}
-    create_proxy ${domain_name} ${port}
-    create_ssl ${domain_name}
+    deploy_portainer 9001
+    # create_proxy docker.iapp.run 9001
+
+    # domain_name=blog.iapp.run
+    # port=8010
+    # deploy_wordpress ${port}
+    # create_database ${domain_name}
+    # create_proxy ${domain_name} ${port}
+    # create_ssl ${domain_name}
 
 }
 
