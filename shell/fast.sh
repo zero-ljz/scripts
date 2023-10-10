@@ -1514,6 +1514,7 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     install_docker
     deploy_debian
 
+    deploy_memcached
     deploy_mongo
     deploy_mongo_express
     deploy_postgres
