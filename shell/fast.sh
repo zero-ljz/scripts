@@ -1061,6 +1061,19 @@ redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 # docker run -it --network redis --rm redis redis-cli -h redis1
 }
 
+deploy_memcached(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [port]"
+return; fi
+port=${1:-11211}
+docker network create network1
+
+echo "安装 Memcached" 
+docker run -dp ${port}:11211 --name memcached1 --restart=always --network network1 --network-alias memcached -v /docker/memcached1:/data -e TZ=Asia/Shanghai \
+memcached:bullseye
+}
+
 deploy_mongo(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
