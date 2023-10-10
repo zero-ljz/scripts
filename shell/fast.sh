@@ -1342,6 +1342,56 @@ wordpress
 
 }
 
+deploy_nextcloud(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [local_port]"
+return; fi
+echo -e "\n\n\n------------------------------部署 NextCloud------------------------------"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+local_port=${1:-8000}
+docker run -dp 127.0.0.1:${local_port}:80 --name nextcloud1 --restart=always --network network1  -v /docker/nextcloud:/var/www/html -e TZ=Asia/Shanghai nextcloud
+
+# 用mysql性能不好
+
+}
+
+deploy_gitea(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [local_port] [ssh_port]"
+return; fi
+echo -e "\n\n\n------------------------------部署 Gitea------------------------------"
+echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+local_port=${1:-3000}
+ssh_port=${2:-222}
+adduser \
+   --system \
+   --shell /bin/bash \
+   --gecos 'Git Version Control' \
+   --group \
+   --disabled-password \
+   --home /home/git \
+   git
+docker run -d \
+--name gitea1 \
+--restart=always \
+-p 127.0.0.1:${local_port}:3000 -p ${ssh_port}:22 \
+-e USER_UID=$(id -u git) \
+-e USER_GID=$(id -g git) \
+-v /docker/gitea:/data  \
+-v /etc/timezone:/etc/timezone:ro \
+-v /etc/localtime:/etc/localtime:ro  \
+gitea/gitea:1.19
+
+# 记得配置SSH_PORT=222，SSH_LISTEN_PORT=22
+
+# ssh://git@git.iapp.run:222/zero-ljz/repo.git
+
+}
+
 deploy_portainer(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
