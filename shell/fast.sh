@@ -1068,13 +1068,12 @@ cat>/var/www/html/index.html<<EOF
 <html lang="zh-Hans">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="data:,">
-    <title>站点未找到</title>
+    <title>404 未找到站点</title>
 </head>
 <body>
-    <h1>站点未找到</h1>
-    <p>抱歉，您访问的站点不存在。</p>
+    <center><h1>404 未找到站点</h1></center><hr>
+    <center><p>抱歉，您访问的站点不存在。</p></center>
 </body>
 </html>
 EOF
