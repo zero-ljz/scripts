@@ -1034,7 +1034,7 @@ docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --
 --env MARIADB_DATABASE=db1 \
 --env MARIADB_CHARSET=utf8mb4 \
 --env MARIADB_COLLATION=utf8mb4_unicode_ci \
-mariadb:10.3-focal \
+mariadb:10.3-jammy \
 --character-set-server=utf8mb4 \
 --collation-server=utf8mb4_unicode_ci
 
@@ -1059,6 +1059,63 @@ redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
 # redis://default:123qwe123@@localhost:6379/0
 # 连接方式：redis-cli
 # docker run -it --network redis --rm redis redis-cli -h redis1
+}
+
+deploy_mongo(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [port]"
+return; fi
+port=${1:-27017}
+docker network create network1
+
+echo "安装 MongoDB"
+docker run -dp ${port}:27017 --name mongo1 --restart=always --network network1 --network-alias mongo -v /docker/mongo1:/data/db -e TZ=Asia/Shanghai \
+-e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
+-e MONGO_INITDB_ROOT_PASSWORD=secret \
+mongo:jammy
+}
+
+deploy_mongo_express(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [port]"
+return; fi
+port=${1:-8081}
+
+echo "安装 mongo-express"
+docker run -dp ${port}:8081 --network network1 -e ME_CONFIG_MONGODB_SERVER=mongo mongo-express
+}
+
+deploy_postgres(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [port]"
+return; fi
+port=${1:-5432}
+docker network create network1
+
+echo "安装 PostgreSQL"
+docker run -dp ${port}:5432 --name postgres1 --restart=always --network network1 --network-alias postgres -e TZ=Asia/Shanghai \
+-e POSTGRES_PASSWORD=mysecretpassword \
+-e PGDATA=/var/lib/postgresql/data/pgdata \
+-v /docker/postgres1:/var/lib/postgresql/data \
+postgres:bullseye
+}
+
+deploy_rabbitmq(){
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} [port]"
+return; fi
+port=${1:-5672}
+docker network create network1
+
+echo "安装 RabbitMQ"
+docker run -dp ${port}:5672 -p 15672:15672 --name rabbitmq1 --restart=always --network network1 --network-alias rabbitmq -e TZ=Asia/Shanghai \
+-e RABBITMQ_DEFAULT_USER=myuser \
+-e RABBITMQ_DEFAULT_PASS=mypassword \
+rabbitmq
 }
 
 create_default_vhost(){
@@ -1350,6 +1407,30 @@ docker logs ${repo}
 }
 
 
+deploy_node_app() {
+if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: ${FUNCNAME} repo_url http_port command"
+return; fi
+
+repo_url=${1}
+http_port=${2:-3000}
+command=${3:-"npm start"}
+repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
+commands=$(cat <<EOF
+# sed -i -E 's#(https?://)#${proxy}\1#g' /etc/apt/sources.list
+apt update && apt -y install git wget
+git clone ${repo_url} .
+npm install --production --silent
+${command}
+EOF
+)
+docker run -d -p "${http_port}":3000 --name ${repo} --restart=always -v "/docker/${repo}":/usr/src/app -w /usr/src/app -e TZ=Asia/Shanghai \
+-e NODE_ENV=production \
+node:lts-bullseye-slim bash -c "$commands"
+docker logs ${repo}
+}
+
 deploy_php_app() {
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
@@ -1419,6 +1500,11 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 
     install_docker
     deploy_debian
+
+    deploy_mongo
+    deploy_mongo_express
+    deploy_postgres
+    deploy_rabbitmq
 
     deploy_mysql
     deploy_redis
