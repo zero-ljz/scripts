@@ -245,7 +245,7 @@ apt -y install fio
 # 运行随机读取测试
 # fio --name=random-read --ioengine=libaio --direct=1 --rw=randread --bs=4k --size=1G --numjobs=1 --runtime=60s
 
-apt -y install apache2-utils
+# apt -y install apache2-utils
 # Apache Benchmarking Tool，t最大持续时间 n总请求数 c并发连接数 v信息详细程度
 #ab -t 30 -n 5000 -c 100 -v 1 http://example.com/
 
