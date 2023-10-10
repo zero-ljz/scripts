@@ -1414,21 +1414,16 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     install_utils
 
     install_nodejs
-    install_nginx
-    install_php_fpm
-
-    # domain_name=a.iapp.run
-    # create_vhost ${domain_name}
-    # create_ssl ${domain_name}
-    # create_database ${domain_name}
+    # install_nginx
+    # install_php_fpm
 
     install_docker
     deploy_debian
 
     deploy_mysql
     deploy_redis
-    # deploy_nginx
-    # deploy_php_fpm
+    deploy_nginx
+    deploy_php_fpm
 
     # tinyfilemanager
     docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
@@ -1445,6 +1440,11 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     # create_database ${domain_name}
     # create_proxy ${domain_name} ${port}
     # create_ssl ${domain_name}
+
+    # domain_name=a.iapp.run
+    # create_vhost ${domain_name}
+    # create_ssl ${domain_name}
+    # create_database ${domain_name}
 
 }
 
