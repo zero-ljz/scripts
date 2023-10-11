@@ -1097,7 +1097,13 @@ return; fi
 port=${1:-8081}
 
 echo "安装 mongo-express"
-docker run -dp ${port}:8081 --network network1 -e ME_CONFIG_MONGODB_SERVER=mongo mongo-express
+docker run -dp ${port}:8081 --name mongo-express1 --restart=always --network network1 \
+-e ME_CONFIG_MONGODB_SERVER=mongo \
+-e ME_CONFIG_MONGODB_ADMINUSERNAME='mongoadmin' \
+-e ME_CONFIG_MONGODB_ADMINPASSWORD='secret' \
+-e ME_CONFIG_BASICAUTH_USERNAME=admin \
+-e ME_CONFIG_BASICAUTH_PASSWORD=123123 \
+mongo-express
 }
 
 deploy_postgres(){
