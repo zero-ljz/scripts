@@ -1085,7 +1085,7 @@ docker network create network1
 echo "安装 MongoDB"
 docker run -dp ${port}:27017 --name mongo1 --restart=always --network network1 --network-alias mongo -v /docker/mongo1:/data/db -e TZ=Asia/Shanghai \
 -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
--e MONGO_INITDB_ROOT_PASSWORD=secret \
+-e MONGO_INITDB_ROOT_PASSWORD=123qwe123@ \
 mongo:jammy
 
 # mongodb://admin:password@localhost:27017
@@ -1102,9 +1102,9 @@ echo "安装 mongo-express"
 docker run -dp ${port}:8081 --name mongo-express1 --restart=always --network network1 \
 -e ME_CONFIG_MONGODB_SERVER=mongo \
 -e ME_CONFIG_MONGODB_ADMINUSERNAME='mongoadmin' \
--e ME_CONFIG_MONGODB_ADMINPASSWORD='secret' \
+-e ME_CONFIG_MONGODB_ADMINPASSWORD='123qwe123@' \
 -e ME_CONFIG_BASICAUTH_USERNAME=admin \
--e ME_CONFIG_BASICAUTH_PASSWORD=123123 \
+-e ME_CONFIG_BASICAUTH_PASSWORD=123qwe123@ \
 mongo-express
 }
 
@@ -1118,7 +1118,7 @@ docker network create network1
 
 echo "安装 PostgreSQL"
 docker run -dp ${port}:5432 --name postgres1 --restart=always --network network1 --network-alias postgres -e TZ=Asia/Shanghai \
--e POSTGRES_PASSWORD=mysecretpassword \
+-e POSTGRES_PASSWORD=123qwe123@ \
 -e PGDATA=/var/lib/postgresql/data/pgdata \
 -v /docker/postgres1:/var/lib/postgresql/data \
 postgres:bullseye
@@ -1134,8 +1134,8 @@ docker network create network1
 
 echo "安装 RabbitMQ"
 docker run -dp ${port}:5672 -p 15672:15672 --name rabbitmq1 --restart=always --network network1 --network-alias rabbitmq -e TZ=Asia/Shanghai \
--e RABBITMQ_DEFAULT_USER=myuser \
--e RABBITMQ_DEFAULT_PASS=mypassword \
+-e RABBITMQ_DEFAULT_USER=user1 \
+-e RABBITMQ_DEFAULT_PASS=123qwe123@ \
 rabbitmq
 }
 
