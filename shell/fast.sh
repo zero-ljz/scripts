@@ -1087,6 +1087,8 @@ docker run -dp ${port}:27017 --name mongo1 --restart=always --network network1 -
 -e MONGO_INITDB_ROOT_USERNAME=mongoadmin \
 -e MONGO_INITDB_ROOT_PASSWORD=secret \
 mongo:jammy
+
+# mongodb://admin:password@localhost:27017
 }
 
 deploy_mongo_express(){
