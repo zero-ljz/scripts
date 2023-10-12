@@ -1034,7 +1034,7 @@ docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --
 --env MARIADB_DATABASE=db1 \
 --env MARIADB_CHARSET=utf8mb4 \
 --env MARIADB_COLLATION=utf8mb4_unicode_ci \
-mariadb:10.3-jammy \
+mariadb:10.3-focal \
 --character-set-server=utf8mb4 \
 --collation-server=utf8mb4_unicode_ci
 
@@ -1141,6 +1141,8 @@ rabbitmq
 
 create_default_vhost(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+touch /var/www/html/index.html
+chmod 755 /var/www/html/index.html
 cat>/var/www/html/index.html<<EOF
 <!DOCTYPE html>
 <html lang="zh-Hans">
