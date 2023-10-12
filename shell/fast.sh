@@ -911,8 +911,8 @@ server {
     #
     location ~ \.php$ {
         # 本地安装的php-fpm默认是只能通过套接字通信，且只能和本地安装的nginx通信，非nginx容器
-        fastcgi_pass unix:/run/php/php-fpm.sock;
-        # fastcgi_pass   127.0.0.1:9000;
+        # fastcgi_pass unix:/run/php/php-fpm.sock;
+        fastcgi_pass   127.0.0.1:9000;
         fastcgi_index  index.php;
         # PHP脚本文件路径，document_root表示使用静态资源相同目录，目录路径必须是在php-fpm容器内有效的目录路径
         fastcgi_param  SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
