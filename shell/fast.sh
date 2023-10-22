@@ -898,6 +898,7 @@ server {
 
     location / {
         index index.php index.html index.htm;
+        try_files \$uri \$uri/ /index.php?\$args;
     }
 
     #error_page  404              /404.html;
@@ -912,24 +913,24 @@ server {
     # 将 PHP 脚本传递给在 127.0.0.1:9000 上侦听的 FastCGI 服务器
     #
     location ~ \.php$ {
-        include snippets/fastcgi-php.conf;
+        # include snippets/fastcgi-php.conf;
         # 以下为 snippets/fastcgi-php.conf 中的内容
         # regex to split $uri to $fastcgi_script_name and $fastcgi_path
-        # fastcgi_split_path_info ^(.+?\.php)(/.*)\$;
+        fastcgi_split_path_info ^(.+?\.php)(/.*)\$;
 
-        # # Check that the PHP script exists before passing it
-        # try_files \$fastcgi_script_name =404;
+        # Check that the PHP script exists before passing it
+        try_files \$fastcgi_script_name =404;
 
-        # # Bypass the fact that try_files resets $fastcgi_path_info
-        # # see: http://trac.nginx.org/nginx/ticket/321
-        # set \$path_info \$fastcgi_path_info;
-        # fastcgi_param PATH_INFO \$path_info;
+        # Bypass the fact that try_files resets $fastcgi_path_info
+        # see: http://trac.nginx.org/nginx/ticket/321
+        set \$path_info \$fastcgi_path_info;
+        fastcgi_param PATH_INFO \$path_info;
 
-        # fastcgi_index index.php;
+        fastcgi_index index.php;
 
-        # # PHP脚本文件路径，document_root表示使用静态资源相同目录，目录路径必须是在php-fpm容器内有效的目录路径
-        # fastcgi_param SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
-        # include        fastcgi_params;
+        # PHP脚本文件路径，document_root表示使用静态资源相同目录，目录路径必须是在php-fpm容器内有效的目录路径
+        fastcgi_param SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
+        include        fastcgi_params;
 
         fastcgi_param PHP_VALUE "post_max_size=100M
                 max_execution_time=3600
