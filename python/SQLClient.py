@@ -72,23 +72,22 @@ class SQLClient(QMainWindow):
         self.setWindowTitle("SQL Client")
         self.setGeometry(100, 100, 800, 600)
 
+        # 在主窗口中创建拆分器部件并设为中心部件
         central_widget = QSplitter(self)
         self.setCentralWidget(central_widget)
 
         # 上部分布局
+        # 在新建的空部件中创建垂直布局
         top_widget = QWidget()
         top_layout = QVBoxLayout(top_widget)
 
         # 输入区域布局
+        # 在垂直布局中创建水平布局
         input_layout = QHBoxLayout()
         top_layout.addLayout(input_layout)
 
-        # self.query_text = QTextEdit()
-        # input_layout.addWidget(self.query_text)
-
         # 创建 SQL 输入框
         self.query_text = SQLTextEdit(self)
-        # self.setCentralWidget(self.query_text)
         input_layout.addWidget(self.query_text)
 
         # 设置上部分为可伸缩部件

@@ -760,6 +760,8 @@ fi
 cat "$DOMAIN_CRT" lets-encrypt-x3-cross-signed.pem > "$DOMAIN_CHAINED_CRT"
 
 cat << EOF
+执行 nano /etc/nginx/conf.d/${domain_name}.conf
+
 在nginx网站配置的server块中添加以下内容:
 
     listen 443 ssl;
@@ -907,20 +909,36 @@ server {
         root   /usr/share/nginx/html;
     }
 
-    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+    # 将 PHP 脚本传递给在 127.0.0.1:9000 上侦听的 FastCGI 服务器
     #
     location ~ \.php$ {
-        # 本地安装的php-fpm默认是只能通过套接字通信，且只能和本地安装的nginx通信，非nginx容器
-        # fastcgi_pass unix:/run/php/php-fpm.sock;
-        fastcgi_pass   127.0.0.1:9000;
-        fastcgi_index  index.php;
-        # PHP脚本文件路径，document_root表示使用静态资源相同目录，目录路径必须是在php-fpm容器内有效的目录路径
-        fastcgi_param  SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
+        include snippets/fastcgi-php.conf;
+        # 以下为 snippets/fastcgi-php.conf 中的内容
+        # regex to split $uri to $fastcgi_script_name and $fastcgi_path
+        # fastcgi_split_path_info ^(.+?\.php)(/.*)\$;
+
+        # # Check that the PHP script exists before passing it
+        # try_files \$fastcgi_script_name =404;
+
+        # # Bypass the fact that try_files resets $fastcgi_path_info
+        # # see: http://trac.nginx.org/nginx/ticket/321
+        # set \$path_info \$fastcgi_path_info;
+        # fastcgi_param PATH_INFO \$path_info;
+
+        # fastcgi_index index.php;
+
+        # # PHP脚本文件路径，document_root表示使用静态资源相同目录，目录路径必须是在php-fpm容器内有效的目录路径
+        # fastcgi_param SCRIPT_FILENAME  \$document_root\$fastcgi_script_name;
+        # include        fastcgi_params;
+
         fastcgi_param PHP_VALUE "post_max_size=100M
                 max_execution_time=3600
                 upload_max_filesize=100M
                 memory_limit=256M";
-        include        fastcgi_params;
+
+        # 本地安装的php-fpm默认是只能通过套接字通信，且只能和本地安装的nginx通信，非nginx容器
+        fastcgi_pass unix:/run/php/php-fpm.sock;
+        # fastcgi_pass   127.0.0.1:9000;
     }
 
     # 设置请求大小限制
@@ -1009,12 +1027,13 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
 return; fi
 port=${1:-3306}
 docker network create network1
+docker volume create mysql-data
 
 MYSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
 echo "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
 
 echo "安装 MySQL"
-# docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
+# docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --network-alias mysql -v mysql-data:/var/lib/mysql \
 # -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
 # -e TZ=Asia/Shanghai \
 # -e MYSQL_USER=user1 \
@@ -1026,7 +1045,7 @@ echo "安装 MySQL"
 # --character-set-server=utf8mb4 \
 # --collation-server=utf8mb4_unicode_ci
 
-docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --network-alias mysql -v /docker/mysql:/var/lib/mysql \
+docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --network-alias mysql -v mysql-data:/var/lib/mysql \
 --env MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
 --env TZ=Asia/Shanghai \
 --env MARIADB_USER=user1 \
@@ -1038,8 +1057,8 @@ mariadb:10.3-focal \
 --character-set-server=utf8mb4 \
 --collation-server=utf8mb4_unicode_ci
 
-docker exec -it mysql1 sed -i 's/max_connections\s*=\s*[0-9]\+/max_connections = 1000/' /etc/mysql/my.cnf
-
+docker exec -it mysql1 sed -i -E 's/max_connections(\s*)= [0-9]+/max_connections\1= 1000/g' /etc/mysql/my.cnf
+docker exec -it mysql1 sed -i -E 's/wait_timeout(\s*)= [0-9]+/wait_timeout\1= 86400/g' /etc/mysql/my.cnf
 }
 
 deploy_redis(){
@@ -1115,13 +1134,16 @@ if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
 return; fi
 port=${1:-5432}
 docker network create network1
-
+docker volume create postgre-data
 echo "安装 PostgreSQL"
 docker run -dp ${port}:5432 --name postgres1 --restart=always --network network1 --network-alias postgres -e TZ=Asia/Shanghai \
--e POSTGRES_PASSWORD=123qwe123@ \
--e PGDATA=/var/lib/postgresql/data/pgdata \
--v /docker/postgres1:/var/lib/postgresql/data \
-postgres:bullseye
+-e POSTGRES_USER=postgres \
+-e POSTGRES_PASSWORD=123qwe123@21 \
+-e POSTGRES_DB=postgres \
+-e POSTGRES_INITDB_ARGS="--encoding=UTF8 --locale=C"
+-e PGDATA=/var/lib/postgresql/data \
+-v postgre-data:/var/lib/postgresql/data \
+postgres:13-bullseye -c shared_buffers=256MB -c max_connections=200
 }
 
 deploy_rabbitmq(){
@@ -1413,9 +1435,9 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 local_port=${1:-9000}
 # https://docs.portainer.io/start/install/server/docker/linux
 docker volume create portainer_data
-#docker run -d -p 127.0.0.1:${local_port}:9000 --name portainer1 -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data -e TZ=Asia/Shanghai portainer/portainer
+#docker run -d -p 127.0.0.1:${local_port}:9000 --name portainer1 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data -e TZ=Asia/Shanghai portainer/portainer
 # 汉化版
-docker run -d -p ${local_port}:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /docker/portainer_data:/data -e TZ=Asia/Shanghai 6053537/portainer
+docker run -d -p ${local_port}:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data -e TZ=Asia/Shanghai 6053537/portainer
 
 }
 
@@ -1568,8 +1590,8 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
     install_utils
 
     install_nodejs
-    # install_nginx
-    # install_php_fpm
+    install_nginx
+    install_php_fpm
 
     install_docker
     deploy_debian
@@ -1582,8 +1604,8 @@ if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; retur
 
     deploy_mysql
     deploy_redis
-    deploy_nginx
-    deploy_php_fpm
+    # deploy_nginx
+    # deploy_php_fpm
 
     # tinyfilemanager
     docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
