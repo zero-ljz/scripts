@@ -10,7 +10,7 @@
 <p>
 
 <form id="form1" method="get" onsubmit="return saveFormData();">
-
+    <input type="text" id="cwd" placeholder="cwd">
     <div style="display: block; margin: 1rem 0;">
         <input type="text" list="optionList" id="0" placeholder="0">
         <datalist id="optionList">
@@ -24,6 +24,7 @@
         <button type="button" onclick="removeParam()">-</button>
 
         <input type="submit" value="Execute" onclick="setAction()">
+        <input type="submit" value="Execute2" onclick="setAction2()">
     </div>
 
     <textarea style="display:block;" id="1" placeholder="1"></textarea>
@@ -74,6 +75,9 @@
         let form = document.getElementById('form1');
 
         sessionStorage.clear();
+
+        sessionStorage.setItem('cwd', document.getElementById('cwd').value);
+
         let elements = getElementsWithNumberId(form);
         elements.forEach(element => {
             sessionStorage.setItem(element.id, element.value);
@@ -84,6 +88,11 @@
 
     function loadFormData() {
         const form = document.getElementById('form1');
+
+        if(sessionStorage.getItem('cwd')) {
+            document.getElementById('cwd').value = sessionStorage.getItem('cwd')
+        }
+
         for (let i = 0; i < form.elements.length; i++) {
             const element = form.elements[i];
             const value = sessionStorage.getItem(element.id);
@@ -94,17 +103,34 @@
     }
 
     function setAction() {
-            const form = document.getElementById('form1');
+        const form = document.getElementById('form1');
 
-            const textareas = form.getElementsByTagName('textarea');
-            let paramStr = '';
-            for (let i = 0; i < textareas.length; i++) {
-                const paramValue = textareas[i].value;
-                paramStr += '/' + encodeURIComponent(paramValue);
-            }
-            
-            let href = '/' + document.getElementById('0').value + '/' + paramStr.substr(1);
-            window.location.href = href;
+        // 通过路径传递参数，参数中不能包含斜杠/
+        const textareas = form.getElementsByTagName('textarea');
+        let paramStr = '';
+        for (let i = 0; i < textareas.length; i++) {
+            const paramValue = textareas[i].value;
+            paramStr += '/' + encodeURIComponent(paramValue);
+        }
+        let cwd = document.getElementById('cwd').value;
+
+        let href = '/' + document.getElementById('0').value + '/' + paramStr.substr(1) + (cwd ? '?cwd=' + encodeURIComponent(cwd) : '');
+        window.location.href = href;
+    }
+
+    function setAction2() {
+        const form = document.getElementById('form1');
+
+        // 通过查询字符串传递参数
+        const textareas = form.getElementsByTagName('textarea');
+        let paramStr = '';
+        for (let i = 0; i < textareas.length; i++) {
+            const paramValue = textareas[i].value;
+            paramStr += ' "' + paramValue + '"';
+        }
+        let cwd = document.getElementById('cwd').value;
+        window.location.href = `?cwd=${encodeURIComponent(cwd)}&cmd=` + encodeURIComponent('"' + document.getElementById('0').value + '"' + paramStr);
+
     }
 
     window.onload = function () {

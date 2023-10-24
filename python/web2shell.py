@@ -7,6 +7,10 @@
 import subprocess
 import re, os, base64
 from bottle import Bottle, request, template, response, static_file, abort, HTTPResponse
+import urllib.parse
+
+root_directory = os.path.abspath(os.sep)
+user_home_directory = os.path.expanduser("~")
 
 app = Bottle()
 auth_username = os.environ.get('AUTH_USERNAME', '')
@@ -48,17 +52,30 @@ def handle_request(path=None):
     if path == 'favicon.ico':
         abort(404, 'Not Found')
     query = dict(request.query.decode('utf-8'))
-    if command := query.get('c'):
+    cwd = query.get('cwd', user_home_directory)
+    
+    if command := query.get('cmd'):
         print(command)
-        output = subprocess.check_output(command, shell=True).decode("utf-8", errors="ignore")
-    elif path is not None:
+        output = subprocess.check_output(command, cwd=cwd, shell=True, timeout=30, encoding=None, errors=None).decode(encoding="utf-8", errors="ignore")
+        print('cwd:', cwd)
+    elif path is not None: # 如果参数中包含了斜杠/，请不要使用这种方式
+        # print(request.environ.get('PATH_INFO'))
+        # print(path)
         params = split_with_quotes(path)
         print(params)
         command = " ".join(f'"{value}"' for value in params)
-        output = subprocess.run(params, capture_output=True, text=True, encoding='utf-8', errors='ignore').stdout
+        # run方法这里的shell=True 代表使用系统的shell环境执行命令而非当前脚本所处的shell环境
+        completed_process = subprocess.run(params, cwd=cwd, capture_output=True, text=True, shell=True, timeout=30, encoding=None, errors=None)
+        if completed_process.returncode == 0:
+            output = completed_process.stdout
+        else:
+            response.status = 500
+            output = f"Error: {completed_process.returncode}\n{completed_process.stderr}"
+        print('cwd:', cwd)
     else:
         # return template('web2shell.html')
         return static_file('web2shell.html', root='.', mimetype='text/html')
+    print()
 
     # response.headers['Content-Type'] = 'text/plain; charset=UTF-8'
     response.content_type = 'text/plain; charset=UTF-8'
@@ -69,6 +86,14 @@ def split_with_quotes(string):
     parts = re.findall(r'(?:".*?"|[^/"]+)', string)
     return [part.strip('"') for part in parts]
 
+def try_decode(byte_data, encodings=['utf-8', 'latin-1', 'utf-8-sig', 'gbk']):
+    for encoding in encodings:
+        try:
+            decoded_string = byte_data.decode(encoding)
+            return decoded_string
+        except UnicodeDecodeError:
+            continue
+    return None
 
 if __name__ == '__main__':
     import argparse
