@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<link rel="icon" href="data:,">
+</head>
+<body>
+<h2>
+    执行命令
+</h2>
+<p>
+
+<form id="form1" method="get" onsubmit="return saveFormData();">
+
+    <div style="display: block; margin: 1rem 0;">
+        <input type="text" list="optionList" id="0" placeholder="0">
+        <datalist id="optionList">
+            <option value="python">python</option>
+            <option value="node">node</option>
+            <option value="curl">curl</option>
+        </datalist>
+        <button type="button" onclick="document.getElementById('0').value = ''">ReSelect</button>
+
+        <button type="button" onclick="addParam()">+</button>
+        <button type="button" onclick="removeParam()">-</button>
+
+        <input type="submit" value="Execute" onclick="setAction()">
+    </div>
+
+    <textarea style="display:block;" id="1" placeholder="1"></textarea>
+
+</form>
+</p>
+
+<script>
+    // 定义全局变量用于记录已存在的 textarea 控件数量
+    let textareaCount = 1;
+
+    function addParam() {
+        // 创建新的 textarea 元素
+        const newTextArea = document.createElement('textarea');
+
+        // 设置新的 textarea 的 name 和 placeholder 属性
+        const paramName = (textareaCount + 1);
+        newTextArea.id = paramName;
+        newTextArea.placeholder = paramName;
+        newTextArea.style.display = 'block';
+
+        // 加载保存的记录
+        newTextArea.value = sessionStorage.getItem(paramName)
+
+        // 将新的 textarea 添加到表单中
+        const form = document.getElementById('form1');
+        form.insertBefore(newTextArea, form.lastElementChild.nextElementSibling);
+
+        // 更新 textareaCount 值
+        textareaCount++;
+    }
+
+    function removeParam() {
+        // 获取最后一个参数控件
+        const form = document.getElementById('form1');
+        const lastParam = form.lastElementChild;
+        
+        if (lastParam.tagName === 'TEXTAREA') {
+        // 从表单中删除最后一个参数控件
+        form.removeChild(lastParam);
+
+        // 更新 textareaCount 值
+        textareaCount--;
+        }
+    }
+
+    function saveFormData() {
+        let form = document.getElementById('form1');
+
+        sessionStorage.clear();
+        let elements = getElementsWithNumberId(form);
+        elements.forEach(element => {
+            sessionStorage.setItem(element.id, element.value);
+        });
+
+        return false;
+    }
+
+    function loadFormData() {
+        const form = document.getElementById('form1');
+        for (let i = 0; i < form.elements.length; i++) {
+            const element = form.elements[i];
+            const value = sessionStorage.getItem(element.id);
+            if (value) {
+                element.value = value;
+            }
+        }
+    }
+
+    function setAction() {
+            const form = document.getElementById('form1');
+
+            const textareas = form.getElementsByTagName('textarea');
+            let paramStr = '';
+            for (let i = 0; i < textareas.length; i++) {
+                const paramValue = textareas[i].value;
+                paramStr += '/' + encodeURIComponent(paramValue);
+            }
+            
+            let href = '/' + document.getElementById('0').value + '/' + paramStr.substr(1);
+            window.location.href = href;
+    }
+
+    window.onload = function () {
+        loadFormData();
+    }
+
+    function getElementsWithNumberId(parentElement) {
+            const elements = [];
+            const children = parentElement.children;
+            for (let i = 0; i < children.length; i++) {
+                const element = children[i];
+                if (element.id && element.id.match(/^\d+$/)) {
+                    elements.push(element);
+                }
+                if (element.children.length > 0) {
+                    elements.push(...getElementsWithNumberId(element));
+                }
+            }
+            return elements;
+        }
+</script>
+</body>
+</html>
