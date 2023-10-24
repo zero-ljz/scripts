@@ -21,6 +21,7 @@ httpx[cli]
 
 Django==3.2.20
 flask==1.1.2
+waitress
 gevent
 gunicorn==20.1.0
 requests
