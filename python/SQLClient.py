@@ -6,7 +6,7 @@ import pymysql
 import psycopg2
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QTextEdit, QPushButton, QMessageBox, QLineEdit, QHBoxLayout, QTableWidget, QTableWidgetItem, QMenu, QFileDialog, QInputDialog, QComboBox, QSplitter, QPlainTextEdit
-from PySide6.QtGui import QAction, QKeySequence, QPainter, QSyntaxHighlighter, QTextCharFormat, QColor, QFont
+from PySide6.QtGui import QAction, QKeySequence, QPainter, QSyntaxHighlighter, QTextCharFormat, QBrush, QColor, QFont
 
 
 class SQLTextEdit(QTextEdit):
@@ -98,7 +98,6 @@ class SQLClient(QMainWindow):
         bottom_widget = QWidget()
         bottom_layout = QVBoxLayout(bottom_widget)
 
-
         # 结果区域布局
         self.result_table = QTableWidget()
         self.result_table.setEditTriggers(QTableWidget.DoubleClicked)
@@ -109,18 +108,15 @@ class SQLClient(QMainWindow):
         connection_layout = QHBoxLayout()
         bottom_layout.addLayout(connection_layout)
 
-
         splitter_handle = QSplitter(Qt.Vertical)
         splitter_handle.addWidget(top_widget)
         splitter_handle.addWidget(bottom_widget)
         central_widget.addWidget(splitter_handle)
 
-
         self.db_type_input = QComboBox()
         self.db_type_input.addItems(["sqlite", "mysql", "pgsql"])
         self.db_type_input.setPlaceholderText("Database Type")
         connection_layout.addWidget(self.db_type_input)
-
 
         self.db_host_input = QLineEdit()
         self.db_host_input.setPlaceholderText("Host")
@@ -142,6 +138,12 @@ class SQLClient(QMainWindow):
         self.connect_button = QPushButton("Connect")
         self.connect_button.clicked.connect(self.connect_to_database)
         connection_layout.addWidget(self.connect_button)
+
+        # self.db_type_input.setCurrentText('mysql')
+        # self.db_host_input.setText(':3306')
+        # self.db_user_input.setText('root')
+        # self.db_password_input.setText('')
+        # self.db_name_input.setText('')
 
         self.statusBar()
 
@@ -205,11 +207,14 @@ class SQLClient(QMainWindow):
             if sql_type == "INSERT INTO":
                 sql = "INSERT INTO table_name (column1, column2) VALUES (?, ?)"
             elif sql_type == "DELETE FROM":
-                sql = "DELETE FROM table_name WHERE condition"
+                sql = "DELETE FROM table_name WHERE 1=1"
             elif sql_type == "UPDATE":
-                sql = "UPDATE table_name SET column1 = value1 WHERE condition"
+                sql = "UPDATE table_name SET column1 = value1 WHERE 1=1"
             elif sql_type == "SELECT":
-                sql = "SELECT * FROM table_name WHERE condition"
+                if isinstance(self.connection, psycopg2.extensions.connection):
+                    sql = "SELECT * FROM table_name WHERE 1=1 FETCH FIRST 1000 ROWS ONLY"
+                else:
+                    sql = "SELECT * FROM table_name WHERE 1=1 LIMIT 1000"
             elif sql_type == "CREATE DATABASE":
                 sql = "CREATE DATABASE database_name"
             elif sql_type == "SHOW TABLES":
@@ -316,6 +321,8 @@ CREATE TABLE IF NOT EXISTS table_name (
             # 获取查询结果
             result = self.cursor.fetchall()
 
+            self.result_table.clearContents()  # 清除表格中的所有单元格数据
+
             # 设置表格行列数
             num_rows = len(result)
             num_columns = len(self.cursor.description)
@@ -329,9 +336,13 @@ CREATE TABLE IF NOT EXISTS table_name (
             # 填充结果到表格
             for row_idx, row_data in enumerate(result):
                 for col_idx, col_data in enumerate(row_data):
-                    item = QTableWidgetItem(str(col_data))
-                    item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-                    self.result_table.setItem(row_idx, col_idx, item)
+                    if col_data:
+                        col_data = str(col_data)
+                        item = QTableWidgetItem(col_data)
+                        item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+                        # item.setBackground(Qt.gray)
+                        item.setBackground(QBrush(QColor(200, 200, 200)))
+                        self.result_table.setItem(row_idx, col_idx, item)
 
             self.result_table.setContextMenuPolicy(Qt.CustomContextMenu)
             self.result_table.customContextMenuRequested.connect(self.show_context_menu)
@@ -372,42 +383,50 @@ CREATE TABLE IF NOT EXISTS table_name (
             return
 
         try:
-
             # 获取表的主键字段名
             primary_key_column = self.get_primary_key_column(table_name)
             if not primary_key_column:
                 QMessageBox.warning(self, "Warning", "Table doesn't have a primary key column")
                 return
 
-            for row in range(self.result_table.rowCount()):
-                values = []
+            selected_rows = set(index.row() for index in self.result_table.selectionModel().selectedRows())
+            for row in selected_rows:
                 update_pairs = []
+
+                placeholder = "%s"
+                if isinstance(self.connection, sqlite3.Connection):
+                    placeholder = "?"  # SQLite使用?占位符
+
+                values = []
                 primary_key_value = None
 
                 for col in range(self.result_table.columnCount()):
                     item = self.result_table.item(row, col)
-                    value = item.text()
-                    values.append(value)
+                    if item:
+                        value = item.text()
+                        values.append(value)
+                    else:
+                        values.append(None)
 
-                    # 构建更新语句的列名=值对
+                    # 构建更新语句的列名=占位符
                     column_name = self.result_table.horizontalHeaderItem(col).text()
-                    update_pairs.append(f"{column_name} = '{value}'")
+                    update_pairs.append(f"{column_name} = {placeholder}")
 
                     # 获取主键列的值
                     if column_name == primary_key_column:
                         primary_key_value = value
 
                 # 构建更新语句
-                update_query = f"UPDATE {table_name} SET {', '.join(update_pairs)} WHERE {primary_key_column} = '{primary_key_value}'"
-                self.cursor.execute(update_query)
+                update_query = f"UPDATE {table_name} SET " + ", ".join(update_pairs) + f" WHERE {primary_key_column} = {placeholder}"
+                print(update_query)
+                # 执行更新语句
+                self.cursor.execute(update_query, values + [primary_key_value])
 
             self.connection.commit()
-
             self.statusBar().showMessage("Updated to database successfully")
         except (sqlite3.Error, pymysql.Error, psycopg2.Error) as e:
             QMessageBox.critical(self, "Error", str(e))
             self.statusBar().showMessage("Update to database failed")
-
 
     def get_primary_key_column(self, table_name):
         # 根据数据库类型查询表的主键字段名
@@ -440,13 +459,14 @@ CREATE TABLE IF NOT EXISTS table_name (
 
         if file_path:
             try:
-                with open(file_path, "w", newline="") as file:
+                with open(file_path, "w", newline="", encoding="utf-8") as file:
                     writer = csv.writer(file)
                     header_data = [self.result_table.horizontalHeaderItem(col).text() for col in
                                    range(self.result_table.columnCount())]
                     writer.writerow(header_data)
-                    for row in range(self.result_table.rowCount()):
-                        row_data = [self.result_table.item(row, col).text() for col in
+                    selected_rows = set(index.row() for index in self.result_table.selectionModel().selectedRows())
+                    for row in selected_rows:
+                        row_data = [self.result_table.item(row, col).text().encode("utf-8", "ignore").decode("utf-8") for col in
                                     range(self.result_table.columnCount())]
                         writer.writerow(row_data)
                 self.statusBar().showMessage("Exported as CSV successfully")
