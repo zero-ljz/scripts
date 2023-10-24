@@ -129,7 +129,7 @@
             paramStr += ' "' + paramValue + '"';
         }
         let cwd = document.getElementById('cwd').value;
-        window.location.href = `?cwd=${encodeURIComponent(cwd)}&cmd=` + encodeURIComponent('"' + document.getElementById('0').value + '"' + paramStr);
+        window.location.href = `?cmd=` + encodeURIComponent('"' + document.getElementById('0').value + '"' + paramStr) + ( cwd ? '&cwd=' + encodeURIComponent(cwd) : '' );
 
     }
 
