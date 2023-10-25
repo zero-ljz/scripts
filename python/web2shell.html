@@ -115,7 +115,7 @@
                 continue;
             }
             const paramValue = textareas[i].value;
-            paramStr += '/"' + paramValue + '"';
+            paramStr += '/"' + encodeURIComponent(paramValue) + '"';
         }
         let cwd = document.getElementById('cwd').value;
 
