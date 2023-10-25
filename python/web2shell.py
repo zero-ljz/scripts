@@ -58,7 +58,7 @@ def handle_request(path=None):
         print(command)
         output = try_decode(subprocess.check_output(command, cwd=cwd, shell=True, timeout=30))
         print('cwd:', cwd)
-    elif path is not None: # 如果参数中包含了斜杠/，请不要使用这种方式
+    elif path is not None: # 参数中包含了斜杠/时要用双引号"包括起来
         # print(request.environ.get('PATH_INFO'))
         # print(path)
         params = split_with_quotes(path)
