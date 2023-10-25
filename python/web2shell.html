@@ -111,12 +111,15 @@
         const textareas = form.getElementsByTagName('textarea');
         let paramStr = '';
         for (let i = 0; i < textareas.length; i++) {
+            if (i == textareas.length - 1 && !textareas[i].value) { // 最后一个参数为空时跳过
+                continue;
+            }
             const paramValue = textareas[i].value;
-            paramStr += '/' + encodeURIComponent(paramValue);
+            paramStr += '/"' + encodeURIComponent(paramValue) + '"';
         }
         let cwd = document.getElementById('cwd').value;
 
-        let href = '/' + document.getElementById('0').value + '/' + paramStr.substr(1) + (cwd ? '?cwd=' + cwd : '');
+        let href = '/"' + document.getElementById('0').value + '"' + paramStr + (cwd ? '?cwd=' + cwd : '');
         window.location.href = href;
     }
 
