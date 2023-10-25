@@ -140,7 +140,7 @@ class SQLClient(QMainWindow):
         connection_layout.addWidget(self.connect_button)
 
         # self.db_type_input.setCurrentText('mysql')
-        # self.db_host_input.setText(':3306')
+        # self.db_host_input.setText('127.0.0.1:3306')
         # self.db_user_input.setText('root')
         # self.db_password_input.setText('')
         # self.db_name_input.setText('')
