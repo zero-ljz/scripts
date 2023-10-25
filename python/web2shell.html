@@ -127,9 +127,13 @@
         const textareas = form.getElementsByTagName('textarea');
         let paramStr = '';
         for (let i = 0; i < textareas.length; i++) {
+            if (i == textareas.length - 1 && !textareas[i].value) { // 最后一个参数为空时跳过
+                continue;
+            }
             const paramValue = textareas[i].value;
             paramStr += ' "' + paramValue + '"';
         }
+
         let cwd = document.getElementById('cwd').value;
         window.location.href = `?cmd=` + encodeURIComponent('"' + document.getElementById('0').value + '"' + paramStr) + ( cwd ? '&cwd=' + encodeURIComponent(cwd) : '' );
 

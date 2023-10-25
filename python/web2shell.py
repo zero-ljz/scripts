@@ -56,7 +56,7 @@ def handle_request(path=None):
     
     if command := query.get('cmd'):
         print(command)
-        output = subprocess.check_output(command, cwd=cwd, shell=True, timeout=30, encoding=None, errors=None).decode(encoding="utf-8", errors="ignore")
+        output = try_decode(subprocess.check_output(command, cwd=cwd, shell=True, timeout=30))
         print('cwd:', cwd)
     elif path is not None: # 如果参数中包含了斜杠/，请不要使用这种方式
         # print(request.environ.get('PATH_INFO'))
@@ -65,13 +65,10 @@ def handle_request(path=None):
         print(params)
         command = " ".join(f'"{value}"' for value in params)
         # run方法这里的shell=True 代表使用系统的shell环境执行命令而非当前脚本所处的shell环境
-        # 请求取消或超时后命令仍会继续执行
-        completed_process = subprocess.run(params, cwd=cwd, capture_output=True, text=True, shell=True, timeout=30, encoding=None, errors=None)
-        # 逐行打印输出
-        # for line in completed_process.stdout.splitlines():
-        #     print(line)
+        # 请求取消或命令执行超时后子进程不会中止，只是脚本不再阻塞等待结果
+        completed_process = subprocess.run(params, cwd=cwd, capture_output=True, shell=True, timeout=30)
         if completed_process.returncode == 0:
-            output = completed_process.stdout
+            output = try_decode(completed_process.stdout)
         else:
             response.status = 500
             output = f"Error: {completed_process.returncode}\n{completed_process.stderr}"
@@ -90,7 +87,7 @@ def split_with_quotes(string):
     parts = re.findall(r'(?:".*?"|[^/"]+)', string)
     return [part.strip('"') for part in parts]
 
-def try_decode(byte_data, encodings=['utf-8', 'latin-1', 'utf-8-sig', 'gbk']):
+def try_decode(byte_data, encodings=['utf-8', 'utf-8-sig', 'gbk', 'latin-1']):
     for encoding in encodings:
         try:
             decoded_string = byte_data.decode(encoding)
