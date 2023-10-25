@@ -71,7 +71,7 @@ def handle_request(path=None):
             output = try_decode(completed_process.stdout)
         else:
             response.status = 500
-            output = f"Error: {completed_process.returncode}\n{completed_process.stderr}"
+            output = f"Error: {completed_process.returncode}\n{try_decode(completed_process.stderr)}"
         print('cwd:', cwd)
     else:
         # return template('web2shell.html')

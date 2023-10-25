@@ -116,7 +116,7 @@
         }
         let cwd = document.getElementById('cwd').value;
 
-        let href = '/' + document.getElementById('0').value + '/' + paramStr.substr(1) + (cwd ? '?cwd=' + encodeURIComponent(cwd) : '');
+        let href = '/' + document.getElementById('0').value + '/' + paramStr.substr(1) + (cwd ? '?cwd=' + cwd : '');
         window.location.href = href;
     }
 
