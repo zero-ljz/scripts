@@ -1054,7 +1054,7 @@ docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --
 --env MARIADB_DATABASE=db1 \
 --env MARIADB_CHARSET=utf8mb4 \
 --env MARIADB_COLLATION=utf8mb4_unicode_ci \
-mariadb:10.3-focal \
+mariadb:10.3.39-focal \
 --character-set-server=utf8mb4 \
 --collation-server=utf8mb4_unicode_ci
 
