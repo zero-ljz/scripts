@@ -25,6 +25,8 @@
         <button type="button" onclick="addParam()">+</button>
         <button type="button" onclick="removeParam()">-</button>
 
+        <hr style="margin-bottom:0px; border:0;">
+        <input type="checkbox" id="shell"><label for="shell">shell</label> &nbsp;
         <input type="submit" value="Execute" onclick="setAction()">
         <input type="submit" value="Execute2" onclick="setAction2()">
     </div>
@@ -79,6 +81,7 @@
         sessionStorage.clear();
 
         sessionStorage.setItem('cwd', document.getElementById('cwd').value);
+        sessionStorage.setItem('shell', document.getElementById('shell').checked);
 
         let elements = getElementsWithNumberId(form);
         elements.forEach(element => {
@@ -93,6 +96,9 @@
 
         if(sessionStorage.getItem('cwd')) {
             document.getElementById('cwd').value = sessionStorage.getItem('cwd')
+        }
+        if(sessionStorage.getItem('shell')) {
+            document.getElementById('shell').checked = JSON.parse(sessionStorage.getItem('shell'));
         }
 
         for (let i = 0; i < form.elements.length; i++) {
@@ -115,11 +121,17 @@
                 continue;
             }
             const paramValue = textareas[i].value;
-            paramStr += '/"' + encodeURIComponent(paramValue) + '"';
+            if (paramValue.includes('/')) {
+                paramStr += '/"' + encodeURIComponent(paramValue) + '"';
+            } else {
+                paramStr += '/' + encodeURIComponent(paramValue);
+            }
         }
         let cwd = document.getElementById('cwd').value;
-
-        let href = '/"' + document.getElementById('0').value + '"' + paramStr + (cwd ? '?cwd=' + cwd : '');
+        let shell = document.getElementById('shell').checked;
+        let href = '/"' + document.getElementById('0').value + '"' + paramStr + '?' 
+        + (cwd ? '&cwd=' + cwd : '') 
+        + (shell ? '&shell=' + shell : '');
         window.location.href = href;
     }
 
@@ -134,11 +146,18 @@
                 continue;
             }
             const paramValue = textareas[i].value;
-            paramStr += ' "' + paramValue + '"';
+            if (paramValue.includes(' ')) {
+                paramStr += ' "' + paramValue + '"';
+            } else {
+                paramStr += ' ' + paramValue;
+            }
         }
 
         let cwd = document.getElementById('cwd').value;
-        window.location.href = `?cmd=` + encodeURIComponent('"' + document.getElementById('0').value + '"' + paramStr) + ( cwd ? '&cwd=' + encodeURIComponent(cwd) : '' );
+        let shell = document.getElementById('shell').checked;
+        window.location.href = `?cmd=` + encodeURIComponent('"' + document.getElementById('0').value + '"' + paramStr) 
+        + ( cwd ? '&cwd=' + encodeURIComponent(cwd) : '' ) 
+        + (shell ? '&shell=' + shell : '');
 
     }
 
