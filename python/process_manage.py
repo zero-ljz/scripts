@@ -33,17 +33,17 @@ def terminate_process_by_pid(pid):
         return f"Error: {e.stderr.strip()}"
 
 if __name__ == '__main__':
-    script_dir = os.path.dirname(os.path.realpath(__file__))
-    app_script = os.path.join(script_dir, 'app.py')
-    cmd = '"' + sys.executable + '" "' + app_script + '"'
-    print(cmd)
+    # script_dir = os.path.dirname(os.path.realpath(__file__))
+    # app_script = os.path.join(script_dir, 'app.py')
+    # cmd = '"' + sys.executable + '" "' + app_script + '"'
+    # print(cmd)
 
-    pid = find_process_by_command(cmd)
-    print(pid)
+    # pid = find_process_by_command(cmd)
+    # print(pid)
 
-    if pid:
-        pass
-        print(terminate_process_by_pid(pid))
+    # if pid:
+    #     pass
+    #     print(terminate_process_by_pid(pid))
 
 
 
@@ -57,3 +57,5 @@ if __name__ == '__main__':
 
 
     # pid = find_process_by_command(r'"C:\Users\LJZ\AppData\Local\Programs\Python\Python39\python.exe" "C:\Users\LJZ\repos\cron\app.py"')
+    pid = find_process_by_command(r'"C:\Users\LJZ\AppData\Local\Programs\Python\Python39\python.exe" "api.py"')
+    print(pid)

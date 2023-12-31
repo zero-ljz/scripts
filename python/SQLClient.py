@@ -459,15 +459,17 @@ CREATE TABLE IF NOT EXISTS table_name (
 
         if file_path:
             try:
-                with open(file_path, "w", newline="", encoding="utf-8") as file:
+                with open(file_path, "w", newline="", encoding="utf-8-sig") as file:
                     writer = csv.writer(file)
-                    header_data = [self.result_table.horizontalHeaderItem(col).text() for col in
-                                   range(self.result_table.columnCount())]
+                    header_data = [self.result_table.horizontalHeaderItem(col).text()
+                                   for col in range(self.result_table.columnCount())]
                     writer.writerow(header_data)
                     selected_rows = set(index.row() for index in self.result_table.selectionModel().selectedRows())
                     for row in selected_rows:
-                        row_data = [self.result_table.item(row, col).text().encode("utf-8", "ignore").decode("utf-8") for col in
-                                    range(self.result_table.columnCount())]
+                        row_data = [self.result_table.item(row, col).text().encode("utf-8", "ignore").decode("utf-8")
+                                    if self.result_table.item(row, col) is not None 
+                                    else None 
+                                    for col in range(self.result_table.columnCount())]
                         writer.writerow(row_data)
                 self.statusBar().showMessage("Exported as CSV successfully")
             except IOError as e:

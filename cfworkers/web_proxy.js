@@ -23,6 +23,11 @@ addEventListener('fetch', event => {
     }
   
     if (newUrl) {
+
+      if (!newUrl.startsWith('http://') && !newUrl.startsWith('https://')) {
+        newUrl = 'http://' + newUrl;
+      }
+
       try {
         // 处理浏览器发来的请求头
         const headers = new Headers(request.headers)
@@ -154,22 +159,11 @@ addEventListener('fetch', event => {
   Web Proxy
   </h2>
   
-  <form id="form1">
+  <form onsubmit="event.preventDefault(); window.location.href = '/' + new FormData(this).get('url');">
       <label style="display: block; margin: 1rem 0;" for="text">输入要代理的页面或文件URL</label>
-      <textarea style="display: block; margin: 1rem 0;" id="url" placeholder="url" required>http://</textarea>
-      <input type="submit" value="Send Request">
+      <input type="text" name="url" placeholder="url" value="http://" required>
+      <input type="submit" value="GO">
   </form>
-  
-  <script>
-      document.getElementById("form1").addEventListener("submit", function(event) {
-        event.preventDefault(); // 阻止表单默认提交行为
-        var url = document.getElementById("url").value;
-  
-        // 使用 URL 进行页面跳转
-        window.location.href = "/" + url;
-      });
-    </script>
-      
       `
   
       return new Response(html, {

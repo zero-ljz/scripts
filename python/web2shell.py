@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 
-# python3 -m pip install bottle waitress
+# python3 -m pip install bottle
 # export AUTH_PASSWORD="123qwe123@"
 # python3 web2shell.py
 
+# 被执行的python脚本最好设置
+# export PYTHONIOENCODING=utf-8
+# sys.stdout.reconfigure(encoding='utf-8')
+
 import subprocess
-import re, os, base64, datetime, time
+import re, sys, os, base64, datetime, time
 from bottle import Bottle, request, template, response, static_file, abort, HTTPResponse
 import urllib.parse
+import logging
+
+app_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+logging.basicConfig(filename=app_name + '.log', level=logging.INFO)
 
 root_directory = os.path.abspath(os.sep)
 user_home_directory = os.path.expanduser("~")
@@ -55,9 +63,9 @@ def handle_request(path=None):
     cwd = query.get('cwd', user_home_directory)
     shell = query.get('shell') in ["1", "true"]
     
-    if command := query.get('cmd'): # 参数中包含了空格时要用双引号"包括起来
+    if command := query.get('cmd'): # 参数中包含了空格时要用双引号"将参数包括起来
         params = split_with_quotes(command, sep=' ')
-    elif path is not None: # 参数中包含了斜杠/时要用双引号"包括起来
+    elif path is not None: # 参数中包含了斜杠/时要用双引号"将参数包括起来
         params = split_with_quotes(path)
         command = " ".join(f'"{value}"' for value in params)
     else:
@@ -68,20 +76,22 @@ def handle_request(path=None):
     # run方法这里的shell=True 代表使用系统的shell环境执行命令而非当前脚本所处的shell环境
     # 请求取消或命令执行超时后子进程不会中止，只是脚本不再阻塞等待结果，shell=False时超时才有效果
     try:
-        completed_process = subprocess.run(params, cwd=cwd, shell=shell, capture_output=True, timeout=30)
+        completed_process = subprocess.run(params, cwd=cwd, shell=shell, capture_output=False, timeout=1800)
     except Exception as e:
         print('Exception:', e)
         return 'Exception: ' + str(e)
 
-    output = try_decode(completed_process.stdout)
-    if completed_process.returncode != 0:
-        response.status = 500
-        output = f"Error: {completed_process.returncode}\n\n{try_decode(completed_process.stderr)}\n\n{output}"
+    # output = try_decode(completed_process.stdout)
+    # if completed_process.returncode != 0:
+    #     response.status = 500
+    #     output = f"Error: {completed_process.returncode}\n\n{try_decode(completed_process.stderr)}\n\n{output}"
     print(datetime.datetime.now(), 'finished', '\n', 'cmd:', params, '\n', 'cwd:', cwd)
 
     # response.headers['Content-Type'] = 'text/plain; charset=UTF-8'
-    response.content_type = 'text/plain; charset=UTF-8'
-    response.body = output
+    # response.content_type = 'text/plain; charset=UTF-8'
+    # response.body = output
+
+    # logging.info('\n' + response.body)
 
     try: # 终止子进程
         completed_process.check_returncode()
@@ -109,4 +119,4 @@ if __name__ == '__main__':
     parser.add_argument('--port', '-p', type=int, default=8000, help='Port to listen on (default: 8000)')
     args = parser.parse_args()
 
-    app.run(host=args.host, port=args.port, debug=True, reloader=True, server='waitress')
+    app.run(host=args.host, port=args.port, debug=True, reloader=True)

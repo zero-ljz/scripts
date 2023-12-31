@@ -1,5 +1,7 @@
 import subprocess
 
+import fire
+
 def run_cmd(command, wait=True):
     """
     执行命令行命令
@@ -113,6 +115,8 @@ def run_git_bash(script, wait=True):
         return None
 
 
+if __name__ == '__main__':
+    fire.Fire()
 
 # print(run_powershell("Write-Host 'Hello, PowerShell!'"))
 
@@ -132,4 +136,4 @@ def run_git_bash(script, wait=True):
 # print(stderr)
 
 
-print(run_git_bash(""" echo 'Hello, Git Bash!'; echo 'This is a multiline command.'; pwd; """))
+# print(run_git_bash(""" echo 'Hello, Git Bash!'; echo 'This is a multiline command.'; pwd; """))
