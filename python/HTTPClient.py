@@ -3,7 +3,7 @@ import json
 import time
 import requests
 from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, \
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPlainTextEdit, \
     QPushButton, QComboBox, QMessageBox, QTabWidget, QFileDialog, QSplitter, QStatusBar, QCheckBox
 from PySide6.QtGui import QAction
 
@@ -124,11 +124,9 @@ class HTTPClient(QMainWindow):
         request_layout = QVBoxLayout(request_widget)
     
         url_layout = QHBoxLayout()
-        url_label = QLabel("URL:")
-        url_text = QTextEdit("https://iapp.run/echo")
+        url_text = QPlainTextEdit("https://iapp.run/echo")
         url_text.setObjectName("url_text")  # 添加对象名称
-        url_text.setFixedHeight(30)
-        url_layout.addWidget(url_label)
+        url_text.setFixedHeight(40)
         url_layout.addWidget(url_text)
     
         method_layout = QHBoxLayout()
@@ -140,11 +138,14 @@ class HTTPClient(QMainWindow):
         method_layout.addWidget(method_combo)
     
         request_headers_label = QLabel("Request Headers:")
-        request_headers_text = QTextEdit("User-Agent: curl/7.85.0<br/>Content-Type: application/json")
+        request_headers_text = QPlainTextEdit("""\
+User-Agent: curl/7.85.0
+Content-Type: application/json
+""")
         request_headers_text.setObjectName("request_headers_text")  # 添加对象名称
     
         request_body_label = QLabel("Request Body:")
-        request_body_text = QTextEdit()
+        request_body_text = QPlainTextEdit()
         request_body_text.setObjectName("request_body_text")  # 添加对象名称
     
         send_button = QPushButton("Send")
@@ -168,14 +169,14 @@ class HTTPClient(QMainWindow):
         response_layout = QVBoxLayout(response_widget)
     
         response_headers_label = QLabel("Response Headers:")
-        response_headers_text = QTextEdit()
+        response_headers_text = QPlainTextEdit()
         response_headers_text.setObjectName("response_headers_text")  # 添加对象名称
         response_headers_text.setReadOnly(True)
         response_layout.addWidget(response_headers_label)
         response_layout.addWidget(response_headers_text)
     
         response_body_label = QLabel("Response Body:")
-        response_body_text = QTextEdit()
+        response_body_text = QPlainTextEdit()
         response_body_text.setObjectName("response_body_text")  # 添加对象名称
         response_body_text.setReadOnly(True)
         response_layout.addWidget(response_body_label)
@@ -193,9 +194,9 @@ class HTTPClient(QMainWindow):
         current_tab = self.tab_widget.widget(current_tab_index)
         request_widget = current_tab.findChild(QWidget, "request_widget")
 
-        url_text = request_widget.findChild(QTextEdit, "url_text")
-        request_headers_text = request_widget.findChild(QTextEdit, "request_headers_text")
-        request_body_text = request_widget.findChild(QTextEdit, "request_body_text")
+        url_text = request_widget.findChild(QPlainTextEdit, "url_text")
+        request_headers_text = request_widget.findChild(QPlainTextEdit, "request_headers_text")
+        request_body_text = request_widget.findChild(QPlainTextEdit, "request_body_text")
 
         url = url_text.toPlainText()
         method_combo = request_widget.findChild(QComboBox, "method_combo")
@@ -207,7 +208,7 @@ class HTTPClient(QMainWindow):
         allow_redirects = follow_redirect_checkbox.isChecked()
 
         start_time = time.time()
-        response = requests.request(method, url, headers=headers, data=body, allow_redirects=allow_redirects, timeout=5)
+        response = requests.request(method, url, headers=headers, data=body.encode('utf-8'), allow_redirects=allow_redirects, verify=False, timeout=5)
         elapsed_time = time.time() - start_time
         status_message = f"{response.status_code} {response.reason}"
         response_headers = response.headers
