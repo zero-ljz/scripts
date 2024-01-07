@@ -59,11 +59,11 @@ def requires_auth(f):
 def handle_request(path=None):
     if path == 'favicon.ico':
         abort(404, 'Not Found')
-    query = dict(request.query.decode('utf-8'))
-    cwd = query.get('cwd', user_home_directory)
-    shell = query.get('shell') in ["1", "true"]
+    cwd = request.query.cwd or request.forms.cwd or user_home_directory
+    shell = (request.query.shell or request.forms.shell) in ["1", "true", "on"]
+    capture_output = (request.query.capture_output or request.forms.capture_output) in ["1", "true", "on"]
     
-    if command := query.get('cmd'): # 参数中包含了空格时要用双引号"将参数包括起来
+    if command := request.query.cmd or request.forms.cmd: # 参数中包含了空格时要用双引号"将参数包括起来
         params = split_with_quotes(command, sep=' ')
     elif path is not None: # 参数中包含了斜杠/时要用双引号"将参数包括起来
         params = split_with_quotes(path)
@@ -76,22 +76,24 @@ def handle_request(path=None):
     # run方法这里的shell=True 代表使用系统的shell环境执行命令而非当前脚本所处的shell环境
     # 请求取消或命令执行超时后子进程不会中止，只是脚本不再阻塞等待结果，shell=False时超时才有效果
     try:
-        completed_process = subprocess.run(params, cwd=cwd, shell=shell, capture_output=False, timeout=1800)
+        completed_process = subprocess.run(params, cwd=cwd, shell=shell, capture_output=capture_output, timeout=1800)
     except Exception as e:
         print('Exception:', e)
         return 'Exception: ' + str(e)
 
-    # output = try_decode(completed_process.stdout)
-    # if completed_process.returncode != 0:
-    #     response.status = 500
-    #     output = f"Error: {completed_process.returncode}\n\n{try_decode(completed_process.stderr)}\n\n{output}"
+    if capture_output:
+        output = try_decode(completed_process.stdout)
+        if completed_process.returncode != 0:
+            response.status = 500
+            output = f"Error: {completed_process.returncode}\n\n{try_decode(completed_process.stderr)}\n\n{output}"
     print(datetime.datetime.now(), 'finished', '\n', 'cmd:', params, '\n', 'cwd:', cwd)
 
-    # response.headers['Content-Type'] = 'text/plain; charset=UTF-8'
-    # response.content_type = 'text/plain; charset=UTF-8'
-    # response.body = output
+    if capture_output:
+        response.headers['Content-Type'] = 'text/plain; charset=UTF-8'
+        response.content_type = 'text/plain; charset=UTF-8'
+        response.body = output
 
-    # logging.info('\n' + response.body)
+        logging.info('\n' + response.body)
 
     try: # 终止子进程
         completed_process.check_returncode()

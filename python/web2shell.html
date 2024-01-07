@@ -11,7 +11,7 @@
 </h2>
 <p>
 
-<form id="form1" method="get" onsubmit="return saveFormData();">
+<form id="form1" onsubmit="return saveFormData();">
     <input type="text" id="cwd" placeholder="cwd">
     <div style="display: block; margin: 1rem 0;">
         <input type="text" list="optionList" id="0" placeholder="0">
@@ -25,8 +25,9 @@
         <button type="button" onclick="addParam()">+</button>
         <button type="button" onclick="removeParam()">-</button>
 
-        <hr style="margin-bottom:0px; border:0;">
+        <hr style="margin:5px 0; border:0;">
         <input type="checkbox" id="shell"><label for="shell">shell</label> &nbsp;
+        <input type="checkbox" id="capture_output" checked><label for="capture_output">capture_output</label> &nbsp;
         <input type="submit" value="Execute" onclick="setAction()">
         <input type="submit" value="Execute2" onclick="setAction2()">
     </div>
@@ -81,7 +82,8 @@
         sessionStorage.clear();
 
         sessionStorage.setItem('cwd', document.getElementById('cwd').value);
-        sessionStorage.setItem('shell', document.getElementById('shell').checked);
+        sessionStorage.setItem('shell', document.getElementById('shell').checked ? 'on' : 'off');
+        sessionStorage.setItem('capture_output', document.getElementById('capture_output').checked ? 'on' : 'off');
 
         let elements = getElementsWithNumberId(form);
         elements.forEach(element => {
@@ -98,7 +100,10 @@
             document.getElementById('cwd').value = sessionStorage.getItem('cwd')
         }
         if(sessionStorage.getItem('shell')) {
-            document.getElementById('shell').checked = JSON.parse(sessionStorage.getItem('shell'));
+            document.getElementById('shell').checked = sessionStorage.getItem('shell') == 'on' ? true : false;
+        }
+        if(sessionStorage.getItem('capture_output')) {
+            document.getElementById('capture_output').checked = sessionStorage.getItem('capture_output') == 'on' ? true : false;
         }
 
         for (let i = 0; i < form.elements.length; i++) {
@@ -128,10 +133,12 @@
             }
         }
         let cwd = document.getElementById('cwd').value;
-        let shell = document.getElementById('shell').checked;
+        let shell = document.getElementById('shell').checked ? 'on' : 'off';
+        let capture_output = document.getElementById('capture_output').checked ? 'on' : 'off';
         let href = '/"' + document.getElementById('0').value + '"' + paramStr + '?' 
         + (cwd ? '&cwd=' + cwd : '') 
-        + (shell ? '&shell=' + shell : '');
+        + (shell ? '&shell=' + shell : '')
+        + (capture_output ? '&capture_output=' + capture_output : '');
         window.location.href = href;
     }
 
@@ -154,10 +161,12 @@
         }
 
         let cwd = document.getElementById('cwd').value;
-        let shell = document.getElementById('shell').checked;
+        let shell = document.getElementById('shell').checked ? 'on' : 'off';
+        let capture_output = document.getElementById('capture_output').checked ? 'on' : 'off';
         window.location.href = `?cmd=` + encodeURIComponent('"' + document.getElementById('0').value + '"' + paramStr) 
         + ( cwd ? '&cwd=' + encodeURIComponent(cwd) : '' ) 
-        + (shell ? '&shell=' + shell : '');
+        + (shell ? '&shell=' + shell : '')
+        + (capture_output ? '&capture_output=' + capture_output : '');
 
     }
 
