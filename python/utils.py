@@ -4,9 +4,14 @@ import fire
 import urllib.request
 import urllib.parse
 
-def fetch_url(url, method='GET', headers={}, data=None):
-    with urllib.request.urlopen(urllib.request.Request(url, method=method, headers=headers, data=urllib.parse.urlencode(data).encode('utf-8') if data else None)) as response:
-        return response.read()
+def send_request(url, method='GET', headers={}, data=None):
+    if isinstance(data, dict):
+        data = urllib.parse.urlencode(data)
+        headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    req = urllib.request.Request(url, method=method, headers=headers, data=data and data.encode('utf-8'))
+    with urllib.request.urlopen(req) as resp:
+        return resp.read().decode('utf-8')
+
 
 
 def convert_to_snakecase(text):

@@ -25,10 +25,41 @@ fi
 #rm -rf /docker
 #docker rm -f $(docker ps -a -q)
 
-OSID=$(grep '^ID=' /etc/os-release | cut -d= -f2)
+OS_ID=$(grep '^ID=' /etc/os-release | cut -d= -f2)
+OS_VERSION_ID=$(grep '^VERSION_ID=' /etc/os-release | cut -d= -f2 | sed 's/"//g')
+OS_VERSION_CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d= -f2)
+
+
+if [ ! -e "/tmp/ip_country" ]; then
+# 首次需要获取服务器所在国家并缓存
+apt -y install jq
+IP_COUNTRY=$(curl -s https://ipinfo.io/$(curl -s https://api.ipify.org) | jq '.country' | sed 's/"//g')
+echo $IP_COUNTRY > /tmp/ip_country
+else
+IP_COUNTRY=$(cat /tmp/ip_country)
+fi
+
+if [ "$OS_ID" = "CN" ]; then
 
 # 默认代理设置
 proxy="https://p.iblog.site/"
+
+cat>/etc/docker/daemon.json<<EOF
+{
+  "registry-mirrors": ["http://mirrors.ustc.edu.cn"]
+}
+EOF
+# 备用 http://hub.daocloud.io
+
+cat>~/.config/pip/pip.conf<<EOF
+[global]
+index-url = https://mirrors.aliyun.com/pypi/simple
+EOF
+# 或者用命令
+pip config set global.index-url https://mirrors.aliyun.com/pypi/simple
+
+fi
+
 
 system_init(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -219,8 +250,8 @@ apt -y install tree
 
 
 # echo -e "\n\n\n 安装 exa 替代ls，一个更好的 ls 命令替代品，可以帮助你更好地查看文件和目录的详细信息。"
-# OSID=$(grep '^ID=' /etc/os-release | cut -d= -f2)
-# if [ "$OSID" = "ubuntu" ]; then
+# OS_ID=$(grep '^ID=' /etc/os-release | cut -d= -f2)
+# if [ "$OS_ID" = "ubuntu" ]; then
 # wget -O exa_0.9.0-4_amd64.deb -c http://old-releases.ubuntu.com/ubuntu/pool/universe/r/rust-exa/exa_0.9.0-4_amd64.deb
 # apt-get -y install ./exa_0.9.0-4_amd64.deb
 # else
@@ -397,7 +428,7 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 # sh get-docker.sh
 
 echo -e "\n\n\n 读取发行版名称"
-OSID=$(grep '^ID=' /etc/os-release | cut -d= -f2)
+OS_ID=$(grep '^ID=' /etc/os-release | cut -d= -f2)
 echo -e "\n\n\n 卸载旧版本"
 apt-get remove docker docker-engine docker.io containerd runc
 echo -e "\n\n\n 更新APT包索引"
@@ -406,10 +437,10 @@ echo -e "\n\n\n 安装包以允许apt通过HTTPS使用存储库"
 apt-get -y install ca-certificates curl gnupg
 echo -e "\n\n\n 添加 Docker 的官方 GPG 密钥"
 mkdir -m 0755 -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/${OSID}/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+curl -fsSL https://download.docker.com/linux/${OS_ID}/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 chmod a+r /etc/apt/keyrings/docker.gpg
 echo -e "\n\n\n 设置存储库"
-echo  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] ${proxy}https://download.docker.com/linux/${OSID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+echo  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] ${proxy}https://download.docker.com/linux/${OS_ID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 echo -e "\n\n\n 更新APT包索引"
 apt-get update
 echo -e "\n\n\n 安装 Docker Engine、containerd 和 Docker Compose"
@@ -501,8 +532,13 @@ if [ "$answer" = "y" ]; then
 apt -y install lsb-release
 # wget -O mysql-apt-config_0.8.24-1_all.deb https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
 # dpkg -i mysql-apt-config_0.8.24-1_all.deb
-wget -O mysql-apt-config_0.8.18-1_all.deb https://dev.mysql.com/get/mysql-apt-config_0.8.18-1_all.deb
-dpkg -i mysql-apt-config_0.8.18-1_all.deb
+
+# wget -O mysql-apt-config_0.8.18-1_all.deb https://dev.mysql.com/get/mysql-apt-config_0.8.18-1_all.deb
+# dpkg -i mysql-apt-config_0.8.18-1_all.deb
+
+
+apt -y install mysql-client mysql-server
+
 systemctl enable mysql
 systemctl start mysql
 
@@ -511,7 +547,7 @@ mysql_secure_installation
 
 echo '
 使用以下命令连接到MySQL服务器
-mysql -h 127.0.0.1 -u root -p
+mysql -h 127.0.0.1 -P 3306 -u root -p
 '
 
 echo '
@@ -668,11 +704,11 @@ server_addr=${3:-42.193.229.54}
 install_ssh(){
 if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 
-if [ "$OSID" = "debian" ] || [ "$OSID" = "ubuntu" ]; then
+if [ "$OS_ID" = "debian" ] || [ "$OS_ID" = "ubuntu" ]; then
     apt -y install openssh-server
-elif [ "$OSID" = "alpine" ]; then
+elif [ "$OS_ID" = "alpine" ]; then
     apk add openssh-server
-elif [ "$OSID" = "arch" ]; then
+elif [ "$OS_ID" = "arch" ]; then
     pacman -S openssh-server
 fi
 
@@ -1014,7 +1050,7 @@ GRANT ALL PRIVILEGES ON ${db_user}_db.* TO '${db_user}'@'%';
 FLUSH PRIVILEGES;
 EOF
 
-cmd="mysql -u root -p${MYSQL_ROOT_PASSWORD} < ${domain_name}.sql"
+cmd="mysql -h 127.0.0.1 -P 3306 -u root -p${MYSQL_ROOT_PASSWORD} < ${domain_name}.sql"
 echo "请执行${cmd}创建数据库和用户 mysql://${db_user}:${db_password}@mysql:3306/${db_user}_db"
 echo "在容器内创建需执行 docker exec -i mysql1 ${cmd}"
 
@@ -1436,9 +1472,9 @@ echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer
 local_port=${1:-9000}
 # https://docs.portainer.io/start/install/server/docker/linux
 docker volume create portainer_data
-#docker run -d -p 127.0.0.1:${local_port}:9000 --name portainer1 -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data -e TZ=Asia/Shanghai portainer/portainer
+docker run -d -p ${local_port}:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data -e TZ=Asia/Shanghai portainer/portainer
 # 汉化版
-docker run -d -p ${local_port}:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data -e TZ=Asia/Shanghai 6053537/portainer
+# docker run -d -p ${local_port}:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data -e TZ=Asia/Shanghai 6053537/portainer
 
 }
 
@@ -1536,6 +1572,10 @@ return; fi
 app_name=$1
 http_port=$2
 docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
+# 容器内站点配置文件 /etc/apache2/sites-available/000-default.conf
+# 在php官方docker镜像中安装扩展
+docker exec -t ${app_name} curl -sSL https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions -o - | sh -s gd xdebug pdo_mysql
+#docker exec -t ${app_name} chmod -R 755 /var/www/html
 download_php_apps /docker/${app_name}
 
 }

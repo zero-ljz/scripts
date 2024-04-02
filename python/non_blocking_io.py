@@ -1,7 +1,7 @@
 
 import concurrent.futures
 
-from utils import fetch_url
+from utils import send_request
     
 
 urls = ['http://example.com', 'http://iapp.run/echo?1']
@@ -12,7 +12,7 @@ headers = {
 
 with concurrent.futures.ThreadPoolExecutor() as executor:
     # 提交每个URL的请求任务给线程池
-    futures = {executor.submit(fetch_url, url, method='GET', headers=headers): url for url in urls}
+    futures = {executor.submit(send_request, url, method='GET', headers=headers): url for url in urls}
 
     # 
     
