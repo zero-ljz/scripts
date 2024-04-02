@@ -60,8 +60,8 @@ def handle_request(path=None):
     if path == 'favicon.ico':
         abort(404, 'Not Found')
     cwd = request.query.cwd or request.forms.cwd or user_home_directory
-    shell = (request.query.shell or request.forms.shell) in ["1", "true", "on"]
-    capture_output = (request.query.capture_output or request.forms.capture_output) in ["1", "true", "on"]
+    shell = (request.query.shell or request.forms.shell) in ["1", "true", "True", "on", "yes"]
+    capture_output = (request.query.capture_output or request.forms.capture_output) in ["1", "true", "True", "on", "yes"]
     
     if command := request.query.cmd or request.forms.cmd: # 参数中包含了空格时要用双引号"将参数包括起来
         params = split_with_quotes(command, sep=' ')
