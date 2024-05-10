@@ -13,7 +13,7 @@ winget install -e --id GitHub.GitHubDesktop
 # winget install -e --id Microsoft.WindowsTerminal
 winget install -e --id Microsoft.PowerToys
 winget install -e --id CosmoX.Lepton
-winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.00
+winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.01
 
 winget install -e --id Sandboxie.Plus
 winget install -e --id Bandisoft.Bandizip --version 6.29
