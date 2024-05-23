@@ -1,0 +1,42 @@
+﻿Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\*\shell\copypath]
+@="复制路径"
+
+[HKEY_CLASSES_ROOT\*\shell\copypath\command]
+@="mshta vbscript:clipboarddata.setdata(\"text\",\"%1\")(close)"
+
+
+[HKEY_CLASSES_ROOT\Directory\shell\copypath]
+@="复制路径"
+
+[HKEY_CLASSES_ROOT\Directory\shell\copypath\command]
+@="mshta vbscript:clipboarddata.setdata(\"text\",\"%1\")(close)"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath]
+@="复制当前目录路径"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath\command]
+@="mshta vbscript:clipboarddata.setdata(\"text\",\"%V\")(close)"
+
+
+
+[HKEY_CLASSES_ROOT\*\shell\wslpath]
+@="查看WSL路径"
+
+[HKEY_CLASSES_ROOT\*\shell\wslpath\command]
+@="cmd /k wsl.exe wslpath -a \"%1\""
+
+
+[HKEY_CLASSES_ROOT\Directory\shell\wslpath]
+@="查看WSL路径"
+
+[HKEY_CLASSES_ROOT\Directory\shell\wslpath\command]
+@="cmd /k wsl.exe wslpath -a \"%1\""
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\wslpath]
+@="查看当前目录WSL路径"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\wslpath\command]
+@="cmd /k wsl.exe wslpath -a \"%V\""
+

@@ -1,0 +1,8 @@
+﻿Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\wt_git_bash]
+@="在终端的 Git Bash 中打开"
+"Icon"="C:\\Program Files\\Git\\git-bash.exe"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\wt_git_bash\command]
+@="\"C:\\Users\\zero-\\AppData\\Local\\Microsoft\\WindowsApps\\wt.exe\" -w 0 new-tab -p \"Git Bash\" -d \"%V\" \"C:\\Program Files\\Git\\bin\\bash.exe\" --login -i"
