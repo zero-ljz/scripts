@@ -19,10 +19,12 @@ winget install -e --id Git.Git
 winget install -e --id GitHub.GitHubDesktop
 winget install -e --id Microsoft.WindowsTerminal
 winget install -e --id Microsoft.PowerToys
+winget install -e --id Microsoft.BingWallpaper
 winget install -e --id CosmoX.Lepton
 winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.01
 
 winget install -e --id Sandboxie.Plus
+winget install -e --id Telegram.TelegramDesktop
 
 winget install -e --id Postman.Postman
 winget install -e --id Telerik.Fiddler.Classic
@@ -42,6 +44,7 @@ winget install -e --id Xmind.Xmind
 
 winget install -e --id VideoLAN.VLC
 # winget install -e --id TeamViewer.TeamViewer
+# winget install -e --id Youqu.ToDesk
 # winget install -e --id VMware.WorkstationPro
 winget install -e --id Notion.Notion
 winget install -e --id Obsidian.Obsidian

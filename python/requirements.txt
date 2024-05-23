@@ -50,8 +50,13 @@ DBUtils==3.0.3
 celery
 redis==4.6.0
 hiredis # redis-py加速
-pandas
+
 simplejson==3.19.1
+openpyxl
+pandas
+numpy
+matplotlib
+
 
 
 ansible
