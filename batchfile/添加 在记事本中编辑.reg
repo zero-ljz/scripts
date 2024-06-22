@@ -1,7 +1,7 @@
 ﻿Windows Registry Editor Version 5.00
 
 [HKEY_CLASSES_ROOT\*\shell\notepad]
-@="使用记事本编辑(&E)"
+@="在记事本中编辑(&E)"
 "Icon"="C:\\WINDOWS\\system32\\notepad.exe"
 
 [HKEY_CLASSES_ROOT\*\shell\notepad\command]
