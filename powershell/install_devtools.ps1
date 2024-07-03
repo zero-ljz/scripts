@@ -14,8 +14,27 @@ winget install -e --id 9MSPC6MP8FM4 # Whiteboard
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
 winget install -e --id OpenJS.NodeJS.LTS  --version 18.20.2
+# 配置国内源
+npm config set registry https://registry.npmmirror.com
+# 安装pnpm
+npm install -g pnpm
+
 winget install -e --id Python.Python.3.10 --version 3.10.11
+# 配置国内源
+pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+# 安装pipx
+pip install --user pipx
+# 自动添加到用户环境变量Path
+python -m pipx ensurepath
+# 在隔离环境中安装poetry
+python -m pipx install poetry==1.8.3
+
+
 winget install -e --id Git.Git
+# 配置用户信息
+git config --global user.name 'zero-ljz'
+git config --global user.email '2267719005@qq.com'
+
 winget install -e --id GitHub.GitHubDesktop
 # winget install -e --id Microsoft.WindowsTerminal
 winget install -e --id Microsoft.PowerToys
