@@ -237,10 +237,10 @@ install_docker(){
     if read -t 5 -p "是否使用中国大陆注册表？ (y): " answer && [ "$answer" == "y" ]; then
         cat>/etc/docker/daemon.json<<EOF
 {
-  "registry-mirrors": ["http://mirrors.ustc.edu.cn"]
+  "registry-mirrors": ["https://p.520999.xyz/https://registry-1.docker.io"]
 }
 EOF
-    # 备用 http://hub.daocloud.io
+    # 备用 http://mirrors.ustc.edu.cn http://hub.daocloud.io
     fi
 }
 
@@ -517,10 +517,10 @@ deploy_redis(){
     echo "安装 Redis" 
     docker run -dp ${port}:6379 --name redis1 --restart=always --network network1 --network-alias redis -v /docker/redis1:/data -e TZ=Asia/Shanghai \
     redis:6-bullseye \
-    redis-server --save 60 1 --loglevel warning --requirepass "123qwe123@"
+    redis-server --save 60 1 --loglevel warning --requirepass "123qweQ!"
     # 传给redis服务器的启动参数：若每60秒至少有一个键被修改了1次，就将数据持久化到磁盘，只记录警告及更高级别的日志
     # 连接字符串
-    # redis://default:123qwe123@@localhost:6379/0
+    # redis://default:123qweQ!@localhost:6379/0
     # 连接方式：redis-cli
     # docker run -it --network redis --rm redis redis-cli -h redis1
 }
@@ -814,6 +814,8 @@ docker_run_app(){
     fi
 }
 
+# nginx 部署静态网站
+# docker run -dp 8080:80 --name web1 --restart=always -v /docker/web1:/usr/share/nginx/html nginx:stable-alpine-slim
 
 function auto_mode(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
