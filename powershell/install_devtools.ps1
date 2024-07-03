@@ -49,9 +49,11 @@ winget install -e --id VideoLAN.VLC
 winget install -e --id Notion.Notion
 winget install -e --id Obsidian.Obsidian
 winget install -e --id HTTPie.HTTPie
+winget install -e --id Insomnia.Insomnia
 # winget install -e --id ElectronCommunity.ElectronFiddle # 刚安装完就提示有更新
 winget install -e --id Cloudflare.Warp
 # winget install -e --id Mubu.Mubu # 幕布, 安装时提示执行InternetOpenUrl命令失败
+# winget install -e --id shimo.shimo
 winget install -e --id Automattic.Simplenote
 winget install -e --id Joplin.Joplin
 # winget install -e --id Dropbox.Dropbox

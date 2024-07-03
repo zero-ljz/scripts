@@ -38,7 +38,7 @@ fi
 if [ "$OS_ID" = "CN" ]; then
 
 # 默认代理设置
-proxy="https://p.iblog.site/"
+proxy="http://p.520999.xyz/"
 
 
 
