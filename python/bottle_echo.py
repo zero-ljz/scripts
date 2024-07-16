@@ -9,7 +9,7 @@ def echo(path):
 
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Content-Type'] = 'text/plain; charset=UTF-8'
-    response.body = f'{request_line}\n{headers}\n\n{body}'
+    response.body = f'\n\n\n{request_line}\n{headers}\n\n{body}'
 
     print(response.body)
     return response
