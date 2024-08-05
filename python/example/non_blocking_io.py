@@ -1,8 +1,16 @@
+import urllib.request
+import urllib.parse
+
+def send_request(url, method='GET', headers={}, data=None):
+    if isinstance(data, dict):
+        data = urllib.parse.urlencode(data)
+        headers['Content-Type'] = 'application/x-www-form-urlencoded'
+    req = urllib.request.Request(url, method=method, headers=headers, data=data and data.encode('utf-8'))
+    with urllib.request.urlopen(req) as resp:
+        return resp.read().decode('utf-8')
+
 
 import concurrent.futures
-
-from utils import send_request
-    
 
 urls = ['http://example.com', 'http://iapp.run/echo?1']
 headers = {
@@ -27,3 +35,7 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
             print()
         except Exception as e:
             print(f'Error fetching URL {url}: {e}')
+            
+            
+            
+            
