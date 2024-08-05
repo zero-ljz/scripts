@@ -1,8 +1,9 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QScrollArea, QPushButton, QHBoxLayout, QGroupBox, \
-    QGridLayout, QCheckBox, QRadioButton, QLineEdit, QTextEdit, QComboBox, QSlider, QProgressBar, QSpinBox, QDial, \
-    QDateTimeEdit, QCalendarWidget, QTabWidget, QToolBox, QLCDNumber, QFontComboBox, QInputDialog, QColorDialog, \
-    QFileDialog, QSizePolicy
+from PySide6.QtWidgets import (QApplication, QWidget, QLabel, QVBoxLayout, QScrollArea, QPushButton, QHBoxLayout, QGroupBox,
+    QGridLayout, QCheckBox, QRadioButton, QLineEdit, QTextEdit, QComboBox, QSlider, QProgressBar, QSpinBox, QDial,
+    QDateTimeEdit, QCalendarWidget, QTabWidget, QToolBox, QLCDNumber, QFontComboBox, QInputDialog, QColorDialog,
+    QFileDialog, QSizePolicy)
+from PySide6.QtCore import Qt
 
 class WidgetGallery(QWidget):
     def __init__(self):
@@ -57,8 +58,7 @@ class WidgetGallery(QWidget):
         self.addWidget(comboBox)
 
     def addSlider(self):
-        slider = QSlider()
-        slider.setOrientation(1)
+        slider = QSlider(Qt.Horizontal)
         self.addWidget(slider)
 
     def addProgressBar(self):
@@ -135,7 +135,7 @@ class WidgetGallery(QWidget):
     def showFileDialog(self):
         fileDialog = QFileDialog()
         fileDialog.setFileMode(QFileDialog.AnyFile)
-        if fileDialog.exec_():
+        if fileDialog.exec():
             fileNames = fileDialog.selectedFiles()
             print('Selected file:', fileNames)
 
@@ -148,4 +148,4 @@ class WidgetGallery(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     gallery = WidgetGallery()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

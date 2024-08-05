@@ -704,7 +704,7 @@ deploy_debian() {
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 
     # 创建空的 Debian 容器并保持运行
-    docker run -d --name debian1 --network host debian:bullseye tail -f /dev/null
+    docker run -d --name debian1 --network host debian:bullseye sleep infinity
 
     commands=$(cat <<EOF
 apt update && apt -y install --no-install-recommends wget curl nano micro

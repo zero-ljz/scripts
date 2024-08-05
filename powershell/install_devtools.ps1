@@ -94,6 +94,7 @@ winget install -e --id Bandisoft.Bandizip --version 6.29
 
 winget install -e --id NetEase.CloudMusic # 网易云音乐
 winget install -e --id Youdao.YoudaoTranslate # 网易有道翻译
+winget install -e --id 360.360Chrome.X
 
 # winget install -e --id Baidu.BaiduNetdisk # 百度网盘, 包370m, 装完还添加了广告的开机自启
 winget install -e --id Baidu.BaiduTranslate # 百度翻译

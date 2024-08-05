@@ -8,7 +8,7 @@ app = Bottle()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', handlers=[logging.FileHandler('wait_log.txt'), logging.StreamHandler()])
 
 @app.route('/<path:re:.*>', method=['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'])
-def wait():
+def wait(path):
     # 获取客户端 IP
     client_ip = request.remote_addr
 
