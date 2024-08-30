@@ -486,6 +486,7 @@ CREATE TABLE IF NOT EXISTS table_name (
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
 
     if len(sys.argv) > 1:
         db_file = sys.argv[1]

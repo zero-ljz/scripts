@@ -269,6 +269,7 @@ Content-Type: application/json
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
     http_client = HTTPClient()
     http_client.show()
     sys.exit(app.exec())
