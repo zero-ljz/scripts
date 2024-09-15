@@ -84,6 +84,7 @@ winget install -e --id Automattic.Simplenote
 # winget install -e --id Oracle.MySQLWorkbench
 winget install -e --id 7zip.7zip
 winget install -e --id Bandisoft.Bandizip --version 6.29
+winget install -e --id Bandisoft.Honeyview
 # winget install -e --id BlueStack.BlueStacks --version 5.20.0.1037
 
 # winget install -e --id ByteDance.StreamingTool # 直播伴侣
