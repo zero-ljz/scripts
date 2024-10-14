@@ -57,7 +57,8 @@ winget install -e --id Telerik.Fiddler.Classic
 winget install -e --id voidtools.Everything
 winget install -e --id SublimeHQ.SublimeText.4
 
-winget install -e --id PremiumSoft.NavicatPremium
+# winget install -e --id PremiumSoft.NavicatPremium
+winget install -e --id XP88VSFXNJN3K3 # Navicat Premium Lite 17
 winget install -e --id AdrienAllard.FileConverter
 # winget install -e --id DeepL.DeepL # 提示安装程序哈希不匹配: 以管理员身份运行时不能覆盖此内容
 winget install -e --id Anki.Anki
