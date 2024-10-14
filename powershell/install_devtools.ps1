@@ -46,6 +46,9 @@ winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.01
 # winget install -e --id Sandboxie.Plus
 # winget install -e --id Telegram.TelegramDesktop
 
+winget install RevoUninstaller.RevoUninstaller
+winget install Termius.Termius
+
 winget install -e --id Postman.Postman
 winget install -e --id Telerik.Fiddler.Classic
 # winget install -e --id JavadMotallebi.NeatDownloadManager # 提示找不到包
@@ -59,6 +62,7 @@ winget install -e --id AdrienAllard.FileConverter
 # winget install -e --id DeepL.DeepL # 提示安装程序哈希不匹配: 以管理员身份运行时不能覆盖此内容
 winget install -e --id Anki.Anki
 winget install -e --id Xmind.Xmind
+winget install -e --id SumatraPDF.SumatraPDF
 
 # winget install -e --id MariaDB.Server --version 10.4.30
 
