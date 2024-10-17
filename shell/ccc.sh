@@ -14,13 +14,20 @@ system_init(){
     echo -e "\n\n\n 配置语言"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        dpkg-reconfigure locales
+        # dpkg-reconfigure locales
+        # 启用一个区域设置
+        sed -i '/^# zh_CN.UTF-8 UTF-8$/s/^#//' /etc/locale.gen
+        # 生成区域设置
+        locale-gen
+        # 设置系统环境的默认区域
+        update-locale LANG=zh_CN.UTF-8
     fi
 
     echo -e "\n\n\n 配置时区"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        dpkg-reconfigure tzdata
+        # dpkg-reconfigure tzdata
+        timedatectl set-timezone Asia/Shanghai
     fi
 
     echo -e "\n\n\n 设置ssh 120*720=86400 24小时不断开连接"
