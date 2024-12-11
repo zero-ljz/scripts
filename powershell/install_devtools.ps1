@@ -41,7 +41,8 @@ winget install -e --id GitHub.GitHubDesktop
 winget install -e --id Microsoft.VisualStudioCode
 winget install -e --id Microsoft.PowerToys
 winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.01
-winget install -e --id Postman.Postman
+# winget install -e --id Postman.Postman
+winget install -e --id hoppscotch.Hoppscotch
 winget install -e --id voidtools.Everything
 # wget https://dn.navicat.com.cn/download/navicat17_premium_lite_cs_x64.exe -O navicat17_premium_lite_cs_x64.exe
 winget install -e --id Xmind.Xmind
@@ -75,7 +76,7 @@ winget install -e --id Docker.DockerDesktop --version 4.1.1 --quiet
 # winget install -e --id Telegram.TelegramDesktop
 
 # winget install RevoUninstaller.RevoUninstaller
-# winget install Termius.Termius
+winget install Termius.Termius
 
 
 # winget install -e --id Telerik.Fiddler.Classic
