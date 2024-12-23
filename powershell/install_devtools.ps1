@@ -39,6 +39,7 @@ git config --global user.email '2267719005@qq.com'
 winget install -e --id GitHub.GitHubDesktop
 # winget install -e --id Microsoft.WindowsTerminal
 winget install -e --id Microsoft.VisualStudioCode
+winget install -e --id zyedidia.micro
 winget install -e --id Microsoft.PowerToys
 winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.01
 # winget install -e --id Postman.Postman
