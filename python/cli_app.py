@@ -4,6 +4,9 @@ import datetime, sys, atexit, os, io, time, argparse, logging, subprocess
 import json, re, sqlite3
 import random
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
+
 script_name = os.path.splitext(os.path.basename(__file__))[0]
 logging.basicConfig(filename=script_name + '.log', level=logging.INFO)
 conn = sqlite3.connect(script_name + '.sqlite3')
