@@ -101,6 +101,9 @@ if [ "$backup_databases" = true ]; then
   for db in $databases; do
       docker exec -i mysql1 mysqldump -u"root" -p"$mysql_root_password" --databases "$db" > "$save_dir/${db}_backup_$(date +\%Y\%m\%d_\%H\%M\%S).sql"
       [ $? -ne 0 ] && echo "备份数据库 $db 失败" && exit 1
+
+    # 在mysql容器中选择指定数据库执行容器外面的mysql脚本文件
+    # docker exec -i mysql1 mysql -h 127.0.0.1 -P 3306 -u root -p123 target_db < backup.sql
   done
 fi
 
