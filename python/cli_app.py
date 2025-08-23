@@ -10,14 +10,16 @@ os.chdir(script_dir)
 script_name = os.path.splitext(os.path.basename(__file__))[0]
 logging.basicConfig(filename=script_name + '.log', level=logging.INFO)
 conn = sqlite3.connect(script_name + '.sqlite3')
-
-cursor = conn.cursor()
-cursor.row_factory = sqlite3.Row
+conn.row_factory = sqlite3.Row
 
 sql = "SELECT name FROM sqlite_master WHERE type='table'"
-rows = cursor.execute(sql).fetchall()
+rows = conn.execute(sql).fetchall()
+for row in rows:
+    print(row.keys())
+    print(row['name'], row[0])
 
-cursor.close()
+sql = "CREATE TABLE IF NOT EXISTS tb1 (id INTEGER PRIMARY KEY, col1 TEXT, col2 INTEGER)"
+cursor = conn.execute(sql)
 conn.commit()
 
 conn.close()
