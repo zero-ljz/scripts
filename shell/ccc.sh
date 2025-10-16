@@ -398,10 +398,14 @@ server {
         #add_header Content-Security-Policy upgrade-insecure-requests;
         proxy_http_version 1.1;
         proxy_pass_header Server;
+        proxy_set_header X-Forwarded-Host \$server_name;
         proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_set_header Host \$host;
         proxy_redirect off;
         proxy_pass http://127.0.0.1:${local_port};
+
+        # wordpress容器需要设置
+        # proxy_redirect off;
 
         # 安全配置
         # 设置请求头
@@ -644,6 +648,7 @@ deploy_wordpress(){
     local_port=${1:-8000}
     docker run -dp 127.0.0.1:${local_port}:80 --name wordpress1 --restart=always --network network1 -v /docker/wordpress1:/var/www/html \
     -e TZ=Asia/Shanghai \
+    -e WORDPRESS_CONFIG_EXTRA="define( 'FORCE_SSL_ADMIN', true ); if( strpos( $_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false ) { $_SERVER['HTTPS'] = 'on'; }" \
     wordpress
 
 }
