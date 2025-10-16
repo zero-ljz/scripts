@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title }}</title>
+  <style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background: #f7f7f7;
+}
+
+h1 {
+  color: #2c3e50;
+}
+
+section {
+  background: white;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+form input {
+  margin: 5px;
+  padding: 8px;
+}
+
+button {
+  padding: 8px 12px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+button:hover {
+  background: #2980b9;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+
+  </style>
+</head>
+<body>
+  <h1>🚀 FastAPI Demo</h1>
+
+  <section>
+    <h2>用户登录</h2>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="用户名" required>
+      <input type="password" id="password" placeholder="密码" required>
+      <button type="submit">登录</button>
+    </form>
+    <p id="loginStatus"></p>
+  </section>
+
+  <section>
+    <h2>添加 Item</h2>
+    <form id="itemForm">
+      <input type="text" id="name" placeholder="名称" required>
+      <input type="text" id="description" placeholder="描述">
+      <input type="number" id="price" step="0.01" placeholder="价格" required>
+      <input type="text" id="tags" placeholder="标签(逗号分隔)">
+      <button type="submit">添加</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>已有 Items</h2>
+    <ul id="itemsList"></ul>
+  </section>
+
+  <script>
+    let token = null;
+
+    // 登录
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      const res = await fetch("/login/", {
+        method: "POST",
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: `username=${username}&password=${password}`
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        token = data.token;
+        document.getElementById("loginStatus").innerText = "✅ 登录成功！Token 已保存";
+      } else {
+        document.getElementById("loginStatus").innerText = "❌ 登录失败: " + data.message;
+      }
+    });
+
+    // 添加 Item
+    document.getElementById("itemForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!token) {
+        alert("请先登录获取 token！");
+        return;
+      }
+
+      const item = {
+        name: document.getElementById("name").value,
+        description: document.getElementById("description").value,
+        price: parseFloat(document.getElementById("price").value),
+        tags: document.getElementById("tags").value.split(",").map(t => t.trim()).filter(Boolean)
+      };
+
+      const res = await fetch("/items/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "token": token
+        },
+        body: JSON.stringify(item)
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert("✅ 添加成功！");
+        loadItems();
+      } else {
+        alert("❌ 添加失败: " + data.error);
+      }
+    });
+
+    // 加载 Item 列表
+    async function loadItems() {
+      const res = await fetch("/items/");
+      const data = await res.json();
+      const list = document.getElementById("itemsList");
+      list.innerHTML = "";
+      data.forEach(item => {
+        const li = document.createElement("li");
+        li.innerText = `${item.id}. ${item.name} - ￥${item.price} [${item.tags.join(", ")}]`;
+        list.appendChild(li);
+      });
+    }
+
+    // 页面加载时获取已有 items
+    loadItems();
+  </script>
+</body>
+</html>
