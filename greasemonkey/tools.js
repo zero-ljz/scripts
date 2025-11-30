@@ -3,7 +3,8 @@
 // @namespace    http://iapp.run
 // @version      2.0.0
 // @description  全能网页工具箱：翻译、搜索、去除限制、提取图片、夜间模式等。支持悬浮球拖拽与现代化UI。
-// @author       zero-ljz & Refactored
+// @author       zero-ljz
+// @homepage     https://github.com/zero-ljz/scripts/blob/main/greasemonkey/tools.js
 // @match        *://*/*
 // @grant        GM_registerMenuCommand
 // @grant        GM_info
