@@ -1012,12 +1012,40 @@ LastModified: ${document.lastModified}
             if (hasMoved) { GM_setValue('pos_top', btn.style.top); GM_setValue('pos_left', btn.style.left); }
         });
 
-        btn.addEventListener('click', () => { 
+        // === 修复的核心部分：点击悬浮球 ===
+        btn.addEventListener('click', (e) => { 
+            // 阻止点击事件冒泡和默认行为，防止浏览器误判为点击了页面背景
+            e.preventDefault();
+            e.stopPropagation();
+
             if (!hasMoved) {
                 togglePanel(); 
-                if(!panel.classList.contains('show')) setTimeout(() => searchInput.focus(), 100); 
+                
+                // === 关键修复逻辑 ===
+                // 获取当前页面选中的文本
+                const selection = window.getSelection().toString();
+
+                // 只有在【面板刚刚打开】且【页面上没有选中文本】时，才自动聚焦搜索框
+                // 这样既保留了快捷搜索的体验，又不影响对选中文本的操作
+                if(panel.classList.contains('show') && !selection) {
+                   setTimeout(() => searchInput.focus(), 100); 
+                }
             }
         });
+
+        // 同时也需要确保 mousedown 不会清除选中 (之前的代码已经包含了 e.preventDefault，这里再次确认)
+        btn.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            // 这一行非常重要：阻止鼠标按下时浏览器默认清除选区的行为
+            e.preventDefault(); 
+            
+            isDragging = true; hasMoved = false;
+            startX = e.clientX; startY = e.clientY;
+            const rect = btn.getBoundingClientRect();
+            initLeft = rect.left; initTop = rect.top;
+            btn.style.transition = 'none';
+        });
+
 
         document.addEventListener('click', (e) => {
             if (panel.classList.contains('show') && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
