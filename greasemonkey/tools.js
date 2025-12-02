@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         全局工具箱
 // @namespace    http://iapp.run
-// @version      2.1.0
+// @version      2.1.1
 // @description  全能网页工具箱：解除复制限制 + 全页翻译 + 聚合搜索；浏览器必备效率神器！一键解决网页痛点：支持解除右键/复制限制、沉浸式翻译、图片提取、二维码生成与夜间模式。内置强大的自定义搜索面板（支持 JSON 配置与自动抓取 Favicon），现代化暗色 UI，轻量拖拽，即装即用。
 // @author       zero-ljz
 // @homepage     https://github.com/zero-ljz/scripts/blob/main/greasemonkey/tools.js
