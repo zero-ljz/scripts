@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         全局工具箱
 // @namespace    http://iapp.run
-// @version      2.2.0
-// @description  全能网页工具箱：解除复制限制 + 全页翻译 + 聚合搜索；浏览器必备效率神器！一键解决网页痛点：支持解除右键/复制限制、沉浸式翻译、图片提取、二维码生成与夜间模式。内置强大的自定义搜索面板（支持 JSON 配置与自动抓取 Favicon），现代化暗色 UI，轻量拖拽，即装即用。
+// @version      2.2.1
+// @description  全能网页工具箱：解除复制限制 + 全页翻译 + 聚合搜索；浏览器必备效率神器！一键解决网页痛点：支持解除右键/复制限制、沉浸式翻译、二维码生成与夜间模式。内置强大的自定义搜索面板（支持 JSON 配置与自动抓取 Favicon），现代化暗色 UI，轻量拖拽，即装即用。
 // @author       zero-ljz
 // @homepage     https://github.com/zero-ljz/scripts/blob/main/greasemonkey/tools.js
 // @match        *://*/*
@@ -105,7 +105,7 @@
 
     // [核心修复] 必须显式初始化，否则 get() 会报错
     gmc.init();
-    
+
     // 运行时状态
     const STATE = {
         isDarkMode: false,
@@ -291,6 +291,38 @@
                                 Utils.modal("翻译结果", res);
                             } catch (e) { Utils.toast("翻译解析失败"); }
                         }
+                    });
+                }
+            },
+            {
+                name: "微信翻译", icon: "🟢",
+                action: () => {
+                    let q = Utils.getSelection() || Utils.prompt("请输入翻译文本：");
+                    if (!q) return;
+
+                    // 构造 URL 参数
+                    const params = "source=auto&target=zh&platform=WeChat_APP&candidateLangs=en|zh&guid=cli_user&sourceText=" + encodeURIComponent(q);
+
+                    GM_xmlhttpRequest({
+                        method: "GET",
+                        url: "https://wxapp.translator.qq.com/api/translate?" + params,
+                        headers: {
+                            "Content-Type": "application/json",
+                            // 伪造 Referer 和 UA 是必须的
+                            "Referer": "https://servicewechat.com/wxb1070eabc6f9107e/117/page-frame.html",
+                            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_3_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.32(0x18002035) NetType/WIFI Language/zh_TW"
+                        },
+                        onload: function (response) {
+                            try {
+                                const obj = JSON.parse(response.responseText);
+                                if (obj && obj.targetText) {
+                                    Utils.modal("微信翻译结果", obj.targetText);
+                                } else {
+                                    Utils.toast("微信接口返回异常");
+                                }
+                            } catch (e) { Utils.toast("翻译解析失败"); }
+                        },
+                        onerror: (e) => Utils.toast("网络请求失败")
                     });
                 }
             },
@@ -814,7 +846,7 @@ LastModified: ${document.lastModified}
 
 
     // --- 2. 存储与辅助函数 ---
-    
+
     // 收藏管理
     const FAV_KEY = 'tools_fav_list';
     const getFavorites = () => GM_getValue(FAV_KEY, []);
@@ -836,8 +868,8 @@ LastModified: ${document.lastModified}
     const getSavedOrder = () => GM_getValue('tools_order_map', {});
     const saveCategoryOrder = (categoryName, container) => {
         // 如果是“收藏”分类，不保存排序（或者你可以实现单独的收藏排序逻辑，这里为了简单跳过）
-        if(categoryName === '⭐ 收藏置顶') return;
-        
+        if (categoryName === '⭐ 收藏置顶') return;
+
         const orderMap = getSavedOrder();
         const currentOrder = Array.from(container.children).map(btn => btn.dataset.name);
         orderMap[categoryName] = currentOrder;
@@ -868,7 +900,7 @@ LastModified: ${document.lastModified}
         // --- Panel 构建 ---
         const panel = document.createElement('div');
         panel.id = 'gm-toolbox-panel';
-        
+
         // 搜索框区域
         const searchWrapper = document.createElement('div');
         searchWrapper.id = 'gm-search-wrapper';
@@ -899,10 +931,10 @@ LastModified: ${document.lastModified}
             const searchVal = panel.querySelector('#gm-search-input').value.toLowerCase().trim();
 
             let categoriesToRender = {};
-            
+
             // 收藏置顶逻辑
             // 1. 收藏置顶逻辑 (修改版：支持排序)
-            if (favorites.length > 0 && !searchVal) { 
+            if (favorites.length > 0 && !searchVal) {
                 let favTools = [];
                 // 核心修改：遍历“收藏列表”而不是遍历“所有工具”，这样才能保证渲染顺序与存储顺序一致
                 favorites.forEach(favName => {
@@ -915,7 +947,7 @@ LastModified: ${document.lastModified}
                         }
                     }
                 });
-                
+
                 if (favTools.length > 0) categoriesToRender['⭐ 收藏置顶'] = favTools;
             }
 
@@ -935,7 +967,7 @@ LastModified: ${document.lastModified}
 
                 if (searchVal) {
                     items = items.filter(t => t.name.toLowerCase().includes(searchVal));
-                    if (items.length === 0) continue; 
+                    if (items.length === 0) continue;
                 }
 
                 const title = document.createElement('div');
@@ -955,7 +987,7 @@ LastModified: ${document.lastModified}
                     b.title = "左键运行，右键收藏/取消";
 
                     const isFav = isFavorite(tool.name);
-                    
+
                     // 这里 icon 容器已经被 CSS 强制锁定大小
                     let html = `<span class="icon">${tool.icon}</span><span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${tool.name}</span>`;
                     if (tool.hasDot) html += `<div class="gm-dot"></div>`;
@@ -998,12 +1030,12 @@ LastModified: ${document.lastModified}
                     b.addEventListener('dragleave', function () {
                         this.classList.remove('gm-drag-over');
                     });
-                     b.addEventListener('drop', function (e) {
+                    b.addEventListener('drop', function (e) {
                         e.stopPropagation();
-                        
+
                         // 判断是否在同一个父容器内（同分类）
                         if (dragSrcEl !== this && dragSrcEl.parentNode === this.parentNode) {
-                            
+
                             // 1. DOM 操作：交换位置
                             this.parentNode.insertBefore(dragSrcEl, this);
 
@@ -1025,12 +1057,12 @@ LastModified: ${document.lastModified}
                 });
                 contentScroll.appendChild(grid);
             }
-            
+
             if (contentScroll.children.length === 0 && searchVal) {
-                 const empty = document.createElement('div');
-                 empty.style.cssText = "text-align:center; color:#999; margin-top:20px; font-size:13px;";
-                 empty.innerText = "未找到相关功能";
-                 contentScroll.appendChild(empty);
+                const empty = document.createElement('div');
+                empty.style.cssText = "text-align:center; color:#999; margin-top:20px; font-size:13px;";
+                empty.innerText = "未找到相关功能";
+                contentScroll.appendChild(empty);
             }
         }
 
@@ -1068,21 +1100,21 @@ LastModified: ${document.lastModified}
             if (hasMoved) { GM_setValue('pos_top', btn.style.top); GM_setValue('pos_left', btn.style.left); }
         });
 
-         btn.addEventListener('click', (e) => { 
+        btn.addEventListener('click', (e) => {
             // 1. 阻止默认行为和冒泡，防止触发页面其他点击事件
             e.preventDefault();
             e.stopPropagation();
 
             // 只有在没有拖动的情况下才视为“点击”
             if (!hasMoved) {
-                togglePanel(); 
-                
+                togglePanel();
+
                 // === 自动聚焦逻辑 ===
                 // 使用 setTimeout 是为了等待面板从 display:none 变为可见
                 setTimeout(() => {
                     const input = document.getElementById('gm-search-input');
                     const panel = document.getElementById('gm-toolbox-panel');
-                    
+
                     // 获取当前页面选中的文本
                     const selection = window.getSelection().toString();
 
@@ -1090,8 +1122,8 @@ LastModified: ${document.lastModified}
                     // 1. 面板必须是显示状态 (含有 .show 类)
                     // 2. 页面上【没有】选中文本 (!selection)
                     //    原因：如果页面有选中文本，自动 focus 会导致选中文本丢失，无法使用"搜索选中"功能
-                    if(panel.classList.contains('show') && !selection) {
-                       input.focus(); 
+                    if (panel.classList.contains('show') && !selection) {
+                        input.focus();
                     }
                 }, 50); // 50ms 延时足够让 CSS transition 开始生效
             }
@@ -1101,8 +1133,8 @@ LastModified: ${document.lastModified}
         btn.addEventListener('mousedown', (e) => {
             if (e.button !== 0) return;
             // 这一行非常重要：阻止鼠标按下时浏览器默认清除选区的行为
-            e.preventDefault(); 
-            
+            e.preventDefault();
+
             isDragging = true; hasMoved = false;
             startX = e.clientX; startY = e.clientY;
             const rect = btn.getBoundingClientRect();
@@ -1129,12 +1161,12 @@ LastModified: ${document.lastModified}
                 if (left + panelWidth > window.innerWidth) left = btnRect.left - panelWidth - 15;
                 if (top + panelHeight > window.innerHeight) top = window.innerHeight - panelHeight - 20;
                 if (top < 10) top = 10;
-                
+
                 panel.style.left = left + 'px';
                 panel.style.top = top + 'px';
                 panel.style.height = panelHeight + 'px';
                 panel.style.display = 'flex';
-                
+
                 requestAnimationFrame(() => panel.classList.add('show'));
             } else {
                 panel.classList.remove('show');
