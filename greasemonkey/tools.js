@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         全局工具箱
 // @namespace    http://iapp.run
-// @version      2.1.1
+// @version      2.2.0
 // @description  全能网页工具箱：解除复制限制 + 全页翻译 + 聚合搜索；浏览器必备效率神器！一键解决网页痛点：支持解除右键/复制限制、沉浸式翻译、图片提取、二维码生成与夜间模式。内置强大的自定义搜索面板（支持 JSON 配置与自动抓取 Favicon），现代化暗色 UI，轻量拖拽，即装即用。
 // @author       zero-ljz
 // @homepage     https://github.com/zero-ljz/scripts/blob/main/greasemonkey/tools.js
@@ -22,6 +22,90 @@
 (function () {
     "use strict";
 
+    // --- 0. 核心修复：Trusted Types (针对 innerHTML 限制) ---
+    if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        try {
+            window.trustedTypes.createPolicy('default', {
+                createHTML: string => string,
+                createScript: string => string,
+                createScriptURL: string => string,
+            });
+        } catch (e) {
+            // 忽略策略已存在的错误
+        }
+    }
+
+    // 辅助：安全设置 HTML
+    const setHTML = (el, html) => {
+        if (!el) return;
+        el.innerHTML = html;
+    };
+
+    // 默认的搜索增强列表
+    // 占位符说明: %s = 选中的文本/输入内容, %host% = 当前网站域名, %url% = 当前页面URL
+    const DEFAULT_SEARCH_ENGINES = [
+        { name: "谷歌搜索", icon: "", url: "https://www.google.com/search?q=%s" },
+        { name: "百度搜索", icon: "", url: "https://www.baidu.com/s?wd=%s" },
+        { name: "搜中文(谷歌)", icon: "", url: "https://www.google.com/search?lr=lang_zh-CN&q=%s" },
+        { name: "站内搜索(谷歌)", icon: "", url: "https://www.google.com/search?q=site:%host%+%22%s%22" },
+        { name: "维基百科", icon: "", url: "https://zh.wikipedia.org/wiki/%s" },
+        { name: "GitHub", icon: "", url: "https://github.com/search?q=%s" },
+        { name: "有道词典", icon: "", url: "http://dict.youdao.com/w/eng/%s" },
+        {
+            "name": "页面快照(谷歌)",
+            "icon": "",
+            "url": "http://www.google.com/search?q=cache:%url%"
+        },
+        {
+            "name": "网页时光机",
+            "icon": "",
+            "url": "http://web.archive.org/%url%"
+        },
+        {
+            "name": "翻译页面(谷歌)",
+            "icon": "",
+            "url": "https://translate.google.com/translate?sl=auto&tl=zh-CN&u=%url%"
+        }
+    ];
+
+    // 配置系统 (GM_config) ---
+    const DEFAULT_CONFIG = {
+        btn_text: "⚡️",
+        init_pos_top: "15%",
+        init_pos_left: "10px",
+        // 将默认数组转为格式化的JSON字符串
+        custom_search_json: JSON.stringify(DEFAULT_SEARCH_ENGINES, null, 4)
+    };
+
+    const gmc = new GM_config({
+        id: "ToolboxConfig",
+        title: "工具箱设置",
+        fields: {
+            btn_text: { label: "按钮图标/文字", type: "text", default: DEFAULT_CONFIG.btn_text },
+            show_button: { label: "显示悬浮球", type: "checkbox", default: true },
+            // 新增：自定义搜索配置
+            custom_search_json: {
+                label: "自定义搜索列表 (JSON格式)",
+                type: "textarea",
+                default: DEFAULT_CONFIG.custom_search_json,
+                css: "height: 300px; width: 100%; font-family: monospace; font-size: 12px;" // 样式优化
+            }
+        },
+        events: {
+            save: () => {
+                gmc.close();
+                updateButtonState();
+                // 配置保存后刷新页面以应用新的搜索列表，或者重新渲染面板(稍微复杂点，刷新最简单)
+                if (confirm("设置已保存。是否刷新页面以应用新的搜索列表？")) {
+                    location.reload();
+                }
+            }
+        }
+    });
+
+    // [核心修复] 必须显式初始化，否则 get() 会报错
+    gmc.init();
+    
     // 运行时状态
     const STATE = {
         isDarkMode: false,
@@ -54,7 +138,7 @@
             if (typeof content === 'string') {
                 setHTML(contentBox, content);
             } else if (content instanceof Node) {
-                contentBox.innerHTML = ''; // 清空
+                contentBox.replaceChildren(); // 清空
                 contentBox.appendChild(content);
             }
 
@@ -70,35 +154,6 @@
             }
         }
     };
-
-    // 默认的搜索增强列表
-    // 占位符说明: %s = 选中的文本/输入内容, %host% = 当前网站域名, %url% = 当前页面URL
-    const DEFAULT_SEARCH_ENGINES = [
-        { name: "谷歌搜索", icon: "", url: "https://www.google.com/search?q=%s" },
-        { name: "百度搜索", icon: "", url: "https://www.baidu.com/s?wd=%s" },
-        { name: "搜中文(谷歌)", icon: "", url: "https://www.google.com/search?lr=lang_zh-CN&q=%s" },
-        { name: "站内搜索(谷歌)", icon: "", url: "https://www.google.com/search?q=site:%host%+%22%s%22" },
-        { name: "维基百科", icon: "", url: "https://zh.wikipedia.org/wiki/%s" },
-        { name: "GitHub", icon: "", url: "https://github.com/search?q=%s" },
-        { name: "有道词典", icon: "", url: "http://dict.youdao.com/w/eng/%s" },
-        {
-            "name": "页面快照(谷歌)",
-            "icon": "",
-            "url": "http://www.google.com/search?q=cache:%url%"
-        },
-        {
-            "name": "网页时光机",
-            "icon": "",
-            "url": "http://web.archive.org/%url%"
-        },
-        {
-            "name": "翻译页面(谷歌)",
-            "icon": "",
-            "url": "https://translate.google.com/translate?sl=auto&tl=zh-CN&u=%url%"
-        }
-    ];
-
-    
 
 
     // --- 辅助：构建搜索功能的函数 (自动图标版) ---
@@ -212,7 +267,7 @@
                             }, function (error) {
                                 if (error) {
                                     console.error(error);
-                                    codeContainer.innerHTML = `<span style="color:red">生成失败: ${error.message}</span>`;
+                                    codeContainer.replaceChildren(`<span style="color:red">生成失败: ${error.message}</span>`);
                                 }
                             });
                         } else {
@@ -336,7 +391,7 @@
 
         ],
 
-        "搜索增强": buildSearchTools().concat([]),
+        "搜索增强": [],
 
         "其他工具": [
             {
@@ -346,7 +401,7 @@
                     const events = ["copy", "cut", "contextmenu", "selectstart", "mousedown", "mouseup", "mousemove", "keydown", "keypress", "keyup"];
                     events.forEach(e => document.documentElement.addEventListener(e, evt => { evt.stopPropagation(); }, { capture: true }));
                     const style = document.createElement('style');
-                    style.innerHTML = `* { user-select: text !important; -webkit-user-select: text !important; }`;
+                    style.replaceChildren(`* { user-select: text !important; -webkit-user-select: text !important; }`);
                     document.body.appendChild(style);
                     Utils.toast("🔓 已尝试解除右键和复制限制");
                 }
@@ -398,7 +453,7 @@
                     if (!style) {
                         style = document.createElement('style');
                         style.id = 'gm-dark-mode-style';
-                        style.innerHTML = `html { filter: invert(1) hue-rotate(180deg) !important; } img, video, iframe { filter: invert(1) hue-rotate(180deg) !important; }`;
+                        style.replaceChildren(`html { filter: invert(1) hue-rotate(180deg) !important; } img, video, iframe { filter: invert(1) hue-rotate(180deg) !important; }`);
                         document.head.appendChild(style);
                         style.disabled = true;
                     }
@@ -489,45 +544,6 @@ LastModified: ${document.lastModified}
 
 
 
-    // 配置系统 (GM_config) ---
-    const DEFAULT_CONFIG = {
-        btn_text: "🛠️",
-        init_pos_top: "15%",
-        init_pos_left: "10px",
-        // 将默认数组转为格式化的JSON字符串
-        custom_search_json: JSON.stringify(DEFAULT_SEARCH_ENGINES, null, 4)
-    };
-
-    const gmc = new GM_config({
-        id: "ToolboxConfig",
-        title: "工具箱设置",
-        fields: {
-            btn_text: { label: "按钮图标/文字", type: "text", default: DEFAULT_CONFIG.btn_text },
-            show_button: { label: "显示悬浮球", type: "checkbox", default: true },
-            // 新增：自定义搜索配置
-            custom_search_json: {
-                label: "自定义搜索列表 (JSON格式)",
-                type: "textarea",
-                default: DEFAULT_CONFIG.custom_search_json,
-                css: "height: 300px; width: 100%; font-family: monospace; font-size: 12px;" // 样式优化
-            }
-        },
-        events: {
-            save: () => {
-                gmc.close();
-                updateButtonState();
-                // 配置保存后刷新页面以应用新的搜索列表，或者重新渲染面板(稍微复杂点，刷新最简单)
-                if (confirm("设置已保存。是否刷新页面以应用新的搜索列表？")) {
-                    location.reload();
-                }
-            }
-        }
-    });
-
-
-
-
-
     //Config
     const CONSTANTS = {
         Z_INDEX: 2147483647,
@@ -588,10 +604,10 @@ LastModified: ${document.lastModified}
         /* 主菜单面板 */
         #gm-toolbox-panel {
             position: fixed;
-            display: none;
+            display: none; /* 配合 JS 的 toggle 逻辑 */
             width: 340px !important;
             max-height: 80vh !important;
-            overflow: hidden !important; /* 外部不可滚动，由内部 content-scroll 滚动 */
+            overflow: hidden !important;
             background: ${CONSTANTS.GLASS_BG_DARK};
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
@@ -601,14 +617,35 @@ LastModified: ${document.lastModified}
             padding: 16px !important;
             color: #fff !important;
             border: 1px solid rgba(255,255,255,0.08) !important;
+            
+            /* === 核心修复：隐藏状态 === */
             opacity: 0;
             transform: scale(0.95);
-            transition: opacity ${CONSTANTS.ANIMATION_SPEED}, transform ${CONSTANTS.ANIMATION_SPEED};
+            
+            /* 1. 禁止鼠标穿透：确保看不见的时候点不到 */
+            pointer-events: none !important; 
+            
+            /* 2. 移除可见性：确保不会触发 hover 和 tooltip */
+            visibility: hidden !important;   
+            /* ========================= */
+
+            transition: opacity ${CONSTANTS.ANIMATION_SPEED}, transform ${CONSTANTS.ANIMATION_SPEED}, visibility ${CONSTANTS.ANIMATION_SPEED};
             text-align: left !important;
-            display: flex;
             flex-direction: column;
         }
-        #gm-toolbox-panel.show { opacity: 1; transform: scale(1); }
+
+        /* 显示状态 */
+        #gm-toolbox-panel.show { 
+            opacity: 1; 
+            transform: scale(1); 
+            
+            /* === 核心修复：显示状态 === */
+            /* 恢复鼠标交互 */
+            pointer-events: auto !important; 
+            /* 恢复可见性 */
+            visibility: visible !important;
+            /* ========================= */
+        }
 
         #gm-search-wrapper {
             margin-bottom: 12px !important;
@@ -776,12 +813,6 @@ LastModified: ${document.lastModified}
     `);
 
 
-    // --- 0. Trusted Types 策略 ---
-    const policy = window.trustedTypes?.createPolicy?.('gm-toolbox-policy', {
-        createHTML: (string) => string,
-    }) || { createHTML: (string) => string };
-    const setHTML = (element, html) => { element.innerHTML = policy.createHTML(html); };
-
     // --- 2. 存储与辅助函数 ---
     
     // 收藏管理
@@ -859,7 +890,10 @@ LastModified: ${document.lastModified}
         let dragSrcEl = null;
 
         function renderToolList() {
-            contentScroll.innerHTML = '';
+            contentScroll.replaceChildren(); // 清空内容区域
+
+            TOOLS["搜索增强"] = buildSearchTools();
+
             const savedOrderMap = getSavedOrder();
             const favorites = getFavorites();
             const searchVal = panel.querySelector('#gm-search-input').value.toLowerCase().trim();
@@ -867,13 +901,21 @@ LastModified: ${document.lastModified}
             let categoriesToRender = {};
             
             // 收藏置顶逻辑
+            // 1. 收藏置顶逻辑 (修改版：支持排序)
             if (favorites.length > 0 && !searchVal) { 
                 let favTools = [];
-                Object.values(TOOLS).forEach(toolList => {
-                    toolList.forEach(tool => {
-                        if (favorites.includes(tool.name)) favTools.push({ ...tool, isFavItem: true }); 
-                    });
+                // 核心修改：遍历“收藏列表”而不是遍历“所有工具”，这样才能保证渲染顺序与存储顺序一致
+                favorites.forEach(favName => {
+                    // 在所有工具中查找对应的工具对象
+                    for (const toolList of Object.values(TOOLS)) {
+                        const foundTool = toolList.find(t => t.name === favName);
+                        if (foundTool) {
+                            favTools.push({ ...foundTool, isFavItem: true });
+                            break; // 找到了就跳出当前分类循环
+                        }
+                    }
                 });
+                
                 if (favTools.length > 0) categoriesToRender['⭐ 收藏置顶'] = favTools;
             }
 
@@ -956,11 +998,25 @@ LastModified: ${document.lastModified}
                     b.addEventListener('dragleave', function () {
                         this.classList.remove('gm-drag-over');
                     });
-                    b.addEventListener('drop', function (e) {
+                     b.addEventListener('drop', function (e) {
                         e.stopPropagation();
-                        if (dragSrcEl !== this && dragSrcEl.parentNode === this.parentNode && category !== '⭐ 收藏置顶') {
+                        
+                        // 判断是否在同一个父容器内（同分类）
+                        if (dragSrcEl !== this && dragSrcEl.parentNode === this.parentNode) {
+                            
+                            // 1. DOM 操作：交换位置
                             this.parentNode.insertBefore(dragSrcEl, this);
-                            saveCategoryOrder(category, this.parentNode);
+
+                            // 2. 数据保存逻辑
+                            if (category === '⭐ 收藏置顶') {
+                                // === 核心修改：如果是收藏夹，直接更新收藏列表数据 ===
+                                const newFavOrder = Array.from(this.parentNode.children).map(btn => btn.dataset.name);
+                                GM_setValue(FAV_KEY, newFavOrder);
+                                Utils.toast('收藏排序已更新');
+                            } else {
+                                // 普通分类，走原来的保存逻辑
+                                saveCategoryOrder(category, this.parentNode);
+                            }
                         }
                         return false;
                     });
@@ -1012,24 +1068,32 @@ LastModified: ${document.lastModified}
             if (hasMoved) { GM_setValue('pos_top', btn.style.top); GM_setValue('pos_left', btn.style.left); }
         });
 
-        // === 修复的核心部分：点击悬浮球 ===
-        btn.addEventListener('click', (e) => { 
-            // 阻止点击事件冒泡和默认行为，防止浏览器误判为点击了页面背景
+         btn.addEventListener('click', (e) => { 
+            // 1. 阻止默认行为和冒泡，防止触发页面其他点击事件
             e.preventDefault();
             e.stopPropagation();
 
+            // 只有在没有拖动的情况下才视为“点击”
             if (!hasMoved) {
                 togglePanel(); 
                 
-                // === 关键修复逻辑 ===
-                // 获取当前页面选中的文本
-                const selection = window.getSelection().toString();
+                // === 自动聚焦逻辑 ===
+                // 使用 setTimeout 是为了等待面板从 display:none 变为可见
+                setTimeout(() => {
+                    const input = document.getElementById('gm-search-input');
+                    const panel = document.getElementById('gm-toolbox-panel');
+                    
+                    // 获取当前页面选中的文本
+                    const selection = window.getSelection().toString();
 
-                // 只有在【面板刚刚打开】且【页面上没有选中文本】时，才自动聚焦搜索框
-                // 这样既保留了快捷搜索的体验，又不影响对选中文本的操作
-                if(panel.classList.contains('show') && !selection) {
-                   setTimeout(() => searchInput.focus(), 100); 
-                }
+                    // 逻辑判断：
+                    // 1. 面板必须是显示状态 (含有 .show 类)
+                    // 2. 页面上【没有】选中文本 (!selection)
+                    //    原因：如果页面有选中文本，自动 focus 会导致选中文本丢失，无法使用"搜索选中"功能
+                    if(panel.classList.contains('show') && !selection) {
+                       input.focus(); 
+                    }
+                }, 50); // 50ms 延时足够让 CSS transition 开始生效
             }
         });
 
@@ -1086,7 +1150,7 @@ LastModified: ${document.lastModified}
     function updateButtonState() {
         let btn = document.getElementById('gm-float-btn');
         if (!btn) return;
-        btn.innerHTML = gmc.get('btn_text');
+        btn.replaceChildren(gmc.get('btn_text'));
         if (gmc.get('show_button')) {
             btn.style.setProperty('display', 'flex', 'important');
         } else {
@@ -1132,8 +1196,10 @@ LastModified: ${document.lastModified}
         Utils.toast("排序已重置，请刷新页面");
     });
 
+
     // --- 启动脚本 ---
     // 延迟加载，确保页面主体渲染完成，减少冲突
-    setTimeout(createUI, 300);
-
+    (function main() {
+        setTimeout(createUI, 300);
+    })();
 })();
