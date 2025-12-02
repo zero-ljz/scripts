@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         全局工具箱
 // @namespace    http://iapp.run
-// @version      2.0.0
-// @description  全能网页工具箱：翻译、搜索、去除限制、提取图片、夜间模式等。支持悬浮球拖拽与现代化UI。
+// @version      2.1.0
+// @description  全能网页工具箱：解除复制限制 + 全页翻译 + 聚合搜索；浏览器必备效率神器！一键解决网页痛点：支持解除右键/复制限制、沉浸式翻译、图片提取、二维码生成与夜间模式。内置强大的自定义搜索面板（支持 JSON 配置与自动抓取 Favicon），现代化暗色 UI，轻量拖拽，即装即用。
 // @author       zero-ljz
 // @homepage     https://github.com/zero-ljz/scripts/blob/main/greasemonkey/tools.js
 // @match        *://*/*
@@ -22,213 +22,12 @@
 (function () {
     "use strict";
 
-    // --- 0. Trusted Types 策略 (修复 Strict CSP 报错) ---
-    const policy = window.trustedTypes?.createPolicy?.('gm-toolbox-policy', {
-        createHTML: (string) => string,
-    }) || { createHTML: (string) => string };
-
-    // 封装一个安全的 innerHTML 赋值函数
-    const setHTML = (element, html) => {
-        element.innerHTML = policy.createHTML(html);
-    };
-
-
-    //Config
-    const CONSTANTS = {
-        Z_INDEX: 2147483647,
-        THEME_COLOR: '#007AFF', // iOS Blue
-        GLASS_BG: 'rgba(255, 255, 255, 0.75)',
-        GLASS_BG_DARK: 'rgba(30, 30, 30, 0.85)',
-        ANIMATION_SPEED: '0.25s'
-    };
-
     // 运行时状态
     const STATE = {
         isDarkMode: false,
         isEyeProtect: false
     };
 
-    // --- 1. 样式系统 (CSS) ---
-    GM_addStyle(`
-        /* === 样式隔离与重置 (核心修复) === */
-        /* 强制重置面板内所有元素的盒模型和基础属性 */
-        #gm-toolbox-panel, #gm-toolbox-panel * {
-            box-sizing: border-box !important;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, sans-serif !important;
-            line-height: 1.5 !important;
-        }
-
-        /* 悬浮球 */
-        #gm-float-btn {
-            position: fixed;
-            width: 44px !important;
-            height: 44px !important;
-            border-radius: 50% !important;
-            background: ${CONSTANTS.GLASS_BG_DARK};
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: ${CONSTANTS.Z_INDEX};
-            cursor: move;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            color: white !important;
-            font-size: 20px !important;
-            user-select: none;
-            transition: transform 0.1s, background ${CONSTANTS.ANIMATION_SPEED};
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            box-sizing: border-box !important;
-        }
-        #gm-float-btn:hover { transform: scale(1.1); background: #000; }
-        #gm-float-btn:active { transform: scale(0.95); }
-
-        /* 主菜单面板 */
-        #gm-toolbox-panel {
-            position: fixed;
-            display: none;
-            width: 340px !important;
-            max-height: 80vh !important;
-            overflow-y: auto !important;
-            background: ${CONSTANTS.GLASS_BG_DARK};
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 16px !important;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
-            z-index: ${CONSTANTS.Z_INDEX};
-            padding: 16px !important;
-            color: #fff !important;
-            border: 1px solid rgba(255,255,255,0.08) !important;
-            opacity: 0;
-            transform: scale(0.95);
-            transition: opacity ${CONSTANTS.ANIMATION_SPEED}, transform ${CONSTANTS.ANIMATION_SPEED};
-            /* 强制重置文本对齐 */
-            text-align: left !important;
-            letter-spacing: normal !important;
-        }
-        #gm-toolbox-panel.show { opacity: 1; transform: scale(1); }
-
-        /* 滚动条隐藏但可滚动 */
-        #gm-toolbox-panel::-webkit-scrollbar { width: 4px; }
-        #gm-toolbox-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
-
-        /* 分类标题 */
-        .gm-category-title {
-            font-size: 12px !important;
-            color: rgba(255,255,255,0.5) !important;
-            margin: 12px 0 8px 4px !important;
-            padding: 0 !important;
-            font-weight: 700 !important;
-            text-transform: uppercase;
-            letter-spacing: 1px !important;
-            line-height: 1.2 !important;
-            border: none !important;
-        }
-        .gm-category-title:first-child { margin-top: 0 !important; }
-
-        /* 网格布局 */
-        .gm-grid {
-            display: grid !important;
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 8px !important;
-            border: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        /* 功能按钮 - 深度重置 */
-        .gm-tool-btn {
-            background: rgba(255,255,255,0.05) !important;
-            border: none !important;
-            color: #eee !important;
-            padding: 10px 12px !important;
-            margin: 0 !important; /* 核心：防止网页给button加margin */
-            width: 100% !important; /* 核心：强制填满网格 */
-            height: auto !important;
-            min-height: 40px !important; /* 核心：防止高度塌陷 */
-            border-radius: 8px !important;
-            cursor: pointer;
-            font-size: 13px !important;
-            text-align: left !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: flex-start !important;
-            transition: all 0.2s;
-            user-select: none;
-            outline: none !important;
-            box-shadow: none !important;
-            /* 覆盖可能存在的伪元素 */
-            position: relative !important;
-            text-shadow: none !important;
-        }
-        .gm-tool-btn:hover { background: ${CONSTANTS.THEME_COLOR} !important; color: #fff !important; transform: translateY(-1px); }
-        .gm-tool-btn .icon {
-            margin-right: 8px !important;
-            font-size: 16px !important;
-            line-height: 1 !important;
-            display: inline-block !important;
-            width: auto !important;
-            font-weight: normal !important;
-        }
-
-         /* 开关指示点 */
-        .gm-dot {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: #ccc; margin-left: auto;
-        }
-        .gm-tool-btn.active .gm-dot { background: #34C759; box-shadow: 0 0 5px #34C759; }
-
-        /* Toast 提示框 */
-        #gm-toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100%);
-            background: rgba(0,0,0,0.85);
-            color: #fff;
-            padding: 10px 20px !important;
-            border-radius: 50px !important;
-            z-index: ${CONSTANTS.Z_INDEX + 10};
-            font-size: 14px !important;
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-            pointer-events: none;
-            backdrop-filter: blur(5px);
-            white-space: pre-wrap;
-            text-align: center;
-            max-width: 80vw;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-        }
-        #gm-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-        /* 结果展示弹窗 */
-        #gm-result-modal {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 500px !important;
-            max-width: 90vw !important;
-            background: #fff !important;
-            color: #333 !important;
-            border-radius: 12px !important;
-            padding: 20px !important;
-            z-index: ${CONSTANTS.Z_INDEX + 20};
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important;
-            display: none;
-            flex-direction: column !important;
-            text-align: left !important;
-        }
-        #gm-result-header { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 15px !important; border-bottom: 1px solid #eee !important; padding-bottom: 10px !important; }
-        #gm-result-title { font-weight: bold !important; font-size: 16px !important; color: #000 !important; }
-        #gm-result-close { cursor: pointer; padding: 5px; font-weight: bold; color: #999; font-family: sans-serif !important; }
-        #gm-result-content { max-height: 60vh !important; overflow-y: auto !important; white-space: pre-wrap !important; font-family: monospace !important; line-height: 1.5 !important; font-size: 14px !important; background: #f9f9f9 !important; padding: 10px !important; border-radius: 6px !important; color: #333 !important; border: 1px solid #eee !important; }
-        #gm-result-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: ${CONSTANTS.Z_INDEX + 15}; display: none; backdrop-filter: blur(2px); }
-    `);
-
-    // --- 2. 辅助函数 (Utils) - 已修复 TrustedHTML 问题 ---
     const Utils = {
         getSelection: () => {
             const text = window.getSelection().toString().trim();
@@ -271,6 +70,92 @@
             }
         }
     };
+
+    // 默认的搜索增强列表
+    // 占位符说明: %s = 选中的文本/输入内容, %host% = 当前网站域名, %url% = 当前页面URL
+    const DEFAULT_SEARCH_ENGINES = [
+        { name: "谷歌搜索", icon: "", url: "https://www.google.com/search?q=%s" },
+        { name: "百度搜索", icon: "", url: "https://www.baidu.com/s?wd=%s" },
+        { name: "搜中文(谷歌)", icon: "", url: "https://www.google.com/search?lr=lang_zh-CN&q=%s" },
+        { name: "站内搜索(谷歌)", icon: "", url: "https://www.google.com/search?q=site:%host%+%22%s%22" },
+        { name: "维基百科", icon: "", url: "https://zh.wikipedia.org/wiki/%s" },
+        { name: "GitHub", icon: "", url: "https://github.com/search?q=%s" },
+        { name: "有道词典", icon: "", url: "http://dict.youdao.com/w/eng/%s" },
+        {
+            "name": "页面快照(谷歌)",
+            "icon": "",
+            "url": "http://www.google.com/search?q=cache:%url%"
+        },
+        {
+            "name": "网页时光机",
+            "icon": "",
+            "url": "http://web.archive.org/%url%"
+        },
+        {
+            "name": "翻译页面(谷歌)",
+            "icon": "",
+            "url": "https://translate.google.com/translate?sl=auto&tl=zh-CN&u=%url%"
+        }
+    ];
+
+    
+
+
+    // --- 辅助：构建搜索功能的函数 (自动图标版) ---
+    const buildSearchTools = () => {
+        let searchData = [];
+        try {
+            const jsonStr = gmc.get('custom_search_json');
+            searchData = JSON.parse(jsonStr);
+        } catch (e) {
+            console.error("配置解析失败", e);
+            searchData = DEFAULT_SEARCH_ENGINES;
+        }
+
+        return searchData.map(item => {
+            // --- 核心逻辑：自动获取图标 ---
+            let iconHtml = item.icon; // 默认用配置里的图标
+
+            // 如果配置里 icon 为空，或者用户想强制用自动图标，则计算
+            if (!iconHtml || iconHtml.trim() === "") {
+                try {
+                    // 1. 简单的占位符替换，防止 URL 解析报错
+                    const cleanUrl = item.url.replace(/%s|%url%|%host%/g, 'example.com');
+                    // 2. 提取主机名 (例如 www.google.com)
+                    const hostname = new URL(cleanUrl).hostname;
+                    // 3. 拼接 Google API (sz=32 获取高清一点的)
+                    const faviconUrl = `https://p.520999.xyz/https://www.google.com/s2/favicons?sz=32&domain=${hostname}`;
+                    // 4. 生成 img 标签
+                    iconHtml = `<img src="${faviconUrl}" onerror="this.style.display='none'">`;
+                } catch (e) {
+                    iconHtml = "🔗"; // 解析失败的回退图标
+                }
+            }
+            // ---------------------------
+
+            return {
+                name: item.name,
+                // 这里我们稍微 hack 一下，因为原始逻辑是把 icon 当字符串拼进去的
+                // 这里的 icon 属性现在可能包含 HTML 标签
+                icon: iconHtml,
+                action: () => {
+                    let targetUrl = item.url;
+                    targetUrl = targetUrl.replace(/%host%/g, location.hostname);
+                    targetUrl = targetUrl.replace(/%url%/g, encodeURIComponent(location.href));
+
+                    if (targetUrl.includes('%s')) {
+                        const q = Utils.getSelection() || Utils.prompt(`请输入 [${item.name}] 内容：`);
+                        if (!q) return;
+                        targetUrl = targetUrl.replace(/%s/g, encodeURIComponent(q));
+                    }
+
+                    window.open(targetUrl);
+                }
+
+            };
+        });
+    };
+
 
     // --- 3. 功能定义 (保留所有原有功能) ---
     // 为了更好的UI，我们给功能加了图标和分类
@@ -358,14 +243,10 @@
                 name: "翻译整页", icon: "🔄",
                 action: () => {
                     Utils.toast("⏳ 开始分析并翻译页面，这可能需要一点时间...");
-
-                    // 1. 提取自你提供代码的核心 Google API 逻辑
-                    // 使用 GM_xmlhttpRequest 绕过浏览器的 COEP 安全策略
                     const googleTranslateAPI = (text) => {
                         return new Promise((resolve, reject) => {
                             GM_xmlhttpRequest({
                                 method: "GET",
-                                // 这是你代码中 _Google 类使用的接口 (GTX)
                                 url: "https://translate.googleapis.com/translate_a/single?" + new URLSearchParams({
                                     client: "gtx",
                                     dt: "t",
@@ -373,7 +254,7 @@
                                     tl: "zh-CN", // 目标语言中文
                                     q: text
                                 }).toString(),
-                                onload: function(response) {
+                                onload: function (response) {
                                     try {
                                         const data = JSON.parse(response.responseText);
                                         // 解析逻辑参考了你的代码：result.data[0].map...
@@ -391,17 +272,12 @@
                             });
                         });
                     };
-
-                    // 2. DOM 遍历与批量翻译核心
-                    // 这是一个简化的 DOM 遍历器，只翻译可见的文本节点
                     async function translatePage() {
-                        // 获取所有非空、可见的文本节点
                         const walker = document.createTreeWalker(
                             document.body,
                             NodeFilter.SHOW_TEXT,
                             {
-                                acceptNode: function(node) {
-                                    // 过滤掉脚本、样式、空文本
+                                acceptNode: function (node) {
                                     const tag = node.parentElement.tagName;
                                     if (["SCRIPT", "STYLE", "NOSCRIPT", "CODE", "PRE"].includes(tag)) return NodeFilter.FILTER_REJECT;
                                     if (node.textContent.trim().length === 0) return NodeFilter.FILTER_REJECT;
@@ -434,7 +310,7 @@
                                         if (translated && translated !== originalText) {
                                             textNode.textContent = translated;
                                             // 标记一下颜色，让人知道这里被翻译了
-                                            if(textNode.parentElement) textNode.parentElement.style.backgroundColor = "rgba(255, 255, 0, 0.1)";
+                                            if (textNode.parentElement) textNode.parentElement.style.backgroundColor = "rgba(255, 255, 0, 0.1)";
                                         }
                                     }
                                 } catch (e) {
@@ -457,89 +333,12 @@
                     translatePage();
                 }
             },
-            
-           
+
         ],
-        "搜索增强": [
-            {
-                name: "谷歌搜索", icon: "🔍",
-                action: () => {
-                    let q = Utils.getSelection() || Utils.prompt("请输入搜索内容：");
-                    if (q) window.open("https://www.google.com/search?q=" + encodeURIComponent(q).replace(/ /g, "+"));
-                }
-            },
-            {
-                name: "谷歌搜中文", icon: "🇨🇳",
-                action: () => {
-                    let q = Utils.getSelection() || Utils.prompt("搜中文：");
-                    if (q) window.open("https://www.google.com/search?lr=lang_zh-CN&q=" + encodeURIComponent(q).replace(/ /g, "+"));
-                }
-            },
-            {
-                name: "谷歌搜本站", icon: "🏢",
-                action: () => {
-                    let q = Utils.getSelection() || Utils.prompt("站内搜：");
-                    if (q) location.href = "http://www.google.com/search?num=100&q=site:" + encodeURIComponent(location.hostname) + ' "' + encodeURIComponent(q.replace(/\"/g, "")) + '"';
-                }
-            },
-            {
-                name: "维基百科", icon: "📖",
-                action: () => {
-                    let q = Utils.getSelection() || Utils.prompt("搜维基：");
-                    if (q) window.open("https://zh.wikipedia.org/wiki/" + encodeURIComponent(q));
-                }
-            },
-            
-            {
-                name: "谷歌词典", icon: "📕",
-                action: () => {
-                    let q = Utils.getSelection() || Utils.prompt("查词：");
-                    if (q) window.open("https://www.google.com/search?q=define:" + encodeURIComponent(q), "new", "width=800,height=600");
-                }
-            },
-            {
-                name: "有道词典", icon: "📗",
-                action: () => {
-                    let q = Utils.getSelection() || Utils.prompt("查词：");
-                    if (q) window.open("http://dict.youdao.com/w/eng/" + encodeURIComponent(q), "new", "width=800,height=600");
-                }
-            }
-        ],
-        "网页与浏览": [
-            
-            {
-                name: "翻译页面(谷歌)", icon: "🇬",
-                action: () => location.href = "https://translate.google.com/translate?sl=auto&tl=zh-CN&u=" + encodeURIComponent(location.href)
-            },
-            {
-                name: "翻译页面(有道)", icon: "🇾",
-                action: () => location.href = "http://webtrans.yodao.com/webTransPc/index.html#/?from=auto&to=auto&type=1&url=" + encodeURIComponent(location.href)
-            },
-            {
-                name: "页面快照(Cache)", icon: "📸",
-                action: () => location.href = "http://www.google.com/search?q=cache:" + encodeURIComponent(document.location.href)
-            },
-            {
-                name: "网页时光机", icon: "🕰️",
-                action: () => location.href = "http://web.archive.org/" + encodeURIComponent(document.location.href)
-            },
-            {
-                name: "类似网站(Global)", icon: "🔗",
-                action: () => window.open("https://www.similarweb.com/zh-tw/website/" + window.location.host + "/competitors/")
-            },
-            {
-                name: "类似网站(Similar)", icon: "🔗",
-                action: () => {
-                    const domain = window.location.hostname.split(".").slice(-2).join(".");
-                    window.open("https://www.similarsites.com/site/" + domain);
-                }
-            },
-            {
-                name: "类似网站(SiteLike)", icon: "🔗",
-                action: () => window.open("https://www.sitelike.org/similar/" + window.location.host + "")
-            }
-        ],
-        "黑客与开发": [
+
+        "搜索增强": buildSearchTools().concat([]),
+
+        "其他工具": [
             {
                 name: "解除限制", icon: "🔓",
                 action: () => {
@@ -559,46 +358,7 @@
                     Utils.toast("👀 密码已明文显示");
                 }
             },
-            {
-                name: "图片提取", icon: "🖼️",
-                action: () => {
-                    const imgs = Array.from(document.querySelectorAll('img'))
-                        .map(img => ({ src: img.src || img.dataset.src, w: img.naturalWidth, h: img.naturalHeight }))
-                        .filter(i => i.src && i.w > 50 && i.h > 50); // 过滤小图
 
-                    if (imgs.length === 0) return Utils.toast("⚠️ 未找到有效图片");
-
-                    const div = document.createElement('div');
-                    div.className = 'gm-img-grid';
-                    imgs.forEach(img => {
-                        const item = document.createElement('div');
-                        item.className = 'gm-img-item';
-                        item.title = "点击复制链接，按住Ctrl点击下载";
-                        setHTML(item, `<img src="${img.src}"><div class="gm-img-size">${img.w}x${img.h}</div>`);
-
-                        item.onclick = (e) => {
-                            if (e.ctrlKey) {
-                                const a = document.createElement('a');
-                                a.href = img.src;
-                                a.download = 'image.png';
-                                a.click();
-                            } else {
-                                Utils.copy(img.src);
-                            }
-                        };
-                        div.appendChild(item);
-                    });
-
-                    const info = document.createElement('p');
-                    info.style.marginBottom = '10px';
-                    info.textContent = `共找到 ${imgs.length} 张图片 (点击复制URL / Ctrl+点击下载)`;
-
-                    const wrapper = document.createElement('div');
-                    wrapper.appendChild(info);
-                    wrapper.appendChild(div);
-                    Utils.modal("图片提取器", wrapper);
-                }
-            },
             {
                 name: "屏幕取色", icon: "🎨",
                 action: async () => {
@@ -609,7 +369,7 @@
                         Utils.copy(result.sRGBHex);
                         Utils.toast(`🎨 颜色 ${result.sRGBHex} 已复制`);
                     } catch (e) {
-                        if(!e.toString().includes('canceled')) Utils.toast("❌ 取色失败");
+                        if (!e.toString().includes('canceled')) Utils.toast("❌ 取色失败");
                     }
                 }
             },
@@ -687,7 +447,7 @@
                 action: () => {
                     let q = Utils.getSelection() || Utils.prompt("输入JavaScript代码：", "alert('Hello')");
                     if (q) {
-                        try { eval(q); } catch(e) { Utils.modal("Error", e); }
+                        try { eval(q); } catch (e) { Utils.modal("Error", e); }
                     }
                 }
             },
@@ -709,28 +469,6 @@ LastModified: ${document.lastModified}
         ]
     };
 
-    // --- 4. 配置系统 (GM_config) ---
-    // 保留配置项，但简化操作
-    const DEFAULT_CONFIG = {
-        btn_text: "🛠️",
-        init_pos_top: "15%",
-        init_pos_left: "10px"
-    };
-
-    const gmc = new GM_config({
-        id: "ToolboxConfig",
-        title: "工具箱设置",
-        fields: {
-            btn_text: { label: "按钮图标/文字", type: "text", default: DEFAULT_CONFIG.btn_text },
-            show_button: { label: "显示悬浮球", type: "checkbox", default: true }
-        },
-        events: {
-            save: () => {
-                gmc.close();
-                updateButtonState();
-            }
-        }
-    });
 
     // 额外的设置项：脚本设置
     TOOLS["常用工具"].unshift({
@@ -741,132 +479,545 @@ LastModified: ${document.lastModified}
         name: "隐藏按钮", icon: "🙈",
         action: () => {
             const btn = document.getElementById('gm-float-btn');
-            if(btn) {
-              btn.style.setProperty('display', 'none', 'important');
+            if (btn) {
+                btn.style.setProperty('display', 'none', 'important');
             }
             Utils.toast("按钮已隐藏，请在脚本管理器菜单重新开启或刷新页面");
         }
     });
 
+
+
+
+    // 配置系统 (GM_config) ---
+    const DEFAULT_CONFIG = {
+        btn_text: "🛠️",
+        init_pos_top: "15%",
+        init_pos_left: "10px",
+        // 将默认数组转为格式化的JSON字符串
+        custom_search_json: JSON.stringify(DEFAULT_SEARCH_ENGINES, null, 4)
+    };
+
+    const gmc = new GM_config({
+        id: "ToolboxConfig",
+        title: "工具箱设置",
+        fields: {
+            btn_text: { label: "按钮图标/文字", type: "text", default: DEFAULT_CONFIG.btn_text },
+            show_button: { label: "显示悬浮球", type: "checkbox", default: true },
+            // 新增：自定义搜索配置
+            custom_search_json: {
+                label: "自定义搜索列表 (JSON格式)",
+                type: "textarea",
+                default: DEFAULT_CONFIG.custom_search_json,
+                css: "height: 300px; width: 100%; font-family: monospace; font-size: 12px;" // 样式优化
+            }
+        },
+        events: {
+            save: () => {
+                gmc.close();
+                updateButtonState();
+                // 配置保存后刷新页面以应用新的搜索列表，或者重新渲染面板(稍微复杂点，刷新最简单)
+                if (confirm("设置已保存。是否刷新页面以应用新的搜索列表？")) {
+                    location.reload();
+                }
+            }
+        }
+    });
+
+
+
+
+
+    //Config
+    const CONSTANTS = {
+        Z_INDEX: 2147483647,
+        THEME_COLOR: '#007AFF', // iOS Blue
+        GLASS_BG: 'rgba(255, 255, 255, 0.75)',
+        GLASS_BG_DARK: 'rgba(30, 30, 30, 0.85)',
+        ANIMATION_SPEED: '0.25s'
+    };
+
+    // --- 1. 样式系统 (CSS) ---
+    GM_addStyle(`
+        /* === 样式隔离与重置 (核心修复：防止网页样式污染) === */
+        #gm-toolbox-panel, #gm-toolbox-panel * {
+            box-sizing: border-box !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            line-height: 1.5 !important;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* 强制重置面板内的图片和SVG，防止网页全局样式(如 max-width: 100%)导致图标变形 */
+        #gm-toolbox-panel img, #gm-toolbox-panel svg {
+            max-width: none !important;
+            max-height: none !important;
+            vertical-align: middle !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+        }
+
+        /* 悬浮球 (保持原样，微调) */
+        #gm-float-btn {
+            position: fixed;
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 50% !important;
+            background: ${CONSTANTS.GLASS_BG_DARK};
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: ${CONSTANTS.Z_INDEX};
+            cursor: move;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: white !important;
+            font-size: 20px !important;
+            user-select: none;
+            transition: transform 0.1s, background ${CONSTANTS.ANIMATION_SPEED};
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        #gm-float-btn:hover { transform: scale(1.1); background: #000; }
+        #gm-float-btn:active { transform: scale(0.95); }
+
+        /* 主菜单面板 */
+        #gm-toolbox-panel {
+            position: fixed;
+            display: none;
+            width: 340px !important;
+            max-height: 80vh !important;
+            overflow: hidden !important; /* 外部不可滚动，由内部 content-scroll 滚动 */
+            background: ${CONSTANTS.GLASS_BG_DARK};
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 16px !important;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4) !important;
+            z-index: ${CONSTANTS.Z_INDEX};
+            padding: 16px !important;
+            color: #fff !important;
+            border: 1px solid rgba(255,255,255,0.08) !important;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity ${CONSTANTS.ANIMATION_SPEED}, transform ${CONSTANTS.ANIMATION_SPEED};
+            text-align: left !important;
+            display: flex;
+            flex-direction: column;
+        }
+        #gm-toolbox-panel.show { opacity: 1; transform: scale(1); }
+
+        #gm-search-wrapper {
+            margin-bottom: 12px !important;
+            position: relative !important;
+            flex-shrink: 0;
+            width: 100% !important;
+            height: 36px !important; /* 固定高度，防止塌陷 */
+        }
+        #gm-search-input {
+            width: 100% !important;
+            height: 100% !important;
+            background: rgba(255,255,255,0.1) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            border-radius: 8px !important;
+            padding: 0 34px 0 10px !important; /* 右侧留出图标位置 */
+            color: #fff !important;
+            font-size: 14px !important;
+            outline: none !important;
+            transition: background 0.2s;
+            margin: 0 !important;
+            line-height: normal !important; /* 修复文字垂直对齐 */
+            appearance: none !important; /* 去除浏览器默认样式 */
+        }
+        #gm-search-input:focus { background: rgba(255,255,255,0.15) !important; border-color: ${CONSTANTS.THEME_COLOR} !important; }
+        
+        #gm-search-icon {
+            position: absolute !important;
+            right: 0 !important;
+            top: 0 !important;
+            width: 34px !important; /* 宽度与 input padding 对应 */
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: rgba(255,255,255,0.4) !important;
+            pointer-events: none;
+            font-size: 14px !important;
+            line-height: 1 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* 内容滚动区域 */
+        #gm-content-scroll {
+            overflow-y: auto !important;
+            flex-grow: 1;
+            padding-right: 2px;
+            /* 修复滚动条样式 */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.2) transparent;
+        }
+        #gm-content-scroll::-webkit-scrollbar { width: 4px; }
+        #gm-content-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        #gm-content-scroll::-webkit-scrollbar-track { background: transparent; }
+
+        /* 分类标题 */
+        .gm-category-title {
+            font-size: 12px !important;
+            color: rgba(255,255,255,0.5) !important;
+            margin: 14px 0 6px 4px !important;
+            padding: 0 !important;
+            font-weight: 700 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px !important;
+            line-height: 1.2 !important;
+        }
+        .gm-category-title:first-child { margin-top: 0 !important; }
+
+        /* 网格布局 */
+        .gm-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* 功能按钮 */
+        .gm-tool-btn {
+            background: rgba(255,255,255,0.05) !important;
+            border: none !important;
+            color: #eee !important;
+            padding: 8px 10px !important; /* 微调内边距 */
+            margin: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: 42px !important;
+            border-radius: 8px !important;
+            cursor: pointer;
+            font-size: 13px !important;
+            text-align: left !important;
+            display: flex !important;
+            align-items: center !important; /* 垂直居中 */
+            justify-content: flex-start !important;
+            transition: all 0.2s;
+            user-select: none;
+            position: relative !important;
+            overflow: hidden !important; /* 防止内容溢出 */
+        }
+        .gm-tool-btn:hover { background: ${CONSTANTS.THEME_COLOR} !important; color: #fff !important; transform: translateY(-1px); }
+        
+        /* === 图标统一尺寸修复 (核心) === */
+        .gm-tool-btn .icon {
+            width: 24px !important;  /* 强制固定宽度 */
+            height: 24px !important; /* 强制固定高度 */
+            min-width: 24px !important;
+            margin-right: 10px !important;
+            font-size: 18px !important; /* Emoji 字体大小 */
+            line-height: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            flex-shrink: 0 !important; /* 防止被挤压 */
+        }
+
+        /* 强制约束图片图标 */
+        .gm-tool-btn .icon img, .gm-tool-btn .icon svg {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain !important; /* 保持比例适应 */
+            display: block !important;
+            border-radius: 2px !important;
+        }
+        
+        /* 收藏星星 */
+        .gm-fav-star {
+            position: absolute;
+            top: 4px; right: 4px;
+            font-size: 10px !important;
+            line-height: 1 !important;
+            color: #FFD60A;
+            opacity: 0.8;
+            text-shadow: 0 0 5px rgba(255, 214, 10, 0.5);
+        }
+
+        /* 状态圆点 */
+        .gm-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #ccc; margin-left: auto; flex-shrink: 0;
+        }
+        .gm-tool-btn.active .gm-dot { background: #34C759; box-shadow: 0 0 5px #34C759; }
+
+        /* 拖拽样式 */
+        .gm-tool-btn.gm-dragging { opacity: 0.4; transform: scale(0.95); border: 1px dashed rgba(255,255,255,0.5) !important; }
+        .gm-tool-btn.gm-drag-over { border-top: 2px solid ${CONSTANTS.THEME_COLOR} !important; transform: translateY(2px); }
+
+        /* Toast & Modal (保持不变) */
+        #gm-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100%);
+            background: rgba(0,0,0,0.85); color: #fff; padding: 10px 20px !important; border-radius: 50px !important;
+            z-index: ${CONSTANTS.Z_INDEX + 10}; font-size: 14px !important; opacity: 0; pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3) !important; border: 1px solid rgba(255,255,255,0.1) !important;
+            white-space: nowrap;
+        }
+        #gm-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        
+        #gm-result-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: ${CONSTANTS.Z_INDEX + 15}; display: none; backdrop-filter: blur(2px); }
+        #gm-result-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px !important; max-width: 90vw !important; background: #fff !important; color: #333 !important; border-radius: 12px !important; padding: 20px !important; z-index: ${CONSTANTS.Z_INDEX + 20}; box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important; display: none; flex-direction: column !important; text-align: left !important; }
+        #gm-result-header { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 15px !important; border-bottom: 1px solid #eee !important; padding-bottom: 10px !important; }
+        #gm-result-title { font-weight: bold !important; font-size: 16px !important; color: #000 !important; margin: 0 !important; }
+        #gm-result-close { cursor: pointer; padding: 5px; font-weight: bold; color: #999; line-height: 1 !important; }
+        #gm-result-content { max-height: 60vh !important; overflow-y: auto !important; white-space: pre-wrap !important; font-family: monospace !important; font-size: 14px !important; background: #f9f9f9 !important; padding: 10px !important; border-radius: 6px !important; border: 1px solid #eee !important; }
+    `);
+
+
+    // --- 0. Trusted Types 策略 ---
+    const policy = window.trustedTypes?.createPolicy?.('gm-toolbox-policy', {
+        createHTML: (string) => string,
+    }) || { createHTML: (string) => string };
+    const setHTML = (element, html) => { element.innerHTML = policy.createHTML(html); };
+
+    // --- 2. 存储与辅助函数 ---
+    
+    // 收藏管理
+    const FAV_KEY = 'tools_fav_list';
+    const getFavorites = () => GM_getValue(FAV_KEY, []);
+    const isFavorite = (name) => getFavorites().includes(name);
+    const toggleFavorite = (name) => {
+        let favs = getFavorites();
+        if (favs.includes(name)) {
+            favs = favs.filter(n => n !== name);
+            Utils.toast(`已取消收藏: ${name}`);
+        } else {
+            favs.push(name);
+            Utils.toast(`⭐ 已收藏: ${name}`);
+        }
+        GM_setValue(FAV_KEY, favs);
+        return favs;
+    };
+
+    // 排序管理
+    const getSavedOrder = () => GM_getValue('tools_order_map', {});
+    const saveCategoryOrder = (categoryName, container) => {
+        // 如果是“收藏”分类，不保存排序（或者你可以实现单独的收藏排序逻辑，这里为了简单跳过）
+        if(categoryName === '⭐ 收藏置顶') return;
+        
+        const orderMap = getSavedOrder();
+        const currentOrder = Array.from(container.children).map(btn => btn.dataset.name);
+        orderMap[categoryName] = currentOrder;
+        GM_setValue('tools_order_map', orderMap);
+    };
+
+
     // --- 5. UI 构建与事件逻辑 ---
 
     function createUI() {
-        // 1. Toast
-        const toast = document.createElement('div');
-        toast.id = 'gm-toast';
-        document.body.appendChild(toast);
-
-        // 2. Modal
-        const overlay = document.createElement('div');
-        overlay.id = 'gm-result-overlay';
-        const modal = document.createElement('div');
-        modal.id = 'gm-result-modal';
-
-        // 使用 setHTML 安全插入结构
-        setHTML(modal, `
-            <div id="gm-result-header"><span id="gm-result-title">Title</span><span id="gm-result-close">✕</span></div>
-            <div id="gm-result-content"></div>
-        `);
-
-        document.body.appendChild(overlay);
-        document.body.appendChild(modal);
-
+        // ... (Toast, Modal, Float Button 创建保持不变) ...
+        const toast = document.createElement('div'); toast.id = 'gm-toast'; document.body.appendChild(toast);
+        const overlay = document.createElement('div'); overlay.id = 'gm-result-overlay';
+        const modal = document.createElement('div'); modal.id = 'gm-result-modal';
+        setHTML(modal, `<div id="gm-result-header"><h3 id="gm-result-title">Title</h3><span id="gm-result-close">✕</span></div><div id="gm-result-content"></div>`);
+        document.body.appendChild(overlay); document.body.appendChild(modal);
         const closeFn = () => { modal.style.display = 'none'; overlay.style.display = 'none'; };
-        document.getElementById('gm-result-close').onclick = closeFn;
-        overlay.onclick = closeFn;
+        document.getElementById('gm-result-close').onclick = closeFn; overlay.onclick = closeFn;
 
-        // 3. Float Button
         const btn = document.createElement('div');
         btn.id = 'gm-float-btn';
-        // 使用 setHTML
         setHTML(btn, gmc.get('btn_text'));
-
-        const savedTop = GM_getValue('pos_top', DEFAULT_CONFIG.init_pos_top);
-        const savedLeft = GM_getValue('pos_left', DEFAULT_CONFIG.init_pos_left);
-        btn.style.top = savedTop;
-        btn.style.left = savedLeft;
-
+        btn.style.top = GM_getValue('pos_top', DEFAULT_CONFIG.init_pos_top);
+        btn.style.left = GM_getValue('pos_left', DEFAULT_CONFIG.init_pos_left);
         if (!gmc.get('show_button')) btn.style.setProperty('display', 'none', 'important');
         document.body.appendChild(btn);
 
-        // 4. Panel
+        // --- Panel 构建 ---
         const panel = document.createElement('div');
         panel.id = 'gm-toolbox-panel';
+        
+        // 搜索框区域
+        const searchWrapper = document.createElement('div');
+        searchWrapper.id = 'gm-search-wrapper';
+        // 使用 type="search" 并禁止浏览器默认样式
+        setHTML(searchWrapper, `
+            <input type="text" id="gm-search-input" placeholder="搜索功能..." autocomplete="off" spellcheck="false">
+            <div id="gm-search-icon">🔍</div>
+        `);
+        panel.appendChild(searchWrapper);
 
-        for (const [category, items] of Object.entries(TOOLS)) {
-            const title = document.createElement('div');
-            title.className = 'gm-category-title';
-            title.innerText = category;
-            panel.appendChild(title);
+        // 内容滚动区域
+        const contentScroll = document.createElement('div');
+        contentScroll.id = 'gm-content-scroll';
+        panel.appendChild(contentScroll);
 
-            const grid = document.createElement('div');
-            grid.className = 'gm-grid';
-
-            items.forEach(tool => {
-                const b = document.createElement('button');
-                b.className = 'gm-tool-btn';
-                let html = `<span class="icon">${tool.icon}</span>${tool.name}`;
-                if (tool.hasDot) html += `<div class="gm-dot"></div>`;
-                // 使用 setHTML
-                setHTML(b, html);
-                b.onclick = (e) => {
-                    e.stopPropagation();
-                    // 如果不是切换类功能，点击后自动关闭面板
-                    if (!tool.hasDot) togglePanel(false);
-                    try { tool.action(b); } catch (err) { console.error(err); Utils.toast("❌ Error: " + err.message); }
-                    togglePanel(false);
-                };
-                grid.appendChild(b);
-            });
-            panel.appendChild(grid);
-        }
         document.body.appendChild(panel);
 
-        // ... (后续的拖拽和事件监听逻辑保持不变，不需要改动) ...
-        // ... 请确保原本 createUI 函数后面关于 addEventListener 的代码还保留着 ...
-        let isDragging = false;
-        let hasMoved = false;
-        let startX, startY, initLeft, initTop;
+        // --- 渲染逻辑 (Render Tool List) ---
+        let dragSrcEl = null;
 
+        function renderToolList() {
+            contentScroll.innerHTML = '';
+            const savedOrderMap = getSavedOrder();
+            const favorites = getFavorites();
+            const searchVal = panel.querySelector('#gm-search-input').value.toLowerCase().trim();
+
+            let categoriesToRender = {};
+            
+            // 收藏置顶逻辑
+            if (favorites.length > 0 && !searchVal) { 
+                let favTools = [];
+                Object.values(TOOLS).forEach(toolList => {
+                    toolList.forEach(tool => {
+                        if (favorites.includes(tool.name)) favTools.push({ ...tool, isFavItem: true }); 
+                    });
+                });
+                if (favTools.length > 0) categoriesToRender['⭐ 收藏置顶'] = favTools;
+            }
+
+            Object.assign(categoriesToRender, TOOLS);
+
+            for (const [category, rawItems] of Object.entries(categoriesToRender)) {
+                let items = [...rawItems];
+
+                if (category !== '⭐ 收藏置顶' && savedOrderMap[category]) {
+                    const orderList = savedOrderMap[category];
+                    items.sort((a, b) => {
+                        let indexA = orderList.indexOf(a.name); let indexB = orderList.indexOf(b.name);
+                        if (indexA === -1) indexA = 9999; if (indexB === -1) indexB = 9999;
+                        return indexA - indexB;
+                    });
+                }
+
+                if (searchVal) {
+                    items = items.filter(t => t.name.toLowerCase().includes(searchVal));
+                    if (items.length === 0) continue; 
+                }
+
+                const title = document.createElement('div');
+                title.className = 'gm-category-title';
+                title.innerText = category;
+                contentScroll.appendChild(title);
+
+                const grid = document.createElement('div');
+                grid.className = 'gm-grid';
+                grid.dataset.category = category;
+
+                items.forEach(tool => {
+                    const b = document.createElement('button');
+                    b.className = 'gm-tool-btn';
+                    b.dataset.name = tool.name;
+                    b.setAttribute('draggable', 'true');
+                    b.title = "左键运行，右键收藏/取消";
+
+                    const isFav = isFavorite(tool.name);
+                    
+                    // 这里 icon 容器已经被 CSS 强制锁定大小
+                    let html = `<span class="icon">${tool.icon}</span><span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${tool.name}</span>`;
+                    if (tool.hasDot) html += `<div class="gm-dot"></div>`;
+                    if (isFav) html += `<span class="gm-fav-star">★</span>`;
+                    setHTML(b, html);
+
+                    b.onclick = (e) => {
+                        e.stopPropagation();
+                        if (!tool.hasDot) togglePanel(false);
+                        try { tool.action(b); } catch (err) { console.error(err); Utils.toast("❌ Error: " + err.message); }
+                        togglePanel(false);
+                    };
+
+                    b.oncontextmenu = (e) => {
+                        e.preventDefault(); e.stopPropagation();
+                        toggleFavorite(tool.name);
+                        renderToolList();
+                        return false;
+                    };
+
+                    // 拖拽逻辑 (保持不变)
+                    b.addEventListener('dragstart', function (e) {
+                        dragSrcEl = this;
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/html', this.innerHTML);
+                        this.classList.add('gm-dragging');
+                    });
+                    b.addEventListener('dragend', function () {
+                        this.classList.remove('gm-dragging');
+                        grid.querySelectorAll('.gm-tool-btn').forEach(el => el.classList.remove('gm-drag-over'));
+                    });
+                    b.addEventListener('dragover', function (e) {
+                        if (e.preventDefault) e.preventDefault();
+                        e.dataTransfer.dropEffect = 'move';
+                        return false;
+                    });
+                    b.addEventListener('dragenter', function () {
+                        if (this !== dragSrcEl) this.classList.add('gm-drag-over');
+                    });
+                    b.addEventListener('dragleave', function () {
+                        this.classList.remove('gm-drag-over');
+                    });
+                    b.addEventListener('drop', function (e) {
+                        e.stopPropagation();
+                        if (dragSrcEl !== this && dragSrcEl.parentNode === this.parentNode && category !== '⭐ 收藏置顶') {
+                            this.parentNode.insertBefore(dragSrcEl, this);
+                            saveCategoryOrder(category, this.parentNode);
+                        }
+                        return false;
+                    });
+
+                    grid.appendChild(b);
+                });
+                contentScroll.appendChild(grid);
+            }
+            
+            if (contentScroll.children.length === 0 && searchVal) {
+                 const empty = document.createElement('div');
+                 empty.style.cssText = "text-align:center; color:#999; margin-top:20px; font-size:13px;";
+                 empty.innerText = "未找到相关功能";
+                 contentScroll.appendChild(empty);
+            }
+        }
+
+        renderToolList();
+
+        // 交互事件监听 (搜索框)
+        const searchInput = panel.querySelector('#gm-search-input');
+        searchInput.addEventListener('input', () => renderToolList());
+        searchInput.addEventListener('click', (e) => e.stopPropagation()); // 防止点击输入框关闭面板
+
+        // 交互事件监听 (悬浮球拖拽 & 面板开关 - 保持原逻辑)
+        let isDragging = false, hasMoved = false, startX, startY, initLeft, initTop;
         btn.addEventListener('mousedown', (e) => {
             if (e.button !== 0) return;
-            isDragging = true;
-            hasMoved = false;
-            startX = e.clientX;
-            startY = e.clientY;
+            isDragging = true; hasMoved = false;
+            startX = e.clientX; startY = e.clientY;
             const rect = btn.getBoundingClientRect();
-            initLeft = rect.left;
-            initTop = rect.top;
+            initLeft = rect.left; initTop = rect.top;
             btn.style.transition = 'none';
             e.preventDefault();
         });
-
         window.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
+            const dx = e.clientX - startX; const dy = e.clientY - startY;
             if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
-            let newLeft = initLeft + dx;
-            let newTop = initTop + dy;
-            const maxLeft = window.innerWidth - btn.offsetWidth;
-            const maxTop = window.innerHeight - btn.offsetHeight;
-            newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-            newTop = Math.max(0, Math.min(newTop, maxTop));
-            btn.style.left = newLeft + 'px';
-            btn.style.top = newTop + 'px';
+            let newLeft = initLeft + dx; let newTop = initTop + dy;
+            const maxLeft = window.innerWidth - btn.offsetWidth; const maxTop = window.innerHeight - btn.offsetHeight;
+            newLeft = Math.max(0, Math.min(newLeft, maxLeft)); newTop = Math.max(0, Math.min(newTop, maxTop));
+            btn.style.left = newLeft + 'px'; btn.style.top = newTop + 'px';
         });
-
         window.addEventListener('mouseup', () => {
             if (!isDragging) return;
             isDragging = false;
             btn.style.transition = `transform 0.1s, background ${CONSTANTS.ANIMATION_SPEED}`;
-            if (hasMoved) {
-                GM_setValue('pos_top', btn.style.top);
-                GM_setValue('pos_left', btn.style.left);
-            }
+            if (hasMoved) { GM_setValue('pos_top', btn.style.top); GM_setValue('pos_left', btn.style.left); }
         });
 
-        btn.addEventListener('click', () => { if (!hasMoved) togglePanel(); });
+        btn.addEventListener('click', () => { 
+            if (!hasMoved) {
+                togglePanel(); 
+                if(!panel.classList.contains('show')) setTimeout(() => searchInput.focus(), 100); 
+            }
+        });
 
         document.addEventListener('click', (e) => {
             if (panel.classList.contains('show') && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
@@ -886,9 +1037,12 @@ LastModified: ${document.lastModified}
                 if (left + panelWidth > window.innerWidth) left = btnRect.left - panelWidth - 15;
                 if (top + panelHeight > window.innerHeight) top = window.innerHeight - panelHeight - 20;
                 if (top < 10) top = 10;
+                
                 panel.style.left = left + 'px';
                 panel.style.top = top + 'px';
-                panel.style.display = 'block';
+                panel.style.height = panelHeight + 'px';
+                panel.style.display = 'flex';
+                
                 requestAnimationFrame(() => panel.classList.add('show'));
             } else {
                 panel.classList.remove('show');
@@ -897,15 +1051,18 @@ LastModified: ${document.lastModified}
         }
     }
 
+
+
+
     // 更新按钮状态（用于配置保存后）
     function updateButtonState() {
         let btn = document.getElementById('gm-float-btn');
-        if(!btn) return;
+        if (!btn) return;
         btn.innerHTML = gmc.get('btn_text');
         if (gmc.get('show_button')) {
-             btn.style.setProperty('display', 'flex', 'important');
+            btn.style.setProperty('display', 'flex', 'important');
         } else {
-             btn.style.setProperty('display', 'none', 'important');
+            btn.style.setProperty('display', 'none', 'important');
         }
     }
 
@@ -913,17 +1070,17 @@ LastModified: ${document.lastModified}
     GM_registerMenuCommand("打开工具箱面板", () => {
         const panel = document.getElementById('gm-toolbox-panel');
         // 如果没有显示按钮，临时显示面板在屏幕中心
-        if(!document.getElementById('gm-float-btn').offsetParent) {
-             if(panel) {
-                 panel.style.top = '100px';
-                 panel.style.left = '50%';
-                 panel.style.transform = 'translateX(-50%)';
-                 panel.style.display = 'block';
-                 setTimeout(()=> panel.classList.add('show'), 10);
-             }
+        if (!document.getElementById('gm-float-btn').offsetParent) {
+            if (panel) {
+                panel.style.top = '100px';
+                panel.style.left = '50%';
+                panel.style.transform = 'translateX(-50%)';
+                panel.style.display = 'block';
+                setTimeout(() => panel.classList.add('show'), 10);
+            }
         } else {
             // 模拟点击按钮
-             document.getElementById('gm-float-btn').click();
+            document.getElementById('gm-float-btn').click();
         }
     });
 
@@ -933,13 +1090,18 @@ LastModified: ${document.lastModified}
 
     GM_registerMenuCommand("重置悬浮球位置", () => {
         const btn = document.getElementById('gm-float-btn');
-        if(btn) {
+        if (btn) {
             btn.style.top = DEFAULT_CONFIG.init_pos_top;
             btn.style.left = DEFAULT_CONFIG.init_pos_left;
             GM_setValue('pos_top', DEFAULT_CONFIG.init_pos_top);
             GM_setValue('pos_left', DEFAULT_CONFIG.init_pos_left);
             Utils.toast("已重置位置");
         }
+    });
+
+    GM_registerMenuCommand("重置面板排序", () => {
+        GM_setValue('tools_order_map', {});
+        Utils.toast("排序已重置，请刷新页面");
     });
 
     // --- 启动脚本 ---
