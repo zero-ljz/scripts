@@ -31,6 +31,15 @@ python -m pipx ensurepath
 python -m pipx install poetry==1.8.3
 
 
+
+# NSSM (Non-Sucking Service Manager)。
+# 用法：nssm install MyPanel "C:\Python\python.exe" "C:\Panel\main.py"
+# 它非常稳定，专门用来把普通 exe/脚本变成 Windows 服务。
+winget install -e --id NSSM.NSSM
+
+
+
+
 winget install -e --id Git.Git
 # 配置用户信息
 git config --global user.name 'zero-ljz'
