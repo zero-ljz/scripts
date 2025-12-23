@@ -2,14 +2,23 @@
 
 # bash ./ccc.sh
 
+# 获取系统信息
 OS_ID=$(grep '^ID=' /etc/os-release | cut -d= -f2) # debian
 OS_VERSION_ID=$(grep '^VERSION_ID=' /etc/os-release | cut -d= -f2 | sed 's/"//g') # 11
 OS_VERSION_CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d= -f2) # bullseye
 
+set -e
+LOG_FILE="/var/log/ccc_script.log"
+
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
+
 system_init(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
     echo -e "\n\n\n------------------------------安装必备组件 && 系统配置------------------------------"
-    echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
     echo -e "\n\n\n 配置语言"
     read -t 5 -p "是否继续？ (y):" answer
@@ -43,11 +52,11 @@ system_init(){
     echo -e "\n\n\n开启 rc.local"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        if [ ! -e "/etc/rc.local" ];then
+        if [ ! -e "/etc/rc.local" ]; then
             echo -e "\n\n\n配置 rc.local"
             touch /etc/rc.local
             chmod 755 /etc/rc.local
-            cat>/etc/rc.local<<EOF
+            cat >/etc/rc.local <<EOF
 #!/bin/sh -e
 #
 # rc.local
@@ -64,10 +73,10 @@ EOF
         fi
     fi
 
-    if [ ! -f "/swapfile" ];then
+    if [ ! -f "/swapfile" ]; then
         echo -e "\n\n\n设置 Swap"
         read -t 5 -p "是否继续？ (y):" answer
-    if [[ "$answer" == "y" || $? -eq 142 ]]; then
+        if [[ "$answer" == "y" || $? -eq 142 ]]; then
             total_memory_mb=$(grep MemTotal /proc/meminfo | awk '{print int($2 / 1024)}')
             swapfile_length=$(($total_memory_mb * 2))
             # 创建swap文件
@@ -75,7 +84,7 @@ EOF
             # 格式化为交换分区
             mkswap /swapfile
             # 将文件添加到系统的/etc/fstab文件中，以便在系统启动时自动挂载
-            echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
+            log '/swapfile none swap sw 0 0' | tee -a /etc/fstab
             # 启用交换文件
             swapon /swapfile
         fi
@@ -84,7 +93,7 @@ EOF
     if [ -z "$(lsmod | grep bbr)" ]; then
         echo -e "\n\n\n启用 Google BBR"
         read -t 5 -p "是否继续？ (y):" answer
-    if [[ "$answer" == "y" || $? -eq 142 ]]; then
+        if [[ "$answer" == "y" || $? -eq 142 ]]; then
             sh -c 'echo net.core.default_qdisc=fq >> /etc/sysctl.conf'
             sh -c 'echo net.ipv4.tcp_congestion_control=bbr >> /etc/sysctl.conf'
             echo -e "\n\n\n从配置文件加载内核参数（需要管理员）"
@@ -125,41 +134,46 @@ EOF
         git config --global user.name "zero-ljz"
         git config --global user.email "zero-ljz@qq.com"
     fi
-
 }
 
 install_supervisor(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
     echo -e "\n\n\n------------------------------安装 Supervisor 进程管理器------------------------------"
-    echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    
     pip3 install supervisor
+    
     echo -e "\n\n\n 生成配置文件"
     mkdir /etc/supervisor
     echo_supervisord_conf > /etc/supervisor/supervisord.conf
+    
     echo -e "\n\n\n 编辑配置文件"
     find '/etc/supervisor/supervisord.conf' | xargs perl -pi -e 's|;\[include\]|\[include\]|g'
     find '/etc/supervisor/supervisord.conf' | xargs perl -pi -e 's|;files = relative/directory/\*\.ini|files = conf.d/*.ini|g'
+    
     echo -e "\n\n\n 创建子配置文件夹"
     mkdir -p /etc/supervisor/conf.d
 
     # python3 -m http.server -d /home/share
 
     echo -e "\n\n\n 将 Supervisor 启动命令添加到 rc.local 中开机自动执行"
-    echo supervisord -c /etc/supervisor/supervisord.conf>>/etc/rc.local
+    log supervisord -c /etc/supervisor/supervisord.conf >>/etc/rc.local
     supervisord -c /etc/supervisor/supervisord.conf
-
 }
 
 create_supervisor(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} app_name "command" working_dir"
-    return; fi
-    app_name=$1
-    command=$2
-    working_dir=${3:-"/usr/local/bin/"}
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} app_name \"command\" working_dir"
+        return
+    fi
 
-    cat>/etc/supervisor/conf.d/${app_name}.ini<<EOF
+    local app_name="$1"
+    local command="$2"
+    local working_dir="${3:-"/usr/local/bin/"}"
+
+    cat >/etc/supervisor/conf.d/${app_name}.ini <<EOF
 [program:${app_name}]
 directory=${working_dir}
 command=${command}
@@ -192,16 +206,18 @@ EOF
 
 create_service(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} app_name command working_dir"
-    return; fi
-    app_name=$1
-    command=$2
-    working_dir=${3:-"/usr/local/bin/"}
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} app_name command working_dir"
+        return
+    fi
+
+    local app_name="$1"
+    local command="$2"
+    local working_dir="${3:-"/usr/local/bin/"}"
 
     touch /etc/systemd/system/${app_name}.service
     chmod 755 /etc/systemd/system/${app_name}.service
-    cat>/etc/systemd/system/${app_name}.service<<EOF
+    cat >/etc/systemd/system/${app_name}.service <<EOF
 [Unit]
 Description = ${app_name}
 After = network.target syslog.target
@@ -217,45 +233,48 @@ WantedBy = multi-user.target
 EOF
 }
 
-
-
 install_docker(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    
     echo -e "\n\n\n------------------------------安装 Docker------------------------------"
-    echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
     # curl -fsSL https://get.docker.com -o get-docker.sh
     # sh get-docker.sh
 
-    host="download.docker.com"
+    local host="download.docker.com"
     read -t 5 -p "是否使用中国大陆镜像？ (y): " answer && [ "$answer" == "y" ] && host="mirrors.tuna.tsinghua.edu.cn"
 
     echo -e "\n\n\n 安装包以允许apt通过HTTPS使用存储库"
     apt-get update && apt-get -y install ca-certificates curl gnupg
+    
     echo -e "\n\n\n 添加 Docker 的官方 GPG 密钥"
     mkdir -m 0755 -p /etc/apt/keyrings
     curl -fsSL https://${host}/linux/${OS_ID}/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
     chmod a+r /etc/apt/keyrings/docker.gpg
+    
     echo -e "\n\n\n 设置存储库"
-    echo  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://${host}/linux/${OS_ID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    log "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://${host}/linux/${OS_ID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    
     echo -e "\n\n\n 安装 Docker Engine、containerd 和 Docker Compose"
     apt-get update && apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
     if read -t 5 -p "是否使用中国大陆注册表？ (y): " answer && [ "$answer" == "y" ]; then
-        cat>/etc/docker/daemon.json<<EOF
+        cat >/etc/docker/daemon.json <<EOF
 {
   "registry-mirrors": ["https://p.520999.xyz/https://registry-1.docker.io"]
 }
 EOF
-    # 备用 http://mirrors.ustc.edu.cn http://hub.daocloud.io
+        # 备用 http://mirrors.ustc.edu.cn http://hub.daocloud.io
     fi
 }
 
-
 install_nodejs(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    
     echo -e "\n\n\n------------------------------安装 Nodejs------------------------------"
-    echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    
     apt -y install npm
     # 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
@@ -275,53 +294,52 @@ install_nodejs(){
 
     # npm config set registry https://registry.npmjs.org/
     # npm config set registry https://registry.npmmirror.com
-
 }
 
 create_ssl(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} domain_name [acme_dir]"
-    return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} domain_name [acme_dir]"
+        return
+    fi
 
-    domain_name=$1
+    local domain_name="$1"
 
     # acme_dir=${2:-/var/www/${domain_name}/.well-known/acme-challenge/} 
-    acme_dir=/var/www/challenges/${domain_name}/
+    local acme_dir="/var/www/challenges/${domain_name}/"
 
-    SSL_DIR=/var/ssl
+    local SSL_DIR="/var/ssl"
     if [ ! -d "$SSL_DIR" ]; then
         mkdir "$SSL_DIR"
     fi
 
-    ACME_TINY="/tmp/acme_tiny.py"
-    ACCOUNT_KEY=$SSL_DIR/account.key
+    local ACME_TINY="/tmp/acme_tiny.py"
+    local ACCOUNT_KEY="$SSL_DIR/account.key"
     # 私钥
-    DOMAIN_KEY=$SSL_DIR/${domain_name}.key
+    local DOMAIN_KEY="$SSL_DIR/${domain_name}.key"
     # 公钥
-    DOMAIN_CRT="$SSL_DIR/${domain_name}.crt"
+    local DOMAIN_CRT="$SSL_DIR/${domain_name}.crt"
     # 链接起来的公钥
-    DOMAIN_CHAINED_CRT="$SSL_DIR/${domain_name}.chained.crt"
+    local DOMAIN_CHAINED_CRT="$SSL_DIR/${domain_name}.chained.crt"
 
-    DOMAIN_CSR=$SSL_DIR/${domain_name}.csr
+    local DOMAIN_CSR="$SSL_DIR/${domain_name}.csr"
 
     # 文件不存在时创建 Let's Encrypt 帐户私钥
-    if [ ! -f "$ACCOUNT_KEY" ];then
-        echo "Generate account key..."
+    if [ ! -f "$ACCOUNT_KEY" ]; then
+        log "Generate account key..."
         openssl genrsa 4096 > "$ACCOUNT_KEY"
     fi
 
-    if [ ! -f "$DOMAIN_KEY" ];then
-        echo "Generate domain key 私钥..."
+    if [ ! -f "$DOMAIN_KEY" ]; then
+        log "Generate domain key 私钥..."
         openssl genrsa 2048 > "$DOMAIN_KEY"
     fi
 
-    echo "Generate CSR..."
+    log "Generate CSR..."
     openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name},DNS:${domain_name}")) > "${DOMAIN_CSR}"
 
-
     # crt文件存在时备份
-    if [ -f "$DOMAIN_CRT" ];then
+    if [ -f "$DOMAIN_CRT" ]; then
         mv "$DOMAIN_CRT" "$DOMAIN_CRT-OLD-$(date +%y%m%d-%H%M%S)"
     fi
 
@@ -330,8 +348,7 @@ create_ssl(){
     wget https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py -O $ACME_TINY -o /dev/null
     python3 $ACME_TINY --account-key "$ACCOUNT_KEY" --csr "${DOMAIN_CSR}" --acme-dir "$acme_dir" > "$DOMAIN_CRT"
 
-
-    if [ ! -f "lets-encrypt-x3-cross-signed.pem" ];then
+    if [ ! -f "lets-encrypt-x3-cross-signed.pem" ]; then
         wget https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem -o /dev/null
     fi
     # 合并为公钥文件
@@ -346,20 +363,20 @@ create_ssl(){
     ssl_certificate /var/ssl/${domain_name}.chained.crt;
     ssl_certificate_key /var/ssl/${domain_name}.key;
 EOF
-    echo "Please restart nginx"
+    log "Please restart nginx"
 }
-
 
 create_proxy(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then 
-    echo "Usage: ${FUNCNAME} domain_name local_port"; 
-    return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then 
+        log "Usage: ${FUNCNAME} domain_name local_port"
+        return
+    fi
 
-    domain_name=$1
-    local_port=$2
+    local domain_name="$1"
+    local local_port="$2"
 
-    cat>${domain_name}.conf<<EOF
+    cat >${domain_name}.conf <<EOF
 # 反向代理配置
 
 # 引入 upstream 配置
@@ -435,7 +452,6 @@ EOF
     # EOF2
     # EOF
 
-
     # docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
     cp ./${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
 
@@ -443,20 +459,21 @@ EOF
     docker restart nginx1
 }
 
-
 deploy_mysql(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} [port]"
-    return; fi
-    port=${1:-3306}
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port]"
+        return
+    fi
+    
+    local port=${1:-3306}
     docker network create network1
     docker volume create mysql-data
 
     MYSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
-    echo "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
+    log "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
 
-    echo "安装 MySQL"
+    log "安装 MySQL"
     # docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --network-alias mysql -v mysql-data:/var/lib/mysql \
     # -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
     # -e TZ=Asia/Shanghai \
@@ -469,17 +486,22 @@ deploy_mysql(){
     # --character-set-server=utf8mb4 \
     # --collation-server=utf8mb4_unicode_ci
 
-    docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --network-alias mysql -v mysql-data:/var/lib/mysql \
-    --env MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
-    --env TZ=Asia/Shanghai \
-    --env MARIADB_USER=user1 \
-    --env MARIADB_PASSWORD=123 \
-    --env MARIADB_DATABASE=db1 \
-    --env MARIADB_CHARSET=utf8mb4 \
-    --env MARIADB_COLLATION=utf8mb4_unicode_ci \
-    mariadb:10.6-focal \
-    --character-set-server=utf8mb4 \
-    --collation-server=utf8mb4_unicode_ci
+    docker run -dp "${port}:3306" \
+        --name mysql1 \
+        --restart=always \
+        --network network1 \
+        --network-alias mysql \
+        -v mysql-data:/var/lib/mysql \
+        --env MARIADB_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
+        --env TZ=Asia/Shanghai \
+        --env MARIADB_USER=user1 \
+        --env MARIADB_PASSWORD=123 \
+        --env MARIADB_DATABASE=db1 \
+        --env MARIADB_CHARSET=utf8mb4 \
+        --env MARIADB_COLLATION=utf8mb4_unicode_ci \
+        mariadb:10.6-focal \
+        --character-set-server=utf8mb4 \
+        --collation-server=utf8mb4_unicode_ci
 
     # 旧版本
     # docker exec -it mysql1 sed -i -E 's/max_connections(\s*)= [0-9]+/max_connections\1= 1000/g' /etc/mysql/my.cnf
@@ -491,16 +513,19 @@ deploy_mysql(){
 
 create_database(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} domain_name"
-    return; fi
-    domain_name=$1
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} domain_name"
+        return
+    fi
+    
+    local domain_name="$1"
     MYSQL_ROOT_PASSWORD=$(cat MYSQL_ROOT_PASSWORD.txt)
 
     # 将创建数据库的sql语句写入sql文件并通过-i参数和<输入重定向符号传递给容器内的命令执行
-    db_password=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
-    db_user=${domain_name//./_}
-    cat>${domain_name}.sql<<EOF
+    local db_password=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
+    local db_user=${domain_name//./_}
+    
+    cat >${domain_name}.sql <<EOF
 CREATE DATABASE ${db_user}_db
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
@@ -509,26 +534,31 @@ GRANT ALL PRIVILEGES ON ${db_user}_db.* TO '${db_user}'@'%';
 FLUSH PRIVILEGES;
 EOF
 
-    cmd="mysql -h 127.0.0.1 -P 3306 -u root -p${MYSQL_ROOT_PASSWORD} < ${domain_name}.sql"
-    echo "请执行${cmd}创建数据库和用户 mysql://${db_user}:${db_password}@mysql:3306/${db_user}_db"
-    echo "在容器内创建需执行 docker exec -i mysql1 ${cmd}"
-
+    local cmd="mysql -h 127.0.0.1 -P 3306 -u root -p${MYSQL_ROOT_PASSWORD} < ${domain_name}.sql"
+    log "请执行${cmd}创建数据库和用户 mysql://${db_user}:${db_password}@mysql:3306/${db_user}_db"
+    log "在容器内创建需执行 docker exec -i mysql1 ${cmd}"
 }
-
-
 
 deploy_redis(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} [port]"
-    return; fi
-    port=${1:-6379}
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port]"
+        return
+    fi
+    
+    local port=${1:-6379}
     docker network create network1
 
-    echo "安装 Redis" 
-    docker run -dp ${port}:6379 --name redis1 --restart=always --network network1 --network-alias redis -v /docker/redis1:/data -e TZ=Asia/Shanghai \
-    redis:6-bullseye \
-    redis-server --save 60 1 --loglevel warning --requirepass "123qweQ!"
+    log "安装 Redis" 
+    docker run -dp "${port}:6379" \
+        --name redis1 \
+        --restart=always \
+        --network network1 \
+        --network-alias redis \
+        -v /docker/redis1:/data \
+        -e TZ=Asia/Shanghai \
+        redis:6-bullseye \
+        redis-server --save 60 1 --loglevel warning --requirepass "123qweQ!"
     # 传给redis服务器的启动参数：若每60秒至少有一个键被修改了1次，就将数据持久化到磁盘，只记录警告及更高级别的日志
     # 连接字符串
     # redis://default:123qweQ!@localhost:6379/0
@@ -536,40 +566,53 @@ deploy_redis(){
     # docker run -it --network redis --rm redis redis-cli -h redis1
 }
 
-
-
 deploy_postgres(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} [port]"
-    return; fi
-    port=${1:-5432}
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port]"
+        return
+    fi
+    
+    local port=${1:-5432}
     docker network create network1
     docker volume create postgre-data
-    echo "安装 PostgreSQL"
-    docker run -dp ${port}:5432 --name postgres1 --restart=always --network network1 --network-alias postgres -e TZ=Asia/Shanghai \
-    -e POSTGRES_USER=postgres \
-    -e POSTGRES_PASSWORD=123qwe123@21 \
-    -e POSTGRES_DB=postgres \
-    -e POSTGRES_INITDB_ARGS="--encoding=UTF8 --locale=C"
-    -e PGDATA=/var/lib/postgresql/data \
-    -v postgre-data:/var/lib/postgresql/data \
-    postgres:13-bullseye -c shared_buffers=256MB -c max_connections=200
+    
+    log "安装 PostgreSQL"
+    docker run -dp "${port}:5432" \
+        --name postgres1 \
+        --restart=always \
+        --network network1 \
+        --network-alias postgres \
+        -e TZ=Asia/Shanghai \
+        -e POSTGRES_USER=postgres \
+        -e POSTGRES_PASSWORD=123qwe123@21 \
+        -e POSTGRES_DB=postgres \
+        -e POSTGRES_INITDB_ARGS="--encoding=UTF8 --locale=C" \
+        -e PGDATA=/var/lib/postgresql/data \
+        -v postgre-data:/var/lib/postgresql/data \
+        postgres:13-bullseye -c shared_buffers=256MB -c max_connections=200
 }
 
 deploy_rabbitmq(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} [port]"
-    return; fi
-    port=${1:-5672}
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port]"
+        return
+    fi
+    
+    local port=${1:-5672}
     docker network create network1
 
-    echo "安装 RabbitMQ"
-    docker run -dp ${port}:5672 -p 15672:15672 --name rabbitmq1 --restart=always --network network1 --network-alias rabbitmq -e TZ=Asia/Shanghai \
-    -e RABBITMQ_DEFAULT_USER=user1 \
-    -e RABBITMQ_DEFAULT_PASS=123qwe123@ \
-    rabbitmq
+    log "安装 RabbitMQ"
+    docker run -dp "${port}:5672" -p 15672:15672 \
+        --name rabbitmq1 \
+        --restart=always \
+        --network network1 \
+        --network-alias rabbitmq \
+        -e TZ=Asia/Shanghai \
+        -e RABBITMQ_DEFAULT_USER=user1 \
+        -e RABBITMQ_DEFAULT_PASS=123qwe123@ \
+        rabbitmq
 }
 
 create_default_vhost(){
@@ -577,7 +620,7 @@ create_default_vhost(){
     mkdir -p /var/www/html
     touch /var/www/html/index.html
     chmod 755 /var/www/html/index.html
-    cat>/var/www/html/index.html<<EOF
+    cat >/var/www/html/index.html <<EOF
 <!DOCTYPE html>
 <html lang="zh-Hans">
 <head>
@@ -592,7 +635,7 @@ create_default_vhost(){
 </html>
 EOF
 
-    cat>/etc/nginx/conf.d/default.conf<<EOF
+    cat >/etc/nginx/conf.d/default.conf <<EOF
 server {
   listen 80 default_server;
   listen [::]:80 default_server;
@@ -610,11 +653,19 @@ server {
 EOF
 }
 
-
 deploy_nginx(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    echo "安装 Nginx"
-    docker run -d --name nginx1 --restart=always --network host -v /var/www:/var/www -v /var/ssl:/var/ssl -v /etc/nginx/conf.d:/etc/nginx/conf.d -e TZ=Asia/Shanghai nginx:stable-bullseye
+    
+    log "安装 Nginx"
+    docker run -d \
+        --name nginx1 \
+        --restart=always \
+        --network host \
+        -v /var/www:/var/www \
+        -v /var/ssl:/var/ssl \
+        -v /etc/nginx/conf.d:/etc/nginx/conf.d \
+        -e TZ=Asia/Shanghai \
+        nginx:stable-bullseye
 
     create_default_vhost
     docker restart nginx1
@@ -622,95 +673,108 @@ deploy_nginx(){
 
 deploy_portainer(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} [local_port]"
-    return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [local_port]"
+        return
+    fi
+    
     echo -e "\n\n\n------------------------------部署 Portainer------------------------------"
-    echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-    local_port=${1:-9000}
+    local local_port=${1:-9000}
     # https://docs.portainer.io/start/install/server/docker/linux
     docker volume create portainer_data
-    docker run -d -p ${local_port}:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data -e TZ=Asia/Shanghai portainer/portainer-ce
+    docker run -d -p "${local_port}:9000" \
+        --name portainer1 \
+        --restart=always \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v portainer_data:/data \
+        -e TZ=Asia/Shanghai \
+        portainer/portainer-ce
     # 汉化版
     # docker run -d -p ${local_port}:9000 --name portainer1 --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data -e TZ=Asia/Shanghai 6053537/portainer
-
 }
 
 deploy_wordpress(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} [local_port]"
-    return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [local_port]"
+        return
+    fi
+    
     echo -e "\n\n\n------------------------------部署 Wordpress------------------------------"
-    echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-    local_port=${1:-8000}
-    docker run -dp 127.0.0.1:${local_port}:80 --name wordpress1 --restart=always --network network1 -v /docker/wordpress1:/var/www/html \
-    -e TZ=Asia/Shanghai \
-    -e WORDPRESS_CONFIG_EXTRA="define( 'FORCE_SSL_ADMIN', true ); if( strpos( $_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false ) { $_SERVER['HTTPS'] = 'on'; }" \
-    wordpress
-
+    local local_port=${1:-8000}
+    docker run -dp "127.0.0.1:${local_port}:80" \
+        --name wordpress1 \
+        --restart=always \
+        --network network1 \
+        -v /docker/wordpress1:/var/www/html \
+        -e TZ=Asia/Shanghai \
+        -e WORDPRESS_CONFIG_EXTRA="define( 'FORCE_SSL_ADMIN', true ); if( strpos( \$_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false ) { \$_SERVER['HTTPS'] = 'on'; }" \
+        wordpress
 }
 
 deploy_gitea(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} [local_port] [ssh_port]"
-    return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [local_port] [ssh_port]"
+        return
+    fi
+    
     echo -e "\n\n\n------------------------------部署 Gitea------------------------------"
-    echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-    local_port=${1:-3000}
-    ssh_port=${2:-222}
+    local local_port=${1:-3000}
+    local ssh_port=${2:-222}
     adduser \
-    --system \
-    --shell /bin/bash \
-    --gecos 'Git Version Control' \
-    --group \
-    --disabled-password \
-    --home /home/git \
-    git
+        --system \
+        --shell /bin/bash \
+        --gecos 'Git Version Control' \
+        --group \
+        --disabled-password \
+        --home /home/git \
+        git
+    
     docker run -d \
-    --name gitea1 \
-    --restart=always \
-    -p 127.0.0.1:${local_port}:3000 -p ${ssh_port}:22 \
-    -e USER_UID=$(id -u git) \
-    -e USER_GID=$(id -g git) \
-    -v /docker/gitea:/data  \
-    -v /etc/timezone:/etc/timezone:ro \
-    -v /etc/localtime:/etc/localtime:ro  \
-    gitea/gitea:1.19
+        --name gitea1 \
+        --restart=always \
+        -p "127.0.0.1:${local_port}:3000" -p "${ssh_port}:22" \
+        -e USER_UID=$(id -u git) \
+        -e USER_GID=$(id -g git) \
+        -v /docker/gitea:/data \
+        -v /etc/timezone:/etc/timezone:ro \
+        -v /etc/localtime:/etc/localtime:ro \
+        gitea/gitea:1.19
 
     # 记得配置SSH_PORT=222，SSH_LISTEN_PORT=22
 
     # ssh://git@git.iapp.run:222/zero-ljz/repo.git
-
 }
-
-
 
 function docker_build_run(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} repo_url port_port"
-    return; fi
-        url=$1
-        p=$2
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} repo_url port_port"
+        return
+    fi
+    
+    local url="$1"
+    local p="$2"
 
-        # bash /root/fast.sh docker_build_run https://github.com/zero-ljz/iapp.git 777:8000
-        # 请在repos目录使用此函数
-        repo=$(echo "$url" | sed 's|.*/\([^/]*\)\.git|\1|')
-        docker rm -f ${repo}1
-        docker image rm ${repo}
-        rm -rf ${repo}
+    # bash /root/fast.sh docker_build_run https://github.com/zero-ljz/iapp.git 777:8000
+    # 请在repos目录使用此函数
+    local repo=$(echo "$url" | sed 's|.*/\([^/]*\)\.git|\1|')
+    docker rm -f ${repo}1
+    docker image rm ${repo}
+    rm -rf ${repo}
 
-        git clone ${url}
-        docker build -t ${repo} ${repo}
-        docker run -p ${p} --name ${repo}1 ${repo}
-        docker exec -it ${repo}1 sh
+    git clone ${url}
+    docker build -t ${repo} ${repo}
+    docker run -p ${p} --name ${repo}1 ${repo}
+    docker exec -it ${repo}1 sh
 }
-
 
 deploy_debian() {
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -718,7 +782,7 @@ deploy_debian() {
     # 创建空的 Debian 容器并保持运行
     docker run -d --name debian1 --network host debian:bullseye sleep infinity
 
-    commands=$(cat <<EOF
+    local commands=$(cat <<EOF
 apt update && apt -y install --no-install-recommends wget curl nano micro
 rm -rf /var/lib/apt/lists/*
 EOF
@@ -726,18 +790,18 @@ EOF
     docker exec debian1 bash -c "$commands"
 }
 
-
 deploy_python_app() {
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} repo_url http_port command"
-    return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} repo_url http_port command"
+        return
+    fi
     # sudo docker rm -f iapp && sudo bash fast.sh deploy_python_app https://github.com/zero-ljz/iapp.git 8000 "python3 -m gunicorn -w 2 -b 0.0.0.0:8000 -k gevent app:app"
-    repo_url=${1}
-    http_port=${2:-8000}
-    command=${3:-"python3 -m gunicorn -b 0.0.0.0:8000 app:app"}
-    repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
-    commands=$(cat <<EOF
+    local repo_url="${1}"
+    local http_port="${2:-8000}"
+    local command="${3:-"python3 -m gunicorn -b 0.0.0.0:8000 app:app"}"
+    local repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
+    local commands=$(cat <<EOF
 
 apt update && apt -y install git wget
 git clone ${repo_url} .
@@ -746,22 +810,28 @@ python3 -m pip install -r requirements.txt
 ${command}
 EOF
     )
-    docker run -d -p "${http_port}":8000 --name ${repo} --restart=always -v "/docker/${repo}":/usr/src/app -w /usr/src/app -e TZ=Asia/Shanghai python:3.10.11-slim-bullseye bash -c "$commands"
+    docker run -d -p "${http_port}:8000" \
+        --name ${repo} \
+        --restart=always \
+        -v "/docker/${repo}:/usr/src/app" \
+        -w /usr/src/app \
+        -e TZ=Asia/Shanghai \
+        python:3.10.11-slim-bullseye bash -c "$commands"
     docker logs ${repo}
 }
 
-
 deploy_node_app() {
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} repo_url http_port command"
-    return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} repo_url http_port command"
+        return
+    fi
 
-    repo_url=${1}
-    http_port=${2:-3000}
-    command=${3:-"npm start"}
-    repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
-    commands=$(cat <<EOF
+    local repo_url="${1}"
+    local http_port="${2:-3000}"
+    local command="${3:-"npm start"}"
+    local repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
+    local commands=$(cat <<EOF
 
 apt update && apt -y install git wget
 git clone ${repo_url} .
@@ -769,45 +839,52 @@ npm install --production --silent
 ${command}
 EOF
 )
-    docker run -d -p "${http_port}":3000 --name ${repo} --restart=always -v "/docker/${repo}":/usr/src/app -w /usr/src/app -e TZ=Asia/Shanghai \
-    -e NODE_ENV=production \
-    node:lts-bullseye-slim bash -c "$commands"
+    docker run -d -p "${http_port}:3000" \
+        --name ${repo} \
+        --restart=always \
+        -v "/docker/${repo}:/usr/src/app" \
+        -w /usr/src/app \
+        -e TZ=Asia/Shanghai \
+        -e NODE_ENV=production \
+        node:lts-bullseye-slim bash -c "$commands"
     docker logs ${repo}
 }
 
 deploy_php_app() {
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} app_name http_port"
-    return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} app_name http_port"
+        return
+    fi
 
-    app_name=$1
-    http_port=$2
-    docker run -d -p "${http_port}":80 --name ${app_name} -v "/docker/${app_name}":/var/www/html php:7.4-apache
+    local app_name="$1"
+    local http_port="$2"
+    docker run -d -p "${http_port}:80" --name ${app_name} -v "/docker/${app_name}:/var/www/html" php:7.4-apache
     # 容器内站点配置文件 /etc/apache2/sites-available/000-default.conf
     # 在php官方docker镜像中安装扩展
     docker exec -t ${app_name} curl -sSL https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions -o - | sh -s gd xdebug pdo_mysql
     #docker exec -t ${app_name} chmod -R 755 /var/www/html
     download_php_apps /docker/${app_name}
-
 }
-
 
 docker_run_app(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Usage: ${FUNCNAME} [interpreter] [command]..."
-    return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [interpreter] [command]..."
+        return
+    fi
 
-    interpreter=${1:-"python3"}
+    local interpreter=${1:-"python3"}
     shift 1
+    local command=""
+    
     if [ "$interpreter" = "python3" ]; then
         command=${@:-"python3 -m pip install -r requirements.txt && python3 app.py"}
         # 3.11-alpine3.17
-        docker run -it --rm -p 8000:8000 --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:3.10.11-slim-bullseye bash -c "${command}"
+        docker run -it --rm -p 8000:8000 --name py1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp python:3.10.11-slim-bullseye bash -c "${command}"
     elif [ "$interpreter" = "python" ]; then
         command=${@:-"python -m pip install -r requirements.txt && python app.py"}
-        docker run -it --rm -p 8000:8000 --name py1 -v $PWD:/usr/src/myapp -w /usr/src/myapp python:2.7.18-slim-buster bash -c "${command}"
+        docker run -it --rm -p 8000:8000 --name py1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp python:2.7.18-slim-buster bash -c "${command}"
     elif [ "$interpreter" = "php" ]; then
         command=${@:-""}
         docker run -it --rm -p 8000:80 --name php-httpd1 -v "$PWD":/var/www/html php:7.4-apache ${command}
@@ -831,47 +908,47 @@ docker_run_app(){
 
 function auto_mode(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-        system_init
-        install_supervisor
-        install_docker
+    
+    system_init
+    install_supervisor
+    install_docker
 
-        deploy_nginx
-        deploy_mysql
-        deploy_redis
+    deploy_nginx
+    deploy_mysql
+    deploy_redis
 
 
-        # tinyfilemanager
-        # docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
+    # tinyfilemanager admin/admin@123
+    # docker run -d -v /:/var/www/html/data -p 8020:80 --restart=always --name tinyfilemanager1 tinyfilemanager/tinyfilemanager:master
 
-        # adminer
-        # docker run -d --link mysql1:db --network network1 -p 8021:8080 --restart=always --name adminer1 adminer
+    # adminer
+    # docker run -d --link mysql1:db --network network1 -p 8021:8080 --restart=always --name adminer1 adminer
 
-        # deploy_portainer 9001
-        # create_proxy docker.iapp.run 9001
+    # deploy_portainer 9001
+    # create_proxy docker.iapp.run 9001
 
-        domain_name=blog.iapp.run
-        port=8010
-        deploy_wordpress ${port}
-        create_database ${domain_name}
-        create_proxy ${domain_name} ${port}
-        create_ssl ${domain_name}
+    local domain_name=blog.iapp.run
+    local port=8010
+    deploy_wordpress ${port}
+    create_database ${domain_name}
+    create_proxy ${domain_name} ${port}
+    create_ssl ${domain_name}
 
-        # domain_name=a.iapp.run
-        # create_vhost ${domain_name}
-        # create_ssl ${domain_name}
-        # create_database ${domain_name}
-
+    # domain_name=a.iapp.run
+    # create_vhost ${domain_name}
+    # create_ssl ${domain_name}
+    # create_database ${domain_name}
 }
 
 upgrade()
 {
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    if [ $1 = "-h" ] || [ "$1" = "--help" ]; then
-        echo "Description: Upgrade this script, Perform this operation in the working directory"
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Description: Upgrade this script, Perform this operation in the working directory"
         exit 0
     fi
-    url="https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/ccc.sh"
-    echo "正在从 ${url} 下载最新版本脚本..."
+    local url="https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/ccc.sh"
+    log "正在从 ${url} 下载最新版本脚本..."
     # bash -c "wget --no-cache --no-check-certificate -O /root/ccc.sh ${url}"
     bash -c "curl -LkO ${url}"
 }
@@ -886,14 +963,13 @@ function_list=$(compgen -A function)
 # 定义在不传入参数时默认执行的函数
 function default()
 {
-    echo "Usage: ${FUNCNAME} [function_name] [-h] [arguments]"
+    log "Usage: ${FUNCNAME} [function_name] [-h] [arguments]"
     echo -e "\nAvailable functions:"
     for func in $function_list; do
-        echo "  $func"
+        log "  $func"
     done
     echo
 }
 
 # 调用指定的函数，并传递参数
 "$function_name" "$@"
-
