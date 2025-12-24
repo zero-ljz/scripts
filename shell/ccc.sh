@@ -7,7 +7,6 @@ OS_ID=$(grep '^ID=' /etc/os-release | cut -d= -f2) # debian
 OS_VERSION_ID=$(grep '^VERSION_ID=' /etc/os-release | cut -d= -f2 | sed 's/"//g') # 11
 OS_VERSION_CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d= -f2) # bullseye
 
-set -e
 LOG_FILE="/var/log/ccc_script.log"
 
 log() {
@@ -966,7 +965,7 @@ function default()
     log "Usage: ${FUNCNAME} [function_name] [-h] [arguments]"
     echo -e "\nAvailable functions:"
     for func in $function_list; do
-        log "  $func"
+        echo "  $func"
     done
     echo
 }
