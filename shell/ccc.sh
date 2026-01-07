@@ -103,7 +103,7 @@ EOF
     echo -e "\n\n\n 更新APT包索引"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        apt update
+        apt update && apt install -y ca-certificates
     fi
 
     echo -e "\n\n\n 安装必备组件"
