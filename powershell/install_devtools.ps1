@@ -52,41 +52,47 @@ winget install -e --id Git.Git
 git config --global user.name 'zero-ljz'
 git config --global user.email '2267719005@qq.com'
 
+# winget install -e --id MSYS2.MSYS2
+
 winget install -e --id GitHub.GitHubDesktop
 winget install -e --id Microsoft.VisualStudioCode
 winget install -e --id zyedidia.micro
 winget install -e --id Microsoft.PowerToys
 winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.02
 # winget install -e --id Postman.Postman
-winget install -e --id hoppscotch.Hoppscotch
+# winget install -e --id hoppscotch.Hoppscotch
 winget install -e --id voidtools.Everything
 winget install PremiumSoft.NavicatPremiumLite --ignore-security-hash 
 winget install -e --id 7zip.7zip
 winget install -e --id DeepL.DeepL
 winget install -e --id Anki.Anki
-# winget install Termius.Termius
+winget install Termius.Termius
 # winget install -e --id Automattic.Simplenote
-# winget install -e --id Obsidian.Obsidian
+winget install -e --id Obsidian.Obsidian
 winget install -e --id Logseq.Logseq
 # winget install -e --id Notion.Notion
 # winget install -e --id Joplin.Joplin
 winget install -e --id SublimeHQ.SublimeText.4
+# winget install -e --id Notepad++.Notepad++
 # winget install -e --id Rizonesoft.Notepad3
 winget install -e --id Bandisoft.Bandizip --version 6.29
-winget install -e --id Bandisoft.Honeyview
+# winget install -e --id Bandisoft.Honeyview
 winget install -e --id Youdao.YoudaoTranslate
+winget install -e --id ByteDance.Feishu
 
+# winget install -e --id Adobe.Acrobat.Reader.64-bit
 
-
-winget install RevoUninstaller.RevoUninstaller
-winget install -e --id Telerik.Fiddler.Classic
-winget install -e --id AdrienAllard.FileConverter
+# winget install -e --id ShareX.ShareX
+winget install -e --id DuongDieuPhap.ImageGlass
 winget install -e --id Daum.PotPlayer
+# winget install RevoUninstaller.RevoUninstaller
+winget install -e --id Telerik.Fiddler.Classic
+# winget install -e --id AdrienAllard.FileConverter
 
 winget install -e --id Tencent.WeChat
 winget install -e --id Tencent.QQ
 winget install -e --id Tencent.QQMusic
-# winget install -e --id Tencent.TencentMeeting
+winget install -e --id Tencent.TencentMeeting
 
 
 

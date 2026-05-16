@@ -119,7 +119,7 @@ EOF
         apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
 
         if read -t 5 -p "是否使用pypi中国大陆镜像源？ (y): " answer && [ "$answer" == "y" ]; then
-            pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+            pip config set global.index-url https://pypi.mirrors.ustc.edu.cn/simple/
         fi
 
         pip install --user pipx
@@ -804,7 +804,7 @@ deploy_python_app() {
 
 apt update && apt -y install git wget
 git clone ${repo_url} .
-# pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+# pip config set global.index-url https://pypi.mirrors.ustc.edu.cn/simple/
 python3 -m pip install -r requirements.txt
 ${command}
 EOF
