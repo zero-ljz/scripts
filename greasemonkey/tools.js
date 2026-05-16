@@ -179,7 +179,7 @@
                     // 2. 提取主机名 (例如 www.google.com)
                     const hostname = new URL(cleanUrl).hostname;
                     // 3. 拼接 Google API (sz=32 获取高清一点的)
-                    const faviconUrl = `https://p.520999.xyz/https://www.google.com/s2/favicons?sz=32&domain=${hostname}`;
+                    const faviconUrl = `https://p.252525.xyz/https://www.google.com/s2/favicons?sz=32&domain=${hostname}`;
                     // 4. 生成 img 标签
                     iconHtml = `<img src="${faviconUrl}" onerror="this.style.display='none'">`;
                 } catch (e) {
