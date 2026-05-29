@@ -1,0 +1,55 @@
+﻿Windows Registry Editor Version 5.00
+
+; =======================================================================
+; 一、关闭系统广告与建议推广（安全纯净）
+; =======================================================================
+
+; 关闭设置应用中的各种小广告、推荐内容和个性化建议提示
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"SubscribedContent-314563Enabled"=dword:00000000
+"SubscribedContent-338385Enabled"=dword:00000000
+"SubscribedContent-338389Enabled"=dword:00000000
+"SubscribedContent-353696Enabled"=dword:00000000
+
+; 关闭文件资源管理器顶部的同步提供程序通知（主要是 OneDrive 的升级弹窗广告）
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced]
+"ShowSyncProviderNotifications"=dword:00000000
+
+; 从源头关闭 Windows 的“消费者体验”功能（禁止系统在开始菜单里自动下载流氓游戏和推广应用）
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\CloudContent]
+"DisableWindowsConsumerFeatures"=dword:00000001
+
+
+; =======================================================================
+; 二、前台程序 CPU 优先级压榨（游戏/生产力加速）
+; =======================================================================
+
+; 调整前台与后台程序 CPU 时间片分配（锁定高性能模式，让当前活动的游戏/软件获得绝大部分算力）
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\PriorityControl]
+"Win32PrioritySeparation"=dword:00000026
+
+
+; =======================================================================
+; 三、封杀微软隐私遥测与追踪服务（释放后台无用资源）
+; =======================================================================
+
+; 通过策略组彻底禁用系统的诊断数据收集（阻止 Windows 将你的软件崩溃、使用习惯日志上传）
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection]
+"AllowTelemetry"=dword:00000000
+
+; 将“用户体验与遥测服务 (DiagTrack)”的启动类型修改为“禁用”（开机绝不加载）
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\DiagTrack]
+"Start"=dword:00000004
+
+; 将“核心诊断路由服务 (dmwappushservice)”的启动类型修改为“禁用”
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\dmwappushservice]
+"Start"=dword:00000004
+
+
+; =======================================================================
+; 四、净化本地搜索（切断 Bing 联网）
+; =======================================================================
+
+; 彻底禁用开始菜单搜索栏的联网建议（打字搜本地文件时，不再弹出 Bing 网页搜索结果）
+[HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\Explorer]
+"DisableSearchBoxSuggestions"=dword:00000001

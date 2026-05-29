@@ -1,0 +1,11 @@
+﻿Windows Registry Editor Version 5.00
+
+; 路径 1：解除暂停更新的天数限制（主设置）
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings]
+"FlightSettingsMaxPauseDays"=dword:00000e10
+"PauseSettingsMaxPauseDays"=dword:00000e10
+
+; 路径 2：确保策略组层面的最大暂停天数同步放大（企业/专业版更稳妥）
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate]
+"ActiveHoursStart"=—
+"DeferUpdatePeriod"=dword:00000001
