@@ -3,7 +3,7 @@
 
 # 安装 winget
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-    curl.exe -LkOJ https://p.520999.xyz/https://github.com/microsoft/winget-cli/releases/download/v1.12.440/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+    curl.exe -LkOJ https://p.252525.xyz/https://github.com/microsoft/winget-cli/releases/download/v1.12.440/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
     powershell -Command "Add-AppxPackage -Path Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
 }
 
@@ -12,40 +12,45 @@ winget settings --enable InstallerHashOverride
 
 # winget install -e --id SomePythonThings.WingetUIStore
 # winget install -e --id Microsoft.Teams.Free
-winget install -e --id Microsoft.WindowsPCHealthCheck
+# winget install -e --id Microsoft.WindowsPCHealthCheck
 # winget install -e --id Microsoft.MouseandKeyboardCenter
-winget install -e --id 9NBLGGH5R558 # To Do
+# winget install -e --id 9NBLGGH5R558 # To Do
 # winget install -e --id 9MSPC6MP8FM4 # Whiteboard
 
 # 安装 Chocolatey
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 
-winget install -e --id OpenJS.NodeJS.LTS  --version 18.20.2
+# 安装 NodeJS
+winget install -e --id OpenJS.NodeJS.LTS
 # 配置国内源
 npm config set registry https://registry.npmmirror.com
 # 安装pnpm
 npm install -g pnpm
 
+# 安装 Python
 winget install -e --id Python.Python.3.10 --version 3.10.11
 # 配置国内源
-pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+pip config set global.index-url https://mirrors.ustc.edu.cn/pypi/simple
 # 安装pipx
 pip install --user pipx
 # 自动添加到用户环境变量Path
 python -m pipx ensurepath
 # 在隔离环境中安装poetry
-python -m pipx install poetry==1.8.3
+# python -m pipx install poetry==1.8.3
+# 安装uv
+winget install --id astral-sh.uv
 
 
 
 # NSSM (Non-Sucking Service Manager)。
 # 用法：nssm install MyPanel "C:\Python\python.exe" "C:\Panel\main.py"
 # 它非常稳定，专门用来把普通 exe/脚本变成 Windows 服务。
-winget install -e --id NSSM.NSSM
+# winget install -e --id NSSM.NSSM
 
 
 
 winget install -e --id Microsoft.WindowsTerminal
+# winget install -e --id FilesCommunity.Files
 
 winget install -e --id Git.Git
 # 配置用户信息
@@ -55,44 +60,45 @@ git config --global user.email '2267719005@qq.com'
 # winget install -e --id MSYS2.MSYS2
 
 winget install -e --id GitHub.GitHubDesktop
-winget install -e --id Microsoft.VisualStudioCode
 winget install -e --id zyedidia.micro
-winget install -e --id Microsoft.PowerToys
+winget install -e --id aristocratos.btop4win
+# winget install -e --id Microsoft.PowerToys
 winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.02
-# winget install -e --id Postman.Postman
-# winget install -e --id hoppscotch.Hoppscotch
 winget install -e --id voidtools.Everything
-winget install PremiumSoft.NavicatPremiumLite --ignore-security-hash 
-winget install -e --id 7zip.7zip
 winget install -e --id DeepL.DeepL
-winget install -e --id Anki.Anki
-winget install Termius.Termius
-# winget install -e --id Automattic.Simplenote
-winget install -e --id Obsidian.Obsidian
-winget install -e --id Logseq.Logseq
-# winget install -e --id Notion.Notion
-# winget install -e --id Joplin.Joplin
+winget install -e --id 7zip.7zip
 winget install -e --id SublimeHQ.SublimeText.4
 # winget install -e --id Notepad++.Notepad++
-# winget install -e --id Rizonesoft.Notepad3
+winget install -e --id Rizonesoft.Notepad3
 winget install -e --id Bandisoft.Bandizip --version 6.29
-# winget install -e --id Bandisoft.Honeyview
-winget install -e --id Youdao.YoudaoTranslate
-winget install -e --id ByteDance.Feishu
+winget install -e --id Bandisoft.Honeyview
+winget install -e --id liule.Snipaste
+winget install PremiumSoft.NavicatPremiumLite --ignore-security-hash 
+# winget install -e --id Postman.Postman
+# winget install -e --id hoppscotch.Hoppscotch
+# winget install -e --id Anki.Anki
+# winget install Termius.Termius
+# winget install -e --id Automattic.Simplenote
+# winget install -e --id Obsidian.Obsidian
+# winget install -e --id Logseq.Logseq
+# winget install -e --id Notion.Notion
+# winget install -e --id Joplin.Joplin
+# winget install -e --id Youdao.YoudaoTranslate
+# winget install -e --id ByteDance.Feishu
 
 # winget install -e --id Adobe.Acrobat.Reader.64-bit
 
 # winget install -e --id ShareX.ShareX
-winget install -e --id DuongDieuPhap.ImageGlass
-winget install -e --id Daum.PotPlayer
-# winget install RevoUninstaller.RevoUninstaller
+# winget install -e --id DuongDieuPhap.ImageGlass
+# winget install -e --id Daum.PotPlayer
+winget install RevoUninstaller.RevoUninstaller
 winget install -e --id Telerik.Fiddler.Classic
 # winget install -e --id AdrienAllard.FileConverter
 
-winget install -e --id Tencent.WeChat
-winget install -e --id Tencent.QQ
-winget install -e --id Tencent.QQMusic
-winget install -e --id Tencent.TencentMeeting
+# winget install -e --id Tencent.WeChat
+# winget install -e --id Tencent.QQ
+# winget install -e --id Tencent.QQMusic
+# winget install -e --id Tencent.TencentMeeting
 
 
 
@@ -131,11 +137,14 @@ winget install -e --id Tencent.TencentMeeting
 # winget install -e --id PremiumSoft.NavicatPremium
 
 
-# winget install -e --id Pylogmon.pot # 聚合翻译工具
+winget install -e --id Pylogmon.pot # 聚合翻译工具
+winget install -e --id KDE.CrowTranslate
 
 
-# winget install -e --id SumatraPDF.SumatraPDF
-# winget install -e --id VideoLAN.VLC
+winget install -e --id SumatraPDF.SumatraPDF
+winget install -e --id VideoLAN.VLC
+winget install -e --id AntibodySoftware.WizTree
+winget install -e --id GeekUninstaller.GeekUninstaller
 # winget install -e --id TeamViewer.TeamViewer
 # winget install -e --id Youqu.ToDesk
 # winget install -e --id VMware.WorkstationPro
@@ -151,7 +160,7 @@ winget install -e --id Tencent.TencentMeeting
 # winget install -e --id Dropbox.Dropbox
 
 # winget install -e --id MariaDB.Server --version 10.4.30
-# winget install -e --id MariaDB.Server --version 10.6.17
+winget install -e --id MariaDB.Server --version 10.6.27
 # winget install -e --id Oracle.MySQLShell
 # winget install -e --id Oracle.MySQLWorkbench
 # winget install -e --id BlueStack.BlueStacks --version 5.20.0.1037
@@ -179,7 +188,57 @@ winget install -e --id Tencent.TencentMeeting
 # winget install -e --id Tencent.WeCom # 企业微信
 # winget install -e --id Tencent.WeixinDevTools # 微信开发者工具
 
-
+winget install -e --id Microsoft.VisualStudioCode
+# 中文语言包
+code --install-extension MS-CEINTL.vscode-language-pack-zh-hans
+# GitLens
+code --install-extension eamodio.gitlens
+# Python 核心支持
+code --install-extension ms-python.python
+# Prettier 代码格式化
+code --install-extension esbenp.prettier-vscode
+# ESLint 代码规范检查
+code --install-extension dbaeumer.vscode-eslint
+# Pylance 语言服务器
+code --install-extension ms-python.vscode-pylance
+# Live Server 本地前端服务器
+code --install-extension ritwickdey.LiveServer
+# Code Runner 快捷代码运行
+code --install-extension formulahendry.code-runner
+# Docker 工具箱
+code --install-extension ms-azuretools.vscode-docker
+# vscode-icons 经典图标包
+code --install-extension vscode-icons-team.vscode-icons
+# indent-rainbow 彩虹缩进线
+code --install-extension oderwat.indent-rainbow
+# HTML CSS Class 智能补全
+code --install-extension Zignd.html-css-class-completion
+# 突出显示匹配的 HTML 标签
+code --install-extension vincaslt.highlight-matching-tag
+# GitHub 官方主题包
+code --install-extension GitHub.github-vscode-theme
+# Dev Containers 远程容器开发
+code --install-extension ms-azuretools.vscode-containers
+# Thunder Client 接口测试工具
+code --install-extension rangav.vscode-thunder-client
+# Python Debugger
+code --install-extension ms-python.debugpy
+# Ruff 超快 Python 编校器
+code --install-extension charliermarsh.ruff
+# Continue 开源 AI 编码助手
+code --install-extension Continue.continue
+# Python Indent 缩进增强
+code --install-extension KevinRose.vsc-python-indent
+# Python Type Hint 类型提示
+code --install-extension njqdev.vscode-python-typehint
+# Cline
+code --install-extension saoudrizwan.claude-dev
+# Microsoft Edge 开发者工具
+code --install-extension ms-edgedevtools.vscode-edge-devtools
+# Python Environments 环境管理器
+code --install-extension ms-python.vscode-python-envs
+# Anthropic Claude Code
+code --install-extension Anthropic.claude-code
 
 
 
