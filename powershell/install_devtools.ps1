@@ -65,7 +65,7 @@ winget install -e --id aristocratos.btop4win
 # winget install -e --id Microsoft.PowerToys
 winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.02
 winget install -e --id voidtools.Everything
-winget install -e --id DeepL.DeepL
+# winget install -e --id DeepL.DeepL
 winget install -e --id 7zip.7zip
 winget install -e --id SublimeHQ.SublimeText.4
 # winget install -e --id Notepad++.Notepad++
