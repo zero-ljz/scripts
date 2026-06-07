@@ -159,8 +159,8 @@ winget install -e --id GeekUninstaller.GeekUninstaller
 
 # winget install -e --id Dropbox.Dropbox
 
-# winget install -e --id MariaDB.Server --version 10.4.30
-winget install -e --id MariaDB.Server --version 10.6.27
+# 10.4.30和10.6.27已经被删
+winget install -e --id MariaDB.Server
 # winget install -e --id Oracle.MySQLShell
 # winget install -e --id Oracle.MySQLWorkbench
 # winget install -e --id BlueStack.BlueStacks --version 5.20.0.1037
