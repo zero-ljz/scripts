@@ -582,7 +582,12 @@ LastModified: ${document.lastModified}
         THEME_COLOR: '#007AFF', // iOS Blue
         GLASS_BG: 'rgba(255, 255, 255, 0.75)',
         GLASS_BG_DARK: 'rgba(30, 30, 30, 0.85)',
-        ANIMATION_SPEED: '0.25s'
+        ANIMATION_SPEED: '0.25s',
+        FLOAT_MARGIN: 8,
+        STORAGE_KEYS: {
+            FLOAT_TOP: 'pos_top',
+            FLOAT_LEFT: 'pos_left'
+        }
     };
 
     // --- 1. 样式系统 (CSS) ---
@@ -594,7 +599,7 @@ LastModified: ${document.lastModified}
             line-height: 1.5 !important;
             -webkit-font-smoothing: antialiased;
         }
-        
+
         /* 强制重置面板内的图片和SVG，防止网页全局样式(如 max-width: 100%)导致图标变形 */
         #gm-toolbox-panel img, #gm-toolbox-panel svg {
             max-width: none !important;
@@ -649,16 +654,16 @@ LastModified: ${document.lastModified}
             padding: 16px !important;
             color: #fff !important;
             border: 1px solid rgba(255,255,255,0.08) !important;
-            
+
             /* === 核心修复：隐藏状态 === */
             opacity: 0;
             transform: scale(0.95);
-            
+
             /* 1. 禁止鼠标穿透：确保看不见的时候点不到 */
-            pointer-events: none !important; 
-            
+            pointer-events: none !important;
+
             /* 2. 移除可见性：确保不会触发 hover 和 tooltip */
-            visibility: hidden !important;   
+            visibility: hidden !important;
             /* ========================= */
 
             transition: opacity ${CONSTANTS.ANIMATION_SPEED}, transform ${CONSTANTS.ANIMATION_SPEED}, visibility ${CONSTANTS.ANIMATION_SPEED};
@@ -667,13 +672,13 @@ LastModified: ${document.lastModified}
         }
 
         /* 显示状态 */
-        #gm-toolbox-panel.show { 
-            opacity: 1; 
-            transform: scale(1); 
-            
+        #gm-toolbox-panel.show {
+            opacity: 1;
+            transform: scale(1);
+
             /* === 核心修复：显示状态 === */
             /* 恢复鼠标交互 */
-            pointer-events: auto !important; 
+            pointer-events: auto !important;
             /* 恢复可见性 */
             visibility: visible !important;
             /* ========================= */
@@ -702,7 +707,7 @@ LastModified: ${document.lastModified}
             appearance: none !important; /* 去除浏览器默认样式 */
         }
         #gm-search-input:focus { background: rgba(255,255,255,0.15) !important; border-color: ${CONSTANTS.THEME_COLOR} !important; }
-        
+
         #gm-search-icon {
             position: absolute !important;
             right: 0 !important;
@@ -778,7 +783,7 @@ LastModified: ${document.lastModified}
             overflow: hidden !important; /* 防止内容溢出 */
         }
         .gm-tool-btn:hover { background: ${CONSTANTS.THEME_COLOR} !important; color: #fff !important; transform: translateY(-1px); }
-        
+
         /* === 图标统一尺寸修复 (核心) === */
         .gm-tool-btn .icon {
             width: 24px !important;  /* 强制固定宽度 */
@@ -802,7 +807,7 @@ LastModified: ${document.lastModified}
             display: block !important;
             border-radius: 2px !important;
         }
-        
+
         /* 收藏星星 */
         .gm-fav-star {
             position: absolute;
@@ -835,7 +840,7 @@ LastModified: ${document.lastModified}
             white-space: nowrap;
         }
         #gm-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-        
+
         #gm-result-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: ${CONSTANTS.Z_INDEX + 15}; display: none; backdrop-filter: blur(2px); }
         #gm-result-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 500px !important; max-width: 90vw !important; background: #fff !important; color: #333 !important; border-radius: 12px !important; padding: 20px !important; z-index: ${CONSTANTS.Z_INDEX + 20}; box-shadow: 0 20px 60px rgba(0,0,0,0.3) !important; display: none; flex-direction: column !important; text-align: left !important; }
         #gm-result-header { display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 15px !important; border-bottom: 1px solid #eee !important; padding-bottom: 10px !important; }
@@ -876,6 +881,62 @@ LastModified: ${document.lastModified}
         GM_setValue('tools_order_map', orderMap);
     };
 
+    // 悬浮球位置管理：统一处理页面缩放、窗口尺寸变化和历史位置兼容
+    const clampNumber = (value, min, max) => Math.min(Math.max(value, min), Math.max(min, max));
+
+    const getVisibleViewport = () => {
+        const viewport = window.visualViewport;
+        return {
+            left: viewport ? viewport.offsetLeft : 0,
+            top: viewport ? viewport.offsetTop : 0,
+            width: viewport ? viewport.width : window.innerWidth,
+            height: viewport ? viewport.height : window.innerHeight
+        };
+    };
+
+    const parsePositionValue = (value, axisSize, fallback) => {
+        if (typeof value !== 'string') return fallback;
+
+        const raw = value.trim();
+        const number = parseFloat(raw);
+        if (!Number.isFinite(number)) return fallback;
+
+        return raw.endsWith('%') ? axisSize * number / 100 : number;
+    };
+
+    const getClampedFloatPosition = (btn, leftValue, topValue) => {
+        const viewport = getVisibleViewport();
+        const margin = CONSTANTS.FLOAT_MARGIN;
+        const width = btn.offsetWidth || 44;
+        const height = btn.offsetHeight || 44;
+        const fallbackLeft = viewport.left + margin;
+        const fallbackTop = viewport.top + viewport.height * 0.15;
+        const left = parsePositionValue(leftValue, viewport.width, fallbackLeft);
+        const top = parsePositionValue(topValue, viewport.height, fallbackTop);
+
+        return {
+            left: clampNumber(left, viewport.left + margin, viewport.left + viewport.width - width - margin),
+            top: clampNumber(top, viewport.top + margin, viewport.top + viewport.height - height - margin)
+        };
+    };
+
+    const applyFloatPosition = (btn, leftValue, topValue) => {
+        const position = getClampedFloatPosition(btn, leftValue, topValue);
+        btn.style.left = `${position.left}px`;
+        btn.style.top = `${position.top}px`;
+        return position;
+    };
+
+    const saveFloatPosition = (btn) => {
+        GM_setValue(CONSTANTS.STORAGE_KEYS.FLOAT_LEFT, btn.style.left);
+        GM_setValue(CONSTANTS.STORAGE_KEYS.FLOAT_TOP, btn.style.top);
+    };
+
+    const keepFloatButtonInViewport = (btn, shouldSave = false) => {
+        applyFloatPosition(btn, btn.style.left, btn.style.top);
+        if (shouldSave) saveFloatPosition(btn);
+    };
+
 
     // --- 5. UI 构建与事件逻辑 ---
 
@@ -892,10 +953,13 @@ LastModified: ${document.lastModified}
         const btn = document.createElement('div');
         btn.id = 'gm-float-btn';
         setHTML(btn, gmc.get('btn_text'));
-        btn.style.top = GM_getValue('pos_top', DEFAULT_CONFIG.init_pos_top);
-        btn.style.left = GM_getValue('pos_left', DEFAULT_CONFIG.init_pos_left);
-        if (!gmc.get('show_button')) btn.style.setProperty('display', 'none', 'important');
+        const savedTop = GM_getValue(CONSTANTS.STORAGE_KEYS.FLOAT_TOP, DEFAULT_CONFIG.init_pos_top);
+        const savedLeft = GM_getValue(CONSTANTS.STORAGE_KEYS.FLOAT_LEFT, DEFAULT_CONFIG.init_pos_left);
+        btn.style.top = savedTop;
+        btn.style.left = savedLeft;
         document.body.appendChild(btn);
+        applyFloatPosition(btn, savedLeft, savedTop);
+        if (!gmc.get('show_button')) btn.style.setProperty('display', 'none', 'important');
 
         // --- Panel 构建 ---
         const panel = document.createElement('div');
@@ -1073,32 +1137,46 @@ LastModified: ${document.lastModified}
         searchInput.addEventListener('input', () => renderToolList());
         searchInput.addEventListener('click', (e) => e.stopPropagation()); // 防止点击输入框关闭面板
 
-        // 交互事件监听 (悬浮球拖拽 & 面板开关 - 保持原逻辑)
+        // 交互事件监听 (悬浮球拖拽 & 面板开关)
         let isDragging = false, hasMoved = false, startX, startY, initLeft, initTop;
-        btn.addEventListener('mousedown', (e) => {
+
+        const beginDrag = (e) => {
             if (e.button !== 0) return;
+            // 阻止鼠标按下时浏览器默认清除页面选区的行为
+            e.preventDefault();
+
             isDragging = true; hasMoved = false;
             startX = e.clientX; startY = e.clientY;
             const rect = btn.getBoundingClientRect();
             initLeft = rect.left; initTop = rect.top;
             btn.style.transition = 'none';
-            e.preventDefault();
-        });
+        };
+
+        const syncFloatPositionWithViewport = (shouldSave = false) => {
+            keepFloatButtonInViewport(btn, shouldSave);
+            if (panel.classList.contains('show')) togglePanel(true);
+        };
+
+        btn.addEventListener('mousedown', beginDrag);
         window.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
             const dx = e.clientX - startX; const dy = e.clientY - startY;
             if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
-            let newLeft = initLeft + dx; let newTop = initTop + dy;
-            const maxLeft = window.innerWidth - btn.offsetWidth; const maxTop = window.innerHeight - btn.offsetHeight;
-            newLeft = Math.max(0, Math.min(newLeft, maxLeft)); newTop = Math.max(0, Math.min(newTop, maxTop));
-            btn.style.left = newLeft + 'px'; btn.style.top = newTop + 'px';
+            applyFloatPosition(btn, `${initLeft + dx}px`, `${initTop + dy}px`);
         });
         window.addEventListener('mouseup', () => {
             if (!isDragging) return;
             isDragging = false;
             btn.style.transition = `transform 0.1s, background ${CONSTANTS.ANIMATION_SPEED}`;
-            if (hasMoved) { GM_setValue('pos_top', btn.style.top); GM_setValue('pos_left', btn.style.left); }
+            if (hasMoved) {
+                syncFloatPositionWithViewport(true);
+            }
         });
+        window.addEventListener('resize', () => syncFloatPositionWithViewport(true));
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => syncFloatPositionWithViewport(true));
+            window.visualViewport.addEventListener('scroll', () => syncFloatPositionWithViewport());
+        }
 
         btn.addEventListener('click', (e) => {
             // 1. 阻止默认行为和冒泡，防止触发页面其他点击事件
@@ -1129,19 +1207,6 @@ LastModified: ${document.lastModified}
             }
         });
 
-        // 同时也需要确保 mousedown 不会清除选中 (之前的代码已经包含了 e.preventDefault，这里再次确认)
-        btn.addEventListener('mousedown', (e) => {
-            if (e.button !== 0) return;
-            // 这一行非常重要：阻止鼠标按下时浏览器默认清除选区的行为
-            e.preventDefault();
-
-            isDragging = true; hasMoved = false;
-            startX = e.clientX; startY = e.clientY;
-            const rect = btn.getBoundingClientRect();
-            initLeft = rect.left; initTop = rect.top;
-            btn.style.transition = 'none';
-        });
-
 
         document.addEventListener('click', (e) => {
             if (panel.classList.contains('show') && !panel.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
@@ -1153,14 +1218,16 @@ LastModified: ${document.lastModified}
             const isVisible = panel.classList.contains('show');
             const shouldShow = forceState !== undefined ? forceState : !isVisible;
             if (shouldShow) {
+                const viewport = getVisibleViewport();
                 const btnRect = btn.getBoundingClientRect();
                 const panelWidth = 340;
-                const panelHeight = Math.min(window.innerHeight * 0.8, 600);
+                const panelHeight = Math.min(viewport.height * 0.8, 600);
                 let left = btnRect.right + 15;
                 let top = btnRect.top;
-                if (left + panelWidth > window.innerWidth) left = btnRect.left - panelWidth - 15;
-                if (top + panelHeight > window.innerHeight) top = window.innerHeight - panelHeight - 20;
-                if (top < 10) top = 10;
+                if (left + panelWidth > viewport.left + viewport.width) left = btnRect.left - panelWidth - 15;
+                if (left < viewport.left + 10) left = viewport.left + 10;
+                if (top + panelHeight > viewport.top + viewport.height) top = viewport.top + viewport.height - panelHeight - 20;
+                if (top < viewport.top + 10) top = viewport.top + 10;
 
                 panel.style.left = left + 'px';
                 panel.style.top = top + 'px';
@@ -1185,6 +1252,7 @@ LastModified: ${document.lastModified}
         btn.replaceChildren(gmc.get('btn_text'));
         if (gmc.get('show_button')) {
             btn.style.setProperty('display', 'flex', 'important');
+            keepFloatButtonInViewport(btn, true);
         } else {
             btn.style.setProperty('display', 'none', 'important');
         }
@@ -1215,10 +1283,8 @@ LastModified: ${document.lastModified}
     GM_registerMenuCommand("重置悬浮球位置", () => {
         const btn = document.getElementById('gm-float-btn');
         if (btn) {
-            btn.style.top = DEFAULT_CONFIG.init_pos_top;
-            btn.style.left = DEFAULT_CONFIG.init_pos_left;
-            GM_setValue('pos_top', DEFAULT_CONFIG.init_pos_top);
-            GM_setValue('pos_left', DEFAULT_CONFIG.init_pos_left);
+            applyFloatPosition(btn, DEFAULT_CONFIG.init_pos_left, DEFAULT_CONFIG.init_pos_top);
+            saveFloatPosition(btn);
             Utils.toast("已重置位置");
         }
     });
