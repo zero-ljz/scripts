@@ -1,3 +1,5 @@
-regedit /s "C:\Users\LJZ\repos\scripts\batchfile\Navicat Premium 16 ÖØÖÃÊÔÓÃ.reg"
+chcp 65001
+
+regedit /s "C:\Users\zero-\repos\scripts\batchfile\Navicat Premium 16 é‡ç½®è¯•ç”¨.reg"
 
 explorer "C:\Program Files\PremiumSoft\Navicat Premium 16\navicat.exe"

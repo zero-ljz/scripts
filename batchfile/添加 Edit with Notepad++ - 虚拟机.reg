@@ -2,8 +2,8 @@
 
 [HKEY_CLASSES_ROOT\*\shell\notepad++]
 @="Edit with Notepad++"
-"Icon"="\\\\tsclient\\C\\Users\\LJZ\\OneDrive\\程序\\notepad++\\notepad++.exe"
+"Icon"="\\\\tsclient\\C\\Users\\zero-\\OneDrive\\程序\\notepad++\\notepad++.exe"
 
 [HKEY_CLASSES_ROOT\*\shell\notepad++\command]
-@="\"\\\\tsclient\\C\\Users\\LJZ\\OneDrive\\程序\\notepad++\\notepad++.exe\" \"%1\""
+@="\"\\\\tsclient\\C\\Users\\zero-\\OneDrive\\程序\\notepad++\\notepad++.exe\" \"%1\""
 
