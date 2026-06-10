@@ -329,4 +329,8 @@ code --install-extension WallabyJs.console-ninja
 Write-Host "安装 Live Share 团队实时协同编程与调试工具" -ForegroundColor Cyan
 code --install-extension MS-vsliveshare.vsliveshare
 
+
+# 其他
+Write-Host "安装 GistPad 使用GitHub gist和存储库管理您的代码片段和开发人员笔记。" -ForegroundColor Cyan
+code --install-extension vsls-contrib.gistfs
 }
