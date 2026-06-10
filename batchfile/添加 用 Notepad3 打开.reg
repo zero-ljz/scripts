@@ -1,9 +1,9 @@
 ﻿Windows Registry Editor Version 5.00
 
-[HKEY_CLASSES_ROOT\*\shell\notepad3]
+[HKEY_CLASSES_ROOT\*\shell\用 Notepad3 打开]
 @="用 Notepad3 打开"
 "Icon"="C:\\Program Files\\Notepad3\\Notepad3.exe"
 
-[HKEY_CLASSES_ROOT\*\shell\notepad3\command]
+[HKEY_CLASSES_ROOT\*\shell\用 Notepad3 打开\command]
 @="\"C:\\Program Files\\Notepad3\\Notepad3.exe\" \"%1\""
 
