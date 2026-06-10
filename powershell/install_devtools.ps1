@@ -234,11 +234,11 @@ Write-Host "`n`n`n 安装 VSCode 扩展" -ForegroundColor Cyan
 choice /T 5 /D y /M "是否继续？"
 if ($LASTEXITCODE -eq 1) {
 
-# 中文语言包
+Write-Host "安装 中文语言包" -ForegroundColor Cyan
 code --install-extension MS-CEINTL.vscode-language-pack-zh-hans
-# vscode-icons 经典图标包
+Write-Host "安装 vscode-icons 经典图标包" -ForegroundColor Cyan
 code --install-extension vscode-icons-team.vscode-icons
-# GitHub 官方主题包
+Write-Host "安装 GitHub 官方主题包" -ForegroundColor Cyan
 code --install-extension GitHub.github-vscode-theme
 
 # === Python 开发基础 ===
