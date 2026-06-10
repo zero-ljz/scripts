@@ -69,7 +69,7 @@ git config --global user.email '2267719005@qq.com'
 
 # winget install -e --id Microsoft.PowerToys
 # winget install -e --id DeepL.DeepL
-# winget install -e --id Notepad++.Notepad++
+winget install -e --id Notepad++.Notepad++
 
 Write-Host "安装 VS Code" -ForegroundColor Cyan
 winget install -e --id Microsoft.VisualStudioCode

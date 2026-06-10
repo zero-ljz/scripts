@@ -1,7 +1,7 @@
 ﻿Windows Registry Editor Version 5.00
 
 [HKEY_CLASSES_ROOT\*\shell\notepad++]
-@="Edit with Notepad++"
+@="以 Notepad++ 编辑"
 "Icon"="C:\\Users\\zero-\\OneDrive\\程序\\notepad++\\notepad++.exe"
 
 [HKEY_CLASSES_ROOT\*\shell\notepad++\command]
