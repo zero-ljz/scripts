@@ -266,7 +266,7 @@ Write-Host "安装 Roo Cline 基于 Agent 的 AI 自动化编码助手" -Foregro
 code --install-extension RooVeterinaryInc.roo-cline
 Write-Host "安装 Claude Code 官方智能编程扩展" -ForegroundColor Cyan
 code --install-extension Anthropic.claude-code
-Write-Host "安装 Claude Dev 强大的 AI 编码与自主 Agent 助手" -ForegroundColor Cyan
+# Write-Host "安装 Claude Dev 强大的 AI 编码与自主 Agent 助手" -ForegroundColor Cyan
 # code --install-extension saoudrizwan.claude-dev
 
 # === 前端与 Web 开发 ===
