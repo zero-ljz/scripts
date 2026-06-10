@@ -242,7 +242,7 @@ install_docker(){
     # sh get-docker.sh
 
     local host="download.docker.com"
-    read -t 5 -p "是否使用中国大陆镜像？ (y): " answer && [ "$answer" == "y" ] && host="mirrors.tuna.tsinghua.edu.cn"
+    read -t 5 -p "是否使用中国大陆镜像？ (y): " answer && [ "$answer" == "y" ] && host="mirrors.ustc.edu.cn/docker-ce"
 
     echo -e "\n\n\n 安装包以允许apt通过HTTPS使用存储库"
     apt-get update && apt-get -y install ca-certificates curl gnupg
@@ -253,7 +253,7 @@ install_docker(){
     chmod a+r /etc/apt/keyrings/docker.gpg
     
     echo -e "\n\n\n 设置存储库"
-    log "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://${host}/linux/${OS_ID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://${host}/linux/${OS_ID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
     
     echo -e "\n\n\n 安装 Docker Engine、containerd 和 Docker Compose"
     apt-get update && apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
@@ -470,7 +470,7 @@ deploy_mysql(){
     docker volume create mysql-data
 
     MYSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
-    log "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
+    echo "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
 
     log "安装 MySQL"
     # docker run -dp ${port}:3306 --name mysql1 --restart=always --network network1 --network-alias mysql -v mysql-data:/var/lib/mysql \
