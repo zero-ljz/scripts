@@ -1,0 +1,9 @@
+﻿Windows Registry Editor Version 5.00
+
+# 1. 普通权限直接运行 Python
+[HKEY_CLASSES_ROOT\Python.File\shell\RunPyDirect]
+@="直接用 Python 执行"
+"Icon"="py.exe"
+
+[HKEY_CLASSES_ROOT\Python.File\shell\RunPyDirect\command]
+@="cmd.exe /k python \"%1\""
