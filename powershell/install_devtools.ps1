@@ -62,8 +62,8 @@ winget install -e --id Microsoft.WindowsTerminal
 Write-Host "安装 Git" -ForegroundColor Cyan
 winget install -e --id Git.Git
 # 配置用户信息
-git config --global user.name 'zero-ljz'
-git config --global user.email '2267719005@qq.com'
+# git config --global user.name 'zero-ljz'
+# git config --global user.email '2267719005@qq.com'
 
 # winget install -e --id MSYS2.MSYS2
 
