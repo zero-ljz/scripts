@@ -155,20 +155,13 @@ winget install -e --id KDE.CrowTranslate
 # winget install -e --id Tencent.QQMusic
 # winget install -e --id Tencent.TencentMeeting
 
-# wget https://dn.navicat.com.cn/download/navicat17_premium_lite_cs_x64.exe -O navicat17_premium_lite_cs_x64.exe
+# wget https://mirrors.aliyun.com/mariadb///mariadb-10.6.27/winx64-packages/mariadb-10.6.27-winx64.msi -O mariadb-10.6.27-winx64.msi
 # winget install -e --id Xmind.Xmind
 
 # winget install -e --id Microsoft.WSL --version 1.0.0.20210422 --quiet Write-Host "安装 WSL2"
 # winget install -e --id Ubuntu --quiet # 使用 winget 安装 WSL2 发行版
 # wsl --install --distribution Debian
-Write-Host "安装 Docker 插件"
-# $dockerExtensions = @(
-#     "ms-azuretools.vscode-docker"
-# )
 
-# foreach ($dockerExtension in $dockerExtensions) {
-#     Start-Process -Wait -FilePath code -ArgumentList "--install-extension $dockerExtension"
-# }
 
 # winget install -e --id Docker.DockerDesktop --version 4.1.1 --quiet
 
