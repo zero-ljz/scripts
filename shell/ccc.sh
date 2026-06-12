@@ -269,7 +269,7 @@ install_nodejs(){
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-    nvm install 18.19.0
+    nvm install 24
 
     # npm install -g yarn
     npm install -g pnpm
@@ -293,6 +293,17 @@ create_ssl(){
     # acme_dir=${2:-/var/www/${domain_name}/.well-known/acme-challenge/} 
     local acme_dir="/var/www/challenges/${domain_name}/"
 
+    # 自动在 Crontab 中写入“每天凌晨固定检查”的任务
+    local current_script=$(readlink -f "$0")
+    # 确保是通过脚本文件执行，而不是直接在终端粘贴函数
+    if [[ "$current_script" != *"bash"* ]] && [ -f "$current_script" ]; then
+        local cron_job="15 3 * * * CRON_EXECUTION=1 bash $current_script create_ssl $domain_name"
+        if ! crontab -l 2>/dev/null | grep -q "create_ssl $domain_name"; then
+            (crontab -l 2>/dev/null; echo "$cron_job") | crontab -
+            log "SUCCESS: Daily health-check cron job added."
+        fi
+    fi
+
     local SSL_DIR="/var/ssl"
     if [ ! -d "$SSL_DIR" ]; then
         mkdir "$SSL_DIR"
@@ -309,6 +320,30 @@ create_ssl(){
 
     local DOMAIN_CSR="$SSL_DIR/${domain_name}.csr"
 
+    local INTERMEDIATE_PEM="$SSL_DIR/lets-encrypt-r3.pem"
+
+    # ==========================================
+    # 🆕 智能检查：如果证书存在，且剩余天数大于 30 天，则直接退出，不重复申请
+    # ==========================================
+    if [ -f "$DOMAIN_CHAINED_CRT" ]; then
+        # 获取证书过期的绝对时间戳（秒）
+        local expire_time=$(openssl x509 -enddate -noout -in "$DOMAIN_CHAINED_CRT" | cut -d= -f2)
+        local expire_timestamp=$(date -d "$expire_time" +%s)
+        # 获取当前时间戳
+        local current_timestamp=$(date +%s)
+        # 计算剩余天数
+        local rem_days=$(( (expire_timestamp - current_timestamp) / 86400 ))
+
+        # 如果是日常定时任务检查，且剩余天数大于 30 天，则静默退出
+        if [ "$CRON_EXECUTION" = "1" ] && [ "$rem_days" -gt 30 ]; then
+            # 记录一条简短日志说明证书还很安全
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] Certificate for $domain_name is still valid for $rem_days days. No renewal needed." >> /var/log/ssl_renew_${domain_name}.log
+            return 0
+        fi
+        log "Current certificate expires in $rem_days days. Proceeding..."
+    fi
+
+
     # 文件不存在时创建 Let's Encrypt 帐户私钥
     if [ ! -f "$ACCOUNT_KEY" ]; then
         log "Generate account key..."
@@ -321,7 +356,7 @@ create_ssl(){
     fi
 
     log "Generate CSR..."
-    openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name},DNS:${domain_name}")) > "${DOMAIN_CSR}"
+    openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name},DNS:www.${domain_name}")) > "${DOMAIN_CSR}"
 
     # crt文件存在时备份
     if [ -f "$DOMAIN_CRT" ]; then
@@ -330,16 +365,18 @@ create_ssl(){
 
     mkdir -p "$acme_dir"
 
-    wget https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py -O $ACME_TINY -o /dev/null
+    wget https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py -O $ACME_TINY --quiet
     python3 $ACME_TINY --account-key "$ACCOUNT_KEY" --csr "${DOMAIN_CSR}" --acme-dir "$acme_dir" > "$DOMAIN_CRT"
 
-    if [ ! -f "lets-encrypt-x3-cross-signed.pem" ]; then
-        wget https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem -o /dev/null
-    fi
-    # 合并为公钥文件
-    cat "$DOMAIN_CRT" lets-encrypt-x3-cross-signed.pem > "$DOMAIN_CHAINED_CRT"
+    if [ $? -eq 0 ]; then
+        # 下载最新的 R3 中间证书并合并
+        if [ ! -f "$INTERMEDIATE_PEM" ]; then
+            wget https://letsencrypt.org/certs/lets-encrypt-r3.pem -O "$INTERMEDIATE_PEM" --quiet
+        fi
+        # 合并为公钥文件
+        cat "$DOMAIN_CRT" "$INTERMEDIATE_PEM" > "$DOMAIN_CHAINED_CRT"
 
-    cat << EOF
+        cat << EOF
 执行 nano /etc/nginx/conf.d/${domain_name}.conf
 
 在nginx网站配置的server块中添加以下内容:
@@ -349,6 +386,10 @@ create_ssl(){
     ssl_certificate_key /var/ssl/${domain_name}.key;
 EOF
     log "Please restart nginx"
+    else
+        log "ERROR: SSL generation failed!"
+        return 1
+    fi
 }
 
 create_proxy(){
