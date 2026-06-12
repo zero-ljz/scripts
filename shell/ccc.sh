@@ -17,7 +17,7 @@ system_init(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 
     echo -e "\n\n\n------------------------------安装必备组件 && 系统配置------------------------------"
-    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
     echo -e "\n\n\n 配置语言"
     read -t 5 -p "是否继续？ (y):" answer
@@ -42,34 +42,10 @@ system_init(){
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
         cp "/etc/ssh/sshd_config" "/etc/ssh/sshd_config-OLD-$(date +%y%m%d-%H%M%S)"
-        find '/etc/ssh/sshd_config' | xargs perl -pi -e 's|#TCPKeepAlive yes|TCPKeepAlive yes|g'
-        find '/etc/ssh/sshd_config' | xargs perl -pi -e 's|#ClientAliveInterval 0|ClientAliveInterval 120|g'
-        find '/etc/ssh/sshd_config' | xargs perl -pi -e 's|#ClientAliveCountMax 3|ClientAliveCountMax 720|g'
+        sed -i 's/^#\?TCPKeepAlive.*/TCPKeepAlive yes/' /etc/ssh/sshd_config
+        sed -i 's|#ClientAliveInterval 0|ClientAliveInterval 120|g' /etc/ssh/sshd_config
+        sed -i 's|#ClientAliveCountMax 3|ClientAliveCountMax 720|g' /etc/ssh/sshd_config
         systemctl restart sshd
-    fi
-
-    echo -e "\n\n\n开启 rc.local"
-    read -t 5 -p "是否继续？ (y):" answer
-    if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        if [ ! -e "/etc/rc.local" ]; then
-            echo -e "\n\n\n配置 rc.local"
-            touch /etc/rc.local
-            chmod 755 /etc/rc.local
-            cat >/etc/rc.local <<EOF
-#!/bin/sh -e
-#
-# rc.local
-#
-# 这个脚本在每个多用户运行级别结束时执行。
-# 确保脚本在成功时返回"exit 0"，在错误时返回其他值。
-#
-# 要启用或禁用此脚本，只需更改执行权限位即可。
-#
-# 默认情况下，此脚本不执行任何操作。
-
-EOF
-            systemctl enable rc-local
-        fi
     fi
 
     if [ ! -f "/swapfile" ]; then
@@ -78,12 +54,18 @@ EOF
         if [[ "$answer" == "y" || $? -eq 142 ]]; then
             total_memory_mb=$(grep MemTotal /proc/meminfo | awk '{print int($2 / 1024)}')
             swapfile_length=$(($total_memory_mb * 2))
-            # 创建swap文件
-            fallocate -l ${swapfile_length}M /swapfile
+            log "正在创建 Swap 文件..."
+            if fallocate -l ${swapfile_length}M /swapfile 2>/dev/null; then
+                log "使用 fallocate 预分配空间成功"
+            else
+                log "fallocate 失败，正在使用 dd 写入连续块（这可能需要一些时间）..."
+                dd if=/dev/zero of=/swapfile bs=1M count=${swapfile_length} status=none
+            fi
+            chmod 600 /swapfile
             # 格式化为交换分区
             mkswap /swapfile
             # 将文件添加到系统的/etc/fstab文件中，以便在系统启动时自动挂载
-            log '/swapfile none swap sw 0 0' | tee -a /etc/fstab
+            echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
             # 启用交换文件
             swapon /swapfile
         fi
@@ -109,7 +91,7 @@ EOF
     echo -e "\n\n\n 安装必备组件"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        apt -y install sudo openssl aptitude unzip wget curl telnet perl
+        apt -y install sudo openssl aptitude unzip wget curl telnet perl lsof
         apt -y install sqlite3 lua5.3 zip
     fi
 
@@ -122,8 +104,8 @@ EOF
             pip config set global.index-url https://pypi.mirrors.ustc.edu.cn/simple/
         fi
 
-        pip install --user pipx
-        python3 -m pipx ensurepath
+        apt install -y pipx
+        pipx ensurepath
     fi
 
     echo -e "\n\n\n 安装 Git"
@@ -139,7 +121,7 @@ install_supervisor(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 
     echo -e "\n\n\n------------------------------安装 Supervisor 进程管理器------------------------------"
-    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
     
     pip3 install supervisor
     
@@ -156,9 +138,13 @@ install_supervisor(){
 
     # python3 -m http.server -d /home/share
 
-    echo -e "\n\n\n 将 Supervisor 启动命令添加到 rc.local 中开机自动执行"
-    log supervisord -c /etc/supervisor/supervisord.conf >>/etc/rc.local
-    supervisord -c /etc/supervisor/supervisord.conf
+    echo -e "\n\n\n 使用 Systemd 配置 Supervisor 开机自启"
+    SUPERVISOR_BIN=$(which supervisord || echo "/usr/local/bin/supervisord")
+    create_service "supervisord" "${SUPERVISOR_BIN} --nodaemon -c /etc/supervisor/supervisord.conf" "/etc/supervisor"
+    systemctl daemon-reload
+    systemctl enable supervisord
+    systemctl start supervisord
+    log "Supervisor 已通过 Systemd 成功启动并设置开机自启"
 }
 
 create_supervisor(){
@@ -236,7 +222,7 @@ install_docker(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     
     echo -e "\n\n\n------------------------------安装 Docker------------------------------"
-    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
     # curl -fsSL https://get.docker.com -o get-docker.sh
     # sh get-docker.sh
@@ -261,7 +247,7 @@ install_docker(){
     if read -t 5 -p "是否使用中国大陆注册表？ (y): " answer && [ "$answer" == "y" ]; then
         cat >/etc/docker/daemon.json <<EOF
 {
-  "registry-mirrors": ["https://p.520999.xyz/https://registry-1.docker.io"]
+  "registry-mirrors": ["https://p.252525.xyz/https://registry-1.docker.io"]
 }
 EOF
         # 备用 http://mirrors.ustc.edu.cn http://hub.daocloud.io
@@ -272,7 +258,7 @@ install_nodejs(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     
     echo -e "\n\n\n------------------------------安装 Nodejs------------------------------"
-    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
     
     apt -y install npm
     # 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
@@ -420,6 +406,10 @@ server {
         proxy_redirect off;
         proxy_pass http://127.0.0.1:${local_port};
 
+        # WebSocket 转发支持
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+
         # wordpress容器需要设置
         # proxy_redirect off;
 
@@ -454,8 +444,8 @@ EOF
     # docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
     cp ./${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
 
-    systemctl restart nginx
-    docker restart nginx1
+    nginx -t && nginx -s reload
+    docker exec nginx1 nginx -t && docker exec nginx1 nginx -s reload
 }
 
 deploy_mysql(){
@@ -466,7 +456,7 @@ deploy_mysql(){
     fi
     
     local port=${1:-3306}
-    docker network create network1
+    docker network inspect network1 >/dev/null 2>&1 || docker network create network1
     docker volume create mysql-data
 
     MYSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
@@ -546,8 +536,10 @@ deploy_redis(){
     fi
     
     local port=${1:-6379}
-    docker network create network1
+    docker network inspect network1 >/dev/null 2>&1 || docker network create network1
 
+    mkdir -p /docker/redis1
+    chmod 777 /docker/redis1
     log "安装 Redis" 
     docker run -dp "${port}:6379" \
         --name redis1 \
@@ -573,7 +565,7 @@ deploy_postgres(){
     fi
     
     local port=${1:-5432}
-    docker network create network1
+    docker network inspect network1 >/dev/null 2>&1 || docker network create network1
     docker volume create postgre-data
     
     log "安装 PostgreSQL"
@@ -600,7 +592,7 @@ deploy_rabbitmq(){
     fi
     
     local port=${1:-5672}
-    docker network create network1
+    docker network inspect network1 >/dev/null 2>&1 || docker network create network1
 
     log "安装 RabbitMQ"
     docker run -dp "${port}:5672" -p 15672:15672 \
@@ -634,7 +626,7 @@ create_default_vhost(){
 </html>
 EOF
 
-    cat >/etc/nginx/conf.d/default.conf <<EOF
+    cat >/etc/nginx/conf.d/default.conf << 'EOF'
 server {
   listen 80 default_server;
   listen [::]:80 default_server;
@@ -646,7 +638,7 @@ server {
   server_name _;
 
   location / {
-   try_files \$uri \$uri/ =404;
+   try_files $uri $uri/ =404;
   }
 }
 EOF
@@ -656,6 +648,10 @@ deploy_nginx(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     
     log "安装 Nginx"
+    if lsof -i :80 >/dev/null 2>&1; then
+        log "错误: 宿主机 80 端口已被占用，请先停止相关服务后再部署 Docker Nginx！"
+        return 1
+    fi
     docker run -d \
         --name nginx1 \
         --restart=always \
@@ -667,7 +663,7 @@ deploy_nginx(){
         nginx:stable-bullseye
 
     create_default_vhost
-    docker restart nginx1
+    docker exec nginx1 nginx -t && docker exec nginx1 nginx -s reload
 }
 
 deploy_portainer(){
@@ -678,7 +674,7 @@ deploy_portainer(){
     fi
     
     echo -e "\n\n\n------------------------------部署 Portainer------------------------------"
-    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
     local local_port=${1:-9000}
     # https://docs.portainer.io/start/install/server/docker/linux
@@ -702,9 +698,11 @@ deploy_wordpress(){
     fi
     
     echo -e "\n\n\n------------------------------部署 Wordpress------------------------------"
-    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
     local local_port=${1:-8000}
+    mkdir -p /docker/wordpress1
+    chmod 777 /docker/wordpress1
     docker run -dp "127.0.0.1:${local_port}:80" \
         --name wordpress1 \
         --restart=always \
@@ -723,7 +721,7 @@ deploy_gitea(){
     fi
     
     echo -e "\n\n\n------------------------------部署 Gitea------------------------------"
-    log "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
     local local_port=${1:-3000}
     local ssh_port=${2:-222}
@@ -736,6 +734,8 @@ deploy_gitea(){
         --home /home/git \
         git
     
+    mkdir -p /docker/gitea
+    chmod 777 /docker/gitea
     docker run -d \
         --name gitea1 \
         --restart=always \
