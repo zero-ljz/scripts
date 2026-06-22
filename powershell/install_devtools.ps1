@@ -3,7 +3,7 @@
 
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     Write-Host "自动检测安装 WinGet" -ForegroundColor Cyan
-    curl.exe -LkOJ https://p.252525.xyz/https://github.com/microsoft/winget-cli/releases/download/v1.12.440/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+    curl.exe -LkOJ https://github.com/microsoft/winget-cli/releases/download/v1.12.440/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
     powershell -Command "Add-AppxPackage -Path Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle"
 }
 
@@ -20,22 +20,12 @@ if ($LASTEXITCODE -eq 1) {
     Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 }
 
-Write-Host "`n`n`n 安装 NodeJS" -ForegroundColor Cyan
-choice /T 5 /D y /M "是否继续？"
-if ($LASTEXITCODE -eq 1) {
-    winget install -e --id OpenJS.NodeJS.LTS
-    # 配置国内源
-    npm config set registry https://registry.npmmirror.com
-    # 安装pnpm
-    npm install -g pnpm
-}
-
 Write-Host "`n`n`n 安装 Python" -ForegroundColor Cyan
 choice /T 5 /D y /M "是否继续？"
 if ($LASTEXITCODE -eq 1) {
-    winget install -e --id Python.Python.3.10 --version 3.10.11
+    winget install -e --accept-source-agreements --id Python.Python.3.10 --version 3.10.11
     # 配置国内源
-    pip config set global.index-url https://mirrors.ustc.edu.cn/pypi/simple
+    pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
     # 安装pipx
     pip install --user pipx
     # 自动添加到用户环境变量Path
@@ -46,6 +36,15 @@ if ($LASTEXITCODE -eq 1) {
     winget install --id astral-sh.uv
 }
 
+Write-Host "`n`n`n 安装 NodeJS" -ForegroundColor Cyan
+choice /T 5 /D y /M "是否继续？"
+if ($LASTEXITCODE -eq 1) {
+    winget install -e --id OpenJS.NodeJS.LTS
+    # 配置国内源
+    npm config set registry https://registry.npmmirror.com
+    # 安装pnpm
+    npm install -g pnpm
+}
 
 # NSSM (Non-Sucking Service Manager)。
 # 用法：nssm install MyPanel "C:\Python\python.exe" "C:\Panel\main.py"
@@ -89,8 +88,8 @@ winget install -e --id zyedidia.micro
 Write-Host "安装 btop4win 性能监视器" -ForegroundColor Cyan
 winget install -e --id aristocratos.btop4win
 
-Write-Host "安装 AutoHotkey (v1.1)" -ForegroundColor Cyan
-winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.02
+# Write-Host "安装 AutoHotkey (v1.1)" -ForegroundColor Cyan
+# winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.02
 
 Write-Host "安装 Everything 文件搜索" -ForegroundColor Cyan
 winget install -e --id voidtools.Everything
