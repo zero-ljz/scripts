@@ -8,11 +8,11 @@
 [HKEY_CLASSES_ROOT\Microsoft.PowerShellScript.1\Shell\RunWithPS\command]
 @="\"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" \"-NoProfile\" \"-ExecutionPolicy\" \"Bypass\" \"-File\" \"%1\""
 
-# 2. 为管理员权限运行添加右键菜单（可选，推荐）
+# 2. 为管理员权限运行添加右键菜单
 [HKEY_CLASSES_ROOT\Microsoft.PowerShellScript.1\Shell\RunWithPSAsAdmin]
 @="以管理员身份用 PowerShell 执行"
 "Icon"="powershell.exe"
 "HasLUAShield"=""
 
 [HKEY_CLASSES_ROOT\Microsoft.PowerShellScript.1\Shell\RunWithPSAsAdmin\command]
-@="\"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" \"-NoProfile\" \"-ExecutionPolicy\" \"Bypass\" \"-Command\" \"Start-Process powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -File \\\"%1\\\"' -Verb RunAs\""
+@="\"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" \"-NoProfile\" \"-ExecutionPolicy\" \"Bypass\" \"-Command\" \"Start-Process powershell -ArgumentList '-NoProfile -ExecutionPolicy Bypass -Command Set-Location -LiteralPath (Split-Path \\\"%1\\\" -Parent); & \\\"%1\\\"' -Verb RunAs\""
