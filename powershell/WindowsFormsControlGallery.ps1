@@ -1,4 +1,4 @@
-Add-Type -AssemblyName System.Windows.Forms
+﻿Add-Type -AssemblyName System.Windows.Forms
 
 # 创建主窗口
 $form = New-Object System.Windows.Forms.Form
