@@ -1,7 +1,7 @@
 ﻿Windows Registry Editor Version 5.00
 
 [HKEY_CLASSES_ROOT\JSFile\shell\RunNodeDirect]
-@="直接用 Node.js 执行"
+@="使用 Node.js 运行"
 "Icon"="node.exe"
 
 [HKEY_CLASSES_ROOT\JSFile\shell\RunNodeDirect\command]
