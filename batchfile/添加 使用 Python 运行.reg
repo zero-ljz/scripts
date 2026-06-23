@@ -1,7 +1,7 @@
 ﻿Windows Registry Editor Version 5.00
 
 [HKEY_CLASSES_ROOT\Python.File\shell\RunPyDirect]
-@="直接用 Python 执行"
+@="使用 Python 运行"
 "Icon"="py.exe"
 
 [HKEY_CLASSES_ROOT\Python.File\shell\RunPyDirect\command]

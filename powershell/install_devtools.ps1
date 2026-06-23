@@ -175,7 +175,7 @@ winget install -e --id Pylogmon.pot
 
 # winget install -e --id JavadMotallebi.NeatDownloadManager # 提示找不到包
 # winget install -e --id WinSCP.WinSCP
-# winget install -e --id c0re100.qBittorrent-Enhanced-Edition
+winget install -e --id c0re100.qBittorrent-Enhanced-Edition
 # winget install -e --id PremiumSoft.NavicatPremium
 
 # winget install -e --id TeamViewer.TeamViewer
