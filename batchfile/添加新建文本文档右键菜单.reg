@@ -1,0 +1,8 @@
+﻿Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell\NewTextFile]
+@="新建文本文件"
+"Icon"="notepad.exe,0"
+
+[HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell\NewTextFile\command]
+@="cmd.exe /d /c type nul > \"%V\\NewFile.txt\""
