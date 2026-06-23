@@ -1,4 +1,5 @@
-﻿# powershell -ExecutionPolicy Bypass -File ".\install_devtools.ps1"
+﻿# 文件编码 UTF-8 with BOM
+# powershell -ExecutionPolicy Bypass -File ".\install_devtools.ps1"
 
 
 if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
@@ -26,6 +27,8 @@ if ($LASTEXITCODE -eq 1) {
     winget install -e --accept-source-agreements --id Python.Python.3.10 --version 3.10.11
     # 配置国内源
     pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+    # Python UTF-8 Mode (PEP 540) 强制python使用utf-8
+    [Environment]::SetEnvironmentVariable("PYTHONUTF8", "1", "User")
     # 安装pipx
     pip install --user pipx
     # 自动添加到用户环境变量Path
@@ -55,6 +58,12 @@ if ($LASTEXITCODE -eq 1) {
 Write-Host "`n`n`n 安装 常用软件" -ForegroundColor Cyan
 choice /T 5 /D y /M "是否继续？"
 if ($LASTEXITCODE -eq 1) {
+# Write-Host "安装 AutoHotkey (v1.1)" -ForegroundColor Cyan
+# winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.02
+
+Write-Host "安装 Everything 文件搜索" -ForegroundColor Cyan
+winget install -e --id voidtools.Everything
+
 Write-Host "安装 Windows终端" -ForegroundColor Cyan
 winget install -e --id Microsoft.WindowsTerminal
 
@@ -87,12 +96,6 @@ winget install -e --id zyedidia.micro
 
 Write-Host "安装 btop4win 性能监视器" -ForegroundColor Cyan
 winget install -e --id aristocratos.btop4win
-
-# Write-Host "安装 AutoHotkey (v1.1)" -ForegroundColor Cyan
-# winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.02
-
-Write-Host "安装 Everything 文件搜索" -ForegroundColor Cyan
-winget install -e --id voidtools.Everything
 
 Write-Host "安装 7-Zip" -ForegroundColor Cyan
 winget install -e --id 7zip.7zip
@@ -130,8 +133,8 @@ winget install -e --id GeekUninstaller.GeekUninstaller
 Write-Host "安装 pot 聚合翻译工具" -ForegroundColor Cyan
 winget install -e --id Pylogmon.pot
 
-Write-Host "安装 Crow Translate" -ForegroundColor Cyan
-winget install -e --id KDE.CrowTranslate
+# Write-Host "安装 Crow Translate" -ForegroundColor Cyan
+# winget install -e --id KDE.CrowTranslate
 
 # winget install -e --id Postman.Postman
 # winget install -e --id hoppscotch.Hoppscotch

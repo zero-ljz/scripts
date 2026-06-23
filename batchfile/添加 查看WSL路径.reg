@@ -1,0 +1,21 @@
+﻿Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\*\shell\wslpath]
+@="查看WSL路径"
+
+[HKEY_CLASSES_ROOT\*\shell\wslpath\command]
+@="cmd /k wsl.exe wslpath -a \"%1\""
+
+
+[HKEY_CLASSES_ROOT\Directory\shell\wslpath]
+@="查看WSL路径"
+
+[HKEY_CLASSES_ROOT\Directory\shell\wslpath\command]
+@="cmd /k wsl.exe wslpath -a \"%1\""
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\wslpath]
+@="查看当前目录WSL路径"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\wslpath\command]
+@="cmd /k wsl.exe wslpath -a \"%V\""
+
