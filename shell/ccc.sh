@@ -356,7 +356,7 @@ create_ssl(){
     fi
 
     log "Generate CSR..."
-    openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name},DNS:www.${domain_name}")) > "${DOMAIN_CSR}"
+    openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name},DNS:${domain_name}")) > "${DOMAIN_CSR}"
 
     # crt文件存在时备份
     if [ -f "$DOMAIN_CRT" ]; then
