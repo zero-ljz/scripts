@@ -306,28 +306,27 @@ create_ssl(){
 
     local SSL_DIR="/var/ssl"
     if [ ! -d "$SSL_DIR" ]; then
-        mkdir "$SSL_DIR"
+        mkdir -p "$SSL_DIR"
     fi
 
     local ACME_TINY="/tmp/acme_tiny.py"
     local ACCOUNT_KEY="$SSL_DIR/account.key"
     # 私钥
     local DOMAIN_KEY="$SSL_DIR/${domain_name}.key"
-    # 公钥
-    local DOMAIN_CRT="$SSL_DIR/${domain_name}.crt"
-    # 链接起来的公钥
-    local DOMAIN_CHAINED_CRT="$SSL_DIR/${domain_name}.chained.crt"
+    # 公钥（完整证书链）
+    local DOMAIN_FULLCHAIN_CRT="$SSL_DIR/${domain_name}.fullchain.crt"
 
     local DOMAIN_CSR="$SSL_DIR/${domain_name}.csr"
 
-    local INTERMEDIATE_PEM="$SSL_DIR/lets-encrypt-r3.pem"
+    local TMP_FULLCHAIN_CRT="$DOMAIN_FULLCHAIN_CRT.tmp"
+
 
     # ==========================================
     # 🆕 智能检查：如果证书存在，且剩余天数大于 30 天，则直接退出，不重复申请
     # ==========================================
-    if [ -f "$DOMAIN_CHAINED_CRT" ]; then
+    if [ -f "$DOMAIN_FULLCHAIN_CRT" ]; then
         # 获取证书过期的绝对时间戳（秒）
-        local expire_time=$(openssl x509 -enddate -noout -in "$DOMAIN_CHAINED_CRT" | cut -d= -f2)
+        local expire_time=$(openssl x509 -enddate -noout -in "$DOMAIN_FULLCHAIN_CRT" | cut -d= -f2)
         local expire_timestamp=$(date -d "$expire_time" +%s)
         # 获取当前时间戳
         local current_timestamp=$(date +%s)
@@ -356,37 +355,28 @@ create_ssl(){
     fi
 
     log "Generate CSR..."
-    openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name},DNS:${domain_name}")) > "${DOMAIN_CSR}"
-
-    # crt文件存在时备份
-    if [ -f "$DOMAIN_CRT" ]; then
-        mv "$DOMAIN_CRT" "$DOMAIN_CRT-OLD-$(date +%y%m%d-%H%M%S)"
-    fi
+    openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name}")) > "${DOMAIN_CSR}"
 
     mkdir -p "$acme_dir"
 
-    wget https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py -O $ACME_TINY --quiet
-    python3 $ACME_TINY --account-key "$ACCOUNT_KEY" --csr "${DOMAIN_CSR}" --acme-dir "$acme_dir" > "$DOMAIN_CRT"
+    wget https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py -O "$ACME_TINY" --quiet
+    python3 $ACME_TINY --account-key "$ACCOUNT_KEY" --csr "${DOMAIN_CSR}" --acme-dir "$acme_dir" > "$TMP_FULLCHAIN_CRT"
 
-    if [ $? -eq 0 ]; then
-        # 下载最新的 R3 中间证书并合并
-        if [ ! -f "$INTERMEDIATE_PEM" ]; then
-            wget https://letsencrypt.org/certs/lets-encrypt-r3.pem -O "$INTERMEDIATE_PEM" --quiet
-        fi
-        # 合并为公钥文件
-        cat "$DOMAIN_CRT" "$INTERMEDIATE_PEM" > "$DOMAIN_CHAINED_CRT"
-
+    if [ $? -eq 0 ] && openssl x509 -in "$TMP_FULLCHAIN_CRT" -noout >/dev/null 2>&1; then
+        mv "$TMP_FULLCHAIN_CRT" "$DOMAIN_FULLCHAIN_CRT"
         cat << EOF
 执行 nano /etc/nginx/conf.d/${domain_name}.conf
 
 在nginx网站配置的server块中添加以下内容:
 
     listen 443 ssl;
-    ssl_certificate /var/ssl/${domain_name}.chained.crt;
+    ssl_certificate /var/ssl/${domain_name}.fullchain.crt;
     ssl_certificate_key /var/ssl/${domain_name}.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
 EOF
     log "Please restart nginx"
     else
+        rm -f "$TMP_FULLCHAIN_CRT"
         log "ERROR: SSL generation failed!"
         return 1
     fi
@@ -424,8 +414,9 @@ server {
 
     # SSL/TLS 配置
     # listen 443 ssl;
-    # ssl_certificate /var/ssl/${domain_name}.chained.crt;
+    # ssl_certificate /var/ssl/${domain_name}.fullchain.crt;
     # ssl_certificate_key /var/ssl/${domain_name}.key;
+    # ssl_protocols TLSv1.2 TLSv1.3;
 
     # 申请证书需要用到的配置
     location /.well-known/acme-challenge/ {
