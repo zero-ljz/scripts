@@ -25,14 +25,15 @@ Write-Host "`n`n`n 安装 Python" -ForegroundColor Cyan
 choice /T 5 /D y /M "是否继续？"
 if ($LASTEXITCODE -eq 1) {
     winget install -e --accept-source-agreements --id Python.Python.3.10 --version 3.10.11
+    winget install -e --accept-source-agreements --id Python.Python.3.12 --version 3.12.10
     # 配置国内源
     pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
     # Python UTF-8 Mode (PEP 540) 强制python使用utf-8
     [Environment]::SetEnvironmentVariable("PYTHONUTF8", "1", "User")
     # 安装pipx
-    pip install --user pipx
+    # pip install --user pipx
     # 自动添加到用户环境变量Path
-    python -m pipx ensurepath
+    # python -m pipx ensurepath
     # 在隔离环境中安装poetry
     # python -m pipx install poetry==1.8.3
     # 安装uv

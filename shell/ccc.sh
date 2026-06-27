@@ -71,6 +71,24 @@ system_init(){
         fi
     fi
 
+    if [ ! -f "/etc/systemd/zram-generator.conf" ]; then
+        echo -e "\n\n\n开启 ZRAM 内存压缩 (高并发服务器不建议开启)"
+        read -t 5 -p "是否继续？ (y):" answer
+        if [[ "$answer" == "y" || $? -eq 142 ]]; then
+            apt update && apt install -y systemd-zram-generator
+            cat <<EOF > /etc/systemd/zram-generator.conf
+[zram0]
+zram-size = ram * 0.75
+compression-algorithm = zstd
+swap-priority = 100
+EOF
+            systemctl daemon-reload
+            systemctl start systemd-zram-setup@zram0.service
+            echo "ZRAM 配置完成，当前状态："
+            swapon --show
+        fi
+    fi
+
     if [ -z "$(lsmod | grep bbr)" ]; then
         echo -e "\n\n\n启用 Google BBR"
         read -t 5 -p "是否继续？ (y):" answer
@@ -93,28 +111,47 @@ system_init(){
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
         apt -y install sudo openssl aptitude unzip wget curl telnet perl lsof
         apt -y install sqlite3 lua5.3 zip
+
+        apt -y install git
+        git config --global user.name "zero-ljz"
+        git config --global user.email "zero-ljz@qq.com"
     fi
 
     echo -e "\n\n\n 安装 Python 及配套工具"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
+        # apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
+
+        # debian编译依赖包集合
+        apt update && sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev uuid-dev -y
+        # 安装pyenv
+        curl https://pyenv.run | bash
+        # 注入环境变量并写入 ~/.bashrc
+        if ! grep -q "pyenv init" ~/.bashrc; then
+            echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.bashrc
+            echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+            echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
+        fi
+        # 让当前脚本运行环境中临时生效，以便后续执行 pyenv 命令
+        export PATH="$HOME/.pyenv/bin:$PATH"
+        eval "$(pyenv init -)"
+        eval "$(pyenv virtualenv-init -)"
+        # 执行编译安装
+        # pyenv install 3.10.11
+        pyenv install 3.12.10
+        pyenv global 3.12.10
 
         if read -t 5 -p "是否使用pypi中国大陆镜像源？ (y): " answer && [ "$answer" == "y" ]; then
-            pip config set global.index-url https://pypi.mirrors.ustc.edu.cn/simple/
+            pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
         fi
 
-        apt install -y pipx
-        pipx ensurepath
+        # apt install -y pipx
+        # pipx ensurepath
+
+        # 安装uv
+        curl -LsSf https://astral.sh/uv/install.sh | sh
     fi
 
-    echo -e "\n\n\n 安装 Git"
-    read -t 5 -p "是否继续？ (y):" answer
-    if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        apt -y install git
-        git config --global user.name "zero-ljz"
-        git config --global user.email "zero-ljz@qq.com"
-    fi
 }
 
 install_supervisor(){
@@ -520,7 +557,7 @@ deploy_mysql(){
         --env MARIADB_DATABASE=db1 \
         --env MARIADB_CHARSET=utf8mb4 \
         --env MARIADB_COLLATION=utf8mb4_unicode_ci \
-        mariadb:10.6-focal \
+        mariadb:10.6-jammy \
         --character-set-server=utf8mb4 \
         --collation-server=utf8mb4_unicode_ci
 
@@ -580,7 +617,7 @@ deploy_redis(){
         --network-alias redis \
         -v /docker/redis1:/data \
         -e TZ=Asia/Shanghai \
-        redis:6-bullseye \
+        redis:7.2-bookworm \
         redis-server --save 60 1 --loglevel warning --requirepass "123qweQ!"
     # 传给redis服务器的启动参数：若每60秒至少有一个键被修改了1次，就将数据持久化到磁盘，只记录警告及更高级别的日志
     # 连接字符串
@@ -600,6 +637,9 @@ deploy_postgres(){
     docker network inspect network1 >/dev/null 2>&1 || docker network create network1
     docker volume create postgre-data
     
+    PGSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
+    echo "${PGSQL_ROOT_PASSWORD}" > PGSQL_ROOT_PASSWORD.txt
+
     log "安装 PostgreSQL"
     docker run -dp "${port}:5432" \
         --name postgres1 \
@@ -608,12 +648,12 @@ deploy_postgres(){
         --network-alias postgres \
         -e TZ=Asia/Shanghai \
         -e POSTGRES_USER=postgres \
-        -e POSTGRES_PASSWORD=123qwe123@21 \
+        -e POSTGRES_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
         -e POSTGRES_DB=postgres \
         -e POSTGRES_INITDB_ARGS="--encoding=UTF8 --locale=C" \
         -e PGDATA=/var/lib/postgresql/data \
         -v postgre-data:/var/lib/postgresql/data \
-        postgres:13-bullseye -c shared_buffers=256MB -c max_connections=200
+        postgres:16-bookworm -c shared_buffers=256MB -c max_connections=200
 }
 
 deploy_rabbitmq(){
@@ -777,7 +817,7 @@ deploy_gitea(){
         -v /docker/gitea:/data \
         -v /etc/timezone:/etc/timezone:ro \
         -v /etc/localtime:/etc/localtime:ro \
-        gitea/gitea:1.19
+        gitea/gitea:1-rootless
 
     # 记得配置SSH_PORT=222，SSH_LISTEN_PORT=22
 
