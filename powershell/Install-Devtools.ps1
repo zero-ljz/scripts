@@ -80,6 +80,9 @@ winget install -e --id Git.Git
 # winget install -e --id DeepL.DeepL
 winget install -e --id Notepad++.Notepad++
 
+# winget install -e --id kangfenmao.CherryStudio
+# winget install -e --id farion1231.CC-Switch
+
 Write-Host "安装 VS Code" -ForegroundColor Cyan
 winget install -e --id Microsoft.VisualStudioCode
 
