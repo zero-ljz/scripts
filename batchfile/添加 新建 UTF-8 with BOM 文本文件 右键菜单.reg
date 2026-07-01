@@ -1,0 +1,8 @@
+﻿Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell\NewTextFile]
+@="新建 UTF-8 with BOM 文本文件"
+"Icon"="shell32.dll,70"
+
+[HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell\NewTextFile\command]
+@="cmd.exe /d /c powershell -NoProfile -Command \"$t = Get-Date -Format 'yyyyMMdd_HHmmss'; Out-File -FilePath \\\"%V\\$t.txt\\\" -InputObject $null -Encoding utf8\""
