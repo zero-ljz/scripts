@@ -10,17 +10,17 @@
 [HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\01_back]
 @="标准反斜杠 (\\)"
 [HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\01_back\command]
-@="cmd.exe /c echo %1| clip"
+@="powershell -NoProfile -Command \"Set-Clipboard -Value '%1'\""
 
 [HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\02_forward]
 @="跨平台正斜杠 (/)"
 [HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\02_forward\command]
-@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
+@="powershell -NoProfile -Command \"Set-Clipboard -Value ('%1'.Replace('\\', '/'))\""
 
 [HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\03_double]
 @="转义的反斜杠 (\\\\)"
 [HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\03_double\command]
-@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=\\\\!\" & <nul set /p=!p!| clip\""
+@="powershell -NoProfile -Command \"Set-Clipboard -Value ('%1'.Replace('\\', '\\\\'))\""
 
 
 ; ==========================================
@@ -33,17 +33,17 @@
 [HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\01_back]
 @="标准反斜杠 (\\)"
 [HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\01_back\command]
-@="cmd.exe /c echo %1| clip"
+@="powershell -NoProfile -Command \"Set-Clipboard -Value '%1'\""
 
 [HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\02_forward]
 @="跨平台正斜杠 (/)"
 [HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\02_forward\command]
-@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
+@="powershell -NoProfile -Command \"Set-Clipboard -Value ('%1'.Replace('\\', '/'))\""
 
 [HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\03_double]
 @="转义的反斜杠 (\\\\)"
 [HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\03_double\command]
-@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=\\\\!\" & <nul set /p=!p!| clip\""
+@="powershell -NoProfile -Command \"Set-Clipboard -Value ('%1'.Replace('\\', '\\\\'))\""
 
 
 ; ==========================================
@@ -56,14 +56,14 @@
 [HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\01_back]
 @="标准反斜杠 (\\)"
 [HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\01_back\command]
-@="cmd.exe /c echo %V| clip"
+@="powershell -NoProfile -Command \"Set-Clipboard -Value '%V'\""
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\02_forward]
 @="跨平台正斜杠 (/)"
 [HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\02_forward\command]
-@="cmd.exe /v:on /c \"set \"p=%V\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
+@="powershell -NoProfile -Command \"Set-Clipboard -Value ('%V'.Replace('\\', '/'))\""
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\03_double]
 @="转义的反斜杠 (\\\\)"
 [HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\03_double\command]
-@="cmd.exe /v:on /c \"set \"p=%V\" & set \"p=!p:\\=\\\\!\" & <nul set /p=!p!| clip\""
+@="powershell -NoProfile -Command \"Set-Clipboard -Value ('%V'.Replace('\\', '\\\\'))\""
