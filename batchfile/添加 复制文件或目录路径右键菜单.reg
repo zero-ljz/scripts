@@ -44,3 +44,25 @@
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\copypath_forward\command]
 @="cmd.exe /v:on /c \"set \"p=%V\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
+
+; ==========================================
+; 3. 双反斜杠路径 (\\) 
+; ==========================================
+
+[HKEY_CLASSES_ROOT\*\shell\copypath_double_back]
+@="复制路径 (\\\\)"
+
+[HKEY_CLASSES_ROOT\*\shell\copypath_double_back\command]
+@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=\\\\!\" & <nul set /p=!p!| clip\""
+
+[HKEY_CLASSES_ROOT\Directory\shell\copypath_double_back]
+@="复制路径 (\\\\)"
+
+[HKEY_CLASSES_ROOT\Directory\shell\copypath_double_back\command]
+@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=\\\\!\" & <nul set /p=!p!| clip\""
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath_double_back]
+@="复制当前目录路径 (\\\\)"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath_double_back\command]
+@="cmd.exe /v:on /c \"set \"p=%V\" & set \"p=!p:\\=\\\\!\" & <nul set /p=!p!| clip\""
