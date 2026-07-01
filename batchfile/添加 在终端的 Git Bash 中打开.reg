@@ -10,6 +10,7 @@
 [HKEY_CLASSES_ROOT\Directory\Background\shell\wt_git_bash_runas]
 @="在终端的 Git Bash 中打开(管理员)"
 "Icon"="C:\\Program Files\\Git\\git-bash.exe"
+"HasLUAShield"=""
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\wt_git_bash_runas\command]
 @="powershell.exe -WindowStyle Hidden -Command \"Start-Process 'C:\\Users\\zero-\\AppData\\Local\\Microsoft\\WindowsApps\\wt.exe' -ArgumentList '-w 0 new-tab -p \\\"Git Bash\\\" -d \\\"%V\\\" \\\"C:\\Program Files\\Git\\bin\\bash.exe\\\" --login -i' -Verb RunAs\""

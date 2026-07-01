@@ -10,6 +10,7 @@
 [HKEY_CLASSES_ROOT\Directory\Background\shell\wt_powershell_runas]
 @="在终端的 PowerShell 中打开(管理员)"
 "Icon"="powershell.exe"
+"HasLUAShield"=""
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\wt_powershell_runas\command]
 @="powershell.exe -WindowStyle Hidden -Command \"Start-Process 'C:\\Users\\zero-\\AppData\\Local\\Microsoft\\WindowsApps\\wt.exe' -ArgumentList '-w 0 new-tab -p \"PowerShell\" -d \"\\\"%V\\\"\" powershell.exe -noexit -command Set-Location -literalPath ''\"\"\"%V\"\"\"''' -Verb RunAs\""
