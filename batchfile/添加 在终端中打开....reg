@@ -1,5 +1,8 @@
 ﻿Windows Registry Editor Version 5.00
 
+===================================================================
+= 1. 文件夹空白处右键菜单 (Directory\Background)
+===================================================================
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\TerminalMenu]
 "MUIVerb"="在终端中打开..."
@@ -67,4 +70,77 @@
 "HasLUAShield"=""
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\TerminalMenu\shell\wsl_shell_runas\command]
+@="powershell.exe -WindowStyle Hidden -Command \"Start-Process 'wt.exe' -ArgumentList '-w 0 new-tab -d \\\"%V\\\" \\\"C:\\Windows\\System32\\wsl.exe\\\" --cd \\\"%V\\\"' -Verb RunAs\""
+
+
+===================================================================
+= 2. 文件夹图标右键菜单 (Directory)
+===================================================================
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu]
+"MUIVerb"="在终端中打开..."
+"SubCommands"=""
+
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_git_bash]
+@="Git Bash"
+"Icon"="C:\\Program Files\\Git\\git-bash.exe"
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_git_bash\command]
+@="\"wt.exe\" -w 0 new-tab -p \"Git Bash\" -d \"%V\" \"C:\\Program Files\\Git\\bin\\bash.exe\" --login -i"
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_git_bash_runas]
+@="Git Bash(管理员)"
+"Icon"="C:\\Program Files\\Git\\git-bash.exe"
+"HasLUAShield"=""
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_git_bash_runas\command]
+@="powershell.exe -WindowStyle Hidden -Command \"Start-Process 'wt.exe' -ArgumentList '-w 0 new-tab -p \\\"Git Bash\\\" -d \\\"%V\\\" \\\"C:\\Program Files\\Git\\bin\\bash.exe\\\" --login -i' -Verb RunAs\""
+
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_powershell]
+@="PowerShell"
+"Icon"="powershell.exe"
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_powershell\command]
+@="\"wt.exe\" -w 0 new-tab -p \"PowerShell\" -d \"%V\" \"powershell.exe\" -noexit -command Set-Location -literalPath '%V'"
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_powershell_runas]
+@="PowerShell(管理员)"
+"Icon"="powershell.exe"
+"HasLUAShield"=""
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_powershell_runas\command]
+@="powershell.exe -WindowStyle Hidden -Command \"Start-Process 'wt.exe' -ArgumentList '-w 0 new-tab -p \"PowerShell\" -d \"\\\"%V\\\"\" powershell.exe -noexit -command Set-Location -literalPath ''\"\"\"%V\"\"\"''' -Verb RunAs\""
+
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_cmd]
+@="命令提示符"
+"Icon"="cmd.exe"
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_cmd\command]
+@="\"wt.exe\" -w 0 new-tab -p \"Command Prompt\" -d \"%V\" \"cmd.exe\" /k cd /d \"%V\""
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_cmd_runas]
+@="命令提示符(管理员)"
+"Icon"="cmd.exe"
+"HasLUAShield"=""
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wt_cmd_runas\command]
+@="powershell.exe -WindowStyle Hidden -Command \"Start-Process 'wt.exe' -ArgumentList '-w 0 new-tab -p \\\"Command Prompt\\\" -d \\\"%V\\\" cmd.exe /k cd /d \\\"%V\\\"' -Verb RunAs\""
+
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wsl_shell]
+@="Linux shell"
+"Icon"="C:\\Windows\\System32\\wsl.exe"
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wsl_shell\command]
+@="\"wt.exe\" -w 0 new-tab -d \"%V\" \"C:\\Windows\\System32\\wsl.exe\" --cd \"%V\""
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wsl_shell_runas]
+@="Linux shell(管理员)"
+"Icon"="C:\\Windows\\System32\\wsl.exe"
+"HasLUAShield"=""
+
+[HKEY_CLASSES_ROOT\Directory\shell\TerminalMenu\shell\wsl_shell_runas\command]
 @="powershell.exe -WindowStyle Hidden -Command \"Start-Process 'wt.exe' -ArgumentList '-w 0 new-tab -d \\\"%V\\\" \\\"C:\\Windows\\System32\\wsl.exe\\\" --cd \\\"%V\\\"' -Verb RunAs\""
