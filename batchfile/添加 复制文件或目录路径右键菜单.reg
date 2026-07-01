@@ -1,68 +1,69 @@
 ﻿Windows Registry Editor Version 5.00
 
 ; ==========================================
-; 1. 常规路径 (反斜杠 \)
+; 1. 为【任意文件】创建子菜单
 ; ==========================================
+[HKEY_CLASSES_ROOT\*\shell\CopyPathMenu]
+"MUIVerb"="高级复制路径"
+"SubCommands"=""
 
-[HKEY_CLASSES_ROOT\*\shell\copypath]
-@="复制路径 (\\)"
-
-[HKEY_CLASSES_ROOT\*\shell\copypath\command]
+[HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\01_back]
+@="复制常规路径 (\\)"
+[HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\01_back\command]
 @="cmd.exe /c echo %1| clip"
 
-[HKEY_CLASSES_ROOT\Directory\shell\copypath]
-@="复制路径 (\\)"
+[HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\02_forward]
+@="复制正斜杠路径 (/)"
+[HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\02_forward\command]
+@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
 
-[HKEY_CLASSES_ROOT\Directory\shell\copypath\command]
+[HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\03_double]
+@="复制双反斜杠路径 (\\\\)"
+[HKEY_CLASSES_ROOT\*\shell\CopyPathMenu\shell\03_double\command]
+@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=\\\\!\" & <nul set /p=!p!| clip\""
+
+
+; ==========================================
+; 2. 为【文件夹/目录】创建子菜单
+; ==========================================
+[HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu]
+"MUIVerb"="高级复制路径"
+"SubCommands"=""
+
+[HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\01_back]
+@="复制常规路径 (\\)"
+[HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\01_back\command]
 @="cmd.exe /c echo %1| clip"
 
-[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath]
-@="复制当前目录路径 (\\)"
+[HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\02_forward]
+@="复制正斜杠路径 (/)"
+[HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\02_forward\command]
+@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
 
-[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath\command]
+[HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\03_double]
+@="复制双反斜杠路径 (\\\\)"
+[HKEY_CLASSES_ROOT\Directory\shell\CopyPathMenu\shell\03_double\command]
+@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=\\\\!\" & <nul set /p=!p!| clip\""
+
+
+; ==========================================
+; 3. 为【空白处背景】创建子菜单
+; ==========================================
+[HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu]
+"MUIVerb"="高级复制当前目录"
+"SubCommands"=""
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\01_back]
+@="复制常规路径 (\\)"
+[HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\01_back\command]
 @="cmd.exe /c echo %V| clip"
 
-
-; ==========================================
-; 2. 正斜杠路径 (/) 
-; ==========================================
-
-[HKEY_CLASSES_ROOT\*\shell\copypath_forward]
-@="复制路径 (/)"
-
-[HKEY_CLASSES_ROOT\*\shell\copypath_forward\command]
-@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
-
-[HKEY_CLASSES_ROOT\Directory\shell\copypath_forward]
-@="复制路径 (/)"
-
-[HKEY_CLASSES_ROOT\Directory\shell\copypath_forward\command]
-@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
-
-[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath_forward]
-@="复制当前目录路径 (/)"
-
-[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath_forward\command]
+[HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\02_forward]
+@="复制正斜杠路径 (/)"
+[HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\02_forward\command]
 @="cmd.exe /v:on /c \"set \"p=%V\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
 
-; ==========================================
-; 3. 双反斜杠路径 (\\) 
-; ==========================================
-
-[HKEY_CLASSES_ROOT\*\shell\copypath_double_back]
-@="复制路径 (\\\\)"
-
-[HKEY_CLASSES_ROOT\*\shell\copypath_double_back\command]
-@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=\\\\!\" & <nul set /p=!p!| clip\""
-
-[HKEY_CLASSES_ROOT\Directory\shell\copypath_double_back]
-@="复制路径 (\\\\)"
-
-[HKEY_CLASSES_ROOT\Directory\shell\copypath_double_back\command]
-@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=\\\\!\" & <nul set /p=!p!| clip\""
-
-[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath_double_back]
-@="复制当前目录路径 (\\\\)"
-
-[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath_double_back\command]
+[HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\03_double]
+@="复制双反斜杠路径 (\\\\)"
+[HKEY_CLASSES_ROOT\Directory\Background\shell\CopyPathMenu\shell\03_double\command]
 @="cmd.exe /v:on /c \"set \"p=%V\" & set \"p=!p:\\=\\\\!\" & <nul set /p=!p!| clip\""
