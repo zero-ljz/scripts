@@ -1,20 +1,46 @@
 ﻿Windows Registry Editor Version 5.00
 
+; ==========================================
+; 1. 常规路径 (反斜杠 \)
+; ==========================================
+
 [HKEY_CLASSES_ROOT\*\shell\copypath]
-@="复制路径"
+@="复制路径 (\\)"
 
 [HKEY_CLASSES_ROOT\*\shell\copypath\command]
-@="mshta vbscript:clipboarddata.setdata(\"text\",\"%1\")(close)"
-
+@="cmd.exe /c echo %1| clip"
 
 [HKEY_CLASSES_ROOT\Directory\shell\copypath]
-@="复制路径"
+@="复制路径 (\\)"
 
 [HKEY_CLASSES_ROOT\Directory\shell\copypath\command]
-@="mshta vbscript:clipboarddata.setdata(\"text\",\"%1\")(close)"
+@="cmd.exe /c echo %1| clip"
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\copypath]
-@="复制当前目录路径"
+@="复制当前目录路径 (\\)"
 
 [HKEY_CLASSES_ROOT\Directory\Background\shell\copypath\command]
-@="mshta vbscript:clipboarddata.setdata(\"text\",\"%V\")(close)"
+@="cmd.exe /c echo %V| clip"
+
+
+; ==========================================
+; 2. 正斜杠路径 (/) 
+; ==========================================
+
+[HKEY_CLASSES_ROOT\*\shell\copypath_forward]
+@="复制路径 (/)"
+
+[HKEY_CLASSES_ROOT\*\shell\copypath_forward\command]
+@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
+
+[HKEY_CLASSES_ROOT\Directory\shell\copypath_forward]
+@="复制路径 (/)"
+
+[HKEY_CLASSES_ROOT\Directory\shell\copypath_forward\command]
+@="cmd.exe /v:on /c \"set \"p=%1\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath_forward]
+@="复制当前目录路径 (/)"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\copypath_forward\command]
+@="cmd.exe /v:on /c \"set \"p=%V\" & set \"p=!p:\\=/!\" & <nul set /p=!p!| clip\""
