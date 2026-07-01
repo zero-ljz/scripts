@@ -1,13 +1,16 @@
 ﻿Windows Registry Editor Version 5.00
 
-# 1. 为普通用户运行添加右键菜单
 [HKEY_CLASSES_ROOT\Microsoft.PowerShellScript.1\Shell\RunWithPS]
 @="直接用 PowerShell 执行"
 "Icon"="powershell.exe"
 
 [HKEY_CLASSES_ROOT\Microsoft.PowerShellScript.1\Shell\RunWithPS\command]
-@="\"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" \"-NoExit\" \"-NoProfile\" \"-ExecutionPolicy\" \"Bypass\" \"-File\" \"%1\""
+@="\"powershell.exe\" \"-NoExit\" \"-NoProfile\" \"-ExecutionPolicy\" \"Bypass\" \"-File\" \"%1\""
 
-# 2. 为管理员权限运行添加右键菜单
+[HKEY_CLASSES_ROOT\Microsoft.PowerShellScript.1\Shell\RunWithPSAsAdmin]
+@="用 PowerShell 执行(管理员)"
+"Icon"="powershell.exe"
+"HasLUAShield"=""
+
 [HKEY_CLASSES_ROOT\Microsoft.PowerShellScript.1\Shell\RunWithPSAsAdmin\command]
-@="\"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -ExecutionPolicy Bypass -Command \"$p='%1'; Start-Process powershell.exe -Verb RunAs -ArgumentList @('-NoExit','-NoProfile','-ExecutionPolicy','Bypass','-Command',\\\"Set-Location -LiteralPath '$([IO.Path]::GetDirectoryName($p))'; & '$p'\\\")\""
+@="\"powershell.exe\" -NoProfile -ExecutionPolicy Bypass -Command \"$p='%1'; Start-Process powershell.exe -Verb RunAs -ArgumentList @('-NoExit','-NoProfile','-ExecutionPolicy','Bypass','-Command',\\\"Set-Location -LiteralPath '$([IO.Path]::GetDirectoryName($p))'; & '$p'\\\")\""

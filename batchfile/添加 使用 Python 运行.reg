@@ -1,8 +1,9 @@
 ﻿Windows Registry Editor Version 5.00
 
-[HKEY_CLASSES_ROOT\Python.File\shell\RunPyDirect]
+[HKEY_CLASSES_ROOT\*\shell\RunPyDirect]
 @="使用 Python 运行"
 "Icon"="py.exe"
+"AppliesTo"=".py OR .pyw"
 
-[HKEY_CLASSES_ROOT\Python.File\shell\RunPyDirect\command]
+[HKEY_CLASSES_ROOT\*\shell\RunPyDirect\command]
 @="cmd.exe /k python \"%1\""
