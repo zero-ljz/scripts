@@ -38,6 +38,22 @@
 @="powershell.exe -WindowStyle Hidden -Command \"Start-Process 'wt.exe' -ArgumentList '-w 0 new-tab -p \"PowerShell\" -d \"\\\"%V\\\"\" powershell.exe -noexit -command Set-Location -literalPath ''\"\"\"%V\"\"\"''' -Verb RunAs\""
 
 
+[HKEY_CLASSES_ROOT\Directory\Background\shell\TerminalMenu\shell\wt_cmd]
+@="命令提示符"
+"Icon"="cmd.exe"
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\TerminalMenu\shell\wt_cmd\command]
+@="\"wt.exe\" -w 0 new-tab -p \"Command Prompt\" -d \"%V\" \"cmd.exe\" /k cd /d \"%V\""
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\TerminalMenu\shell\wt_cmd_runas]
+@="命令提示符(管理员)"
+"Icon"="cmd.exe"
+"HasLUAShield"=""
+
+[HKEY_CLASSES_ROOT\Directory\Background\shell\TerminalMenu\shell\wt_cmd_runas\command]
+@="powershell.exe -WindowStyle Hidden -Command \"Start-Process 'wt.exe' -ArgumentList '-w 0 new-tab -p \\\"Command Prompt\\\" -d \\\"%V\\\" cmd.exe /k cd /d \\\"%V\\\"' -Verb RunAs\""
+
+
 [HKEY_CLASSES_ROOT\Directory\Background\shell\TerminalMenu\shell\wsl_shell]
 @="Linux shell"
 "Icon"="C:\\Windows\\System32\\wsl.exe"
