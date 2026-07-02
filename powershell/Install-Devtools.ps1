@@ -258,6 +258,11 @@ code --install-extension charliermarsh.ruff
 # Write-Host "安装 Qt for Python (PySide/PyQt) 界面开发支持" -ForegroundColor Cyan
 # code --install-extension seanwu.vscode-qt-for-python
 
+# Write-Host "AHK v2 最强语法提示" -ForegroundColor Cyan
+# code --install-extension thqby.vscode-autohotkey2-lsp
+# Write-Host "Rust 语言支持" -ForegroundColor Cyan
+# code --install-extension rust-lang.rust-analyzer
+
 # === AI 编程助手 ===
 Write-Host "安装 Continue 开源 AI 编程助手" -ForegroundColor Cyan
 code --install-extension Continue.continue
