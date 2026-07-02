@@ -134,6 +134,9 @@ winget install -e --id AntibodySoftware.WizTree
 Write-Host "安装 Geek Uninstaller" -ForegroundColor Cyan
 winget install -e --id GeekUninstaller.GeekUninstaller
 
+Write-Host "安装 TwinkleTray 显示器亮度调节工具" -ForegroundColor Cyan
+winget install -e --id xanderfrangos.twinkletray
+
 Write-Host "安装 pot 聚合翻译工具" -ForegroundColor Cyan
 winget install -e --id Pylogmon.pot
 
