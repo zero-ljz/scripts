@@ -522,8 +522,12 @@ EOF
     # docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
     sudo cp ./${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
 
-    sudo nginx -t && sudo nginx -s reload
-    sudo docker exec nginx1 nginx -t && sudo docker exec nginx1 nginx -s reload
+    if command -v nginx >/dev/null 2>&1; then
+        sudo nginx -t && sudo nginx -s reload
+    fi
+    if sudo docker ps --format '{{.Names}}' | grep -q '^nginx1$'; then
+        sudo docker exec nginx1 nginx -t && sudo docker exec nginx1 nginx -s reload
+    fi
 }
 
 deploy_mysql(){
@@ -657,7 +661,7 @@ deploy_postgres(){
         --network-alias postgres \
         -e TZ=Asia/Shanghai \
         -e POSTGRES_USER=postgres \
-        -e POSTGRES_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
+        -e POSTGRES_PASSWORD="${PGSQL_ROOT_PASSWORD}" \
         -e POSTGRES_DB=postgres \
         -e POSTGRES_INITDB_ARGS="--encoding=UTF8 --locale=C" \
         -e PGDATA=/var/lib/postgresql/data \
@@ -820,13 +824,14 @@ deploy_gitea(){
     sudo docker run -d \
         --name gitea1 \
         --restart=always \
-        -p "127.0.0.1:${local_port}:3000" -p "${ssh_port}:22" \
+        -p "127.0.0.1:${local_port}:3000" -p "${ssh_port}:2222" \
         -e USER_UID=$(id -u git) \
         -e USER_GID=$(id -g git) \
         -v /docker/gitea:/data \
         -v /etc/timezone:/etc/timezone:ro \
         -v /etc/localtime:/etc/localtime:ro \
         gitea/gitea:1-rootless
+    # rootless版默认监听2222, 否则监听22
 
     # 记得配置SSH_PORT=222，SSH_LISTEN_PORT=22
 
@@ -884,7 +889,7 @@ deploy_python_app() {
     local commands=$(cat <<EOF
 
 sudo apt update && sudo apt -y install git wget
-git clone ${repo_url} .
+if [ -d .git ]; then git pull; else git clone ${repo_url} .; fi
 # pip config set global.index-url https://pypi.mirrors.ustc.edu.cn/simple/
 python3 -m pip install -r requirements.txt
 ${command}
@@ -914,7 +919,7 @@ deploy_node_app() {
     local commands=$(cat <<EOF
 
 sudo apt update && sudo apt -y install git wget
-git clone ${repo_url} .
+if [ -d .git ]; then git pull; else git clone ${repo_url} .; fi
 npm install --production --silent
 ${command}
 EOF
@@ -944,7 +949,7 @@ deploy_php_app() {
     # 在php官方docker镜像中安装扩展
     sudo docker exec -t ${app_name} curl -sSL https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions -o - | sh -s gd xdebug pdo_mysql
     #docker exec -t ${app_name} chmod -R 755 /var/www/html
-    download_php_apps /docker/${app_name}
+    # download_php_apps /docker/${app_name}
 }
 
 docker_run_app(){
@@ -1013,7 +1018,7 @@ function auto_mode(){
     create_database ${domain_name}
     create_proxy ${domain_name} ${port}
     create_ssl ${domain_name}
-    
+
     # domain_name=a.iapp.run
     # create_vhost ${domain_name}
     # create_ssl ${domain_name}
