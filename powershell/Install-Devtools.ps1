@@ -43,7 +43,12 @@ if ($LASTEXITCODE -eq 1) {
 Write-Host "`n`n`n 安装 NodeJS" -ForegroundColor Cyan
 choice /T 5 /D y /M "是否继续？"
 if ($LASTEXITCODE -eq 1) {
-    winget install -e --id OpenJS.NodeJS.LTS
+    winget install -e --id CoreyButler.NVMforWindows
+    # 安装Nodejs 24 LTS
+    nvm install 24
+    # 全局使用 24版本
+    nvm use 24
+
     # 配置国内源
     npm config set registry https://registry.npmmirror.com
     # 安装pnpm
