@@ -49,7 +49,7 @@ system_init(){
         sed -i 's/^#\?TCPKeepAlive.*/TCPKeepAlive yes/' /etc/ssh/sshd_config
         sed -i 's|#ClientAliveInterval 0|ClientAliveInterval 120|g' /etc/ssh/sshd_config
         sed -i 's|#ClientAliveCountMax 3|ClientAliveCountMax 720|g' /etc/ssh/sshd_config
-        systemctl restart sshd
+        sudo systemctl restart sshd
     fi
 
     if [ ! -f "/swapfile" ]; then
@@ -71,7 +71,7 @@ system_init(){
             # 将文件添加到系统的/etc/fstab文件中，以便在系统启动时自动挂载
             echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
             # 启用交换文件
-            swapon /swapfile
+            sudo swapon /swapfile
         fi
     fi
 
@@ -79,17 +79,17 @@ system_init(){
         echo -e "\n\n\n开启 ZRAM 内存压缩 (高并发服务器不建议开启)"
         read -t 5 -p "是否继续？ (y):" answer
         if [[ "$answer" == "y" || $? -eq 142 ]]; then
-            apt update && apt install -y systemd-zram-generator
+            sudo apt update && sudo apt install -y systemd-zram-generator
             cat <<EOF > /etc/systemd/zram-generator.conf
 [zram0]
 zram-size = ram * 0.75
 compression-algorithm = zstd
 swap-priority = 100
 EOF
-            systemctl daemon-reload
-            systemctl start systemd-zram-setup@zram0.service
+            sudo systemctl daemon-reload
+            sudo systemctl start systemd-zram-setup@zram0.service
             echo "ZRAM 配置完成，当前状态："
-            swapon --show
+            sudo swapon --show
         fi
     fi
 
@@ -100,23 +100,23 @@ EOF
             sh -c 'echo net.core.default_qdisc=fq >> /etc/sysctl.conf'
             sh -c 'echo net.ipv4.tcp_congestion_control=bbr >> /etc/sysctl.conf'
             echo -e "\n\n\n从配置文件加载内核参数（需要管理员）"
-            sysctl -p
+            sudo sysctl -p
         fi
     fi
 
-    echo -e "\n\n\n 更新APT包索引"
+    echo -e "\n\n\n 更新sudo apt包索引"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        apt update && apt install -y ca-certificates
+        sudo apt update && sudo apt install -y ca-certificates
     fi
 
     echo -e "\n\n\n 安装必备组件"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        apt -y install openssl aptitude unzip wget curl telnet perl lsof
-        apt -y install sqlite3 lua5.3 zip
+        sudo apt -y install openssl sudo aptitude unzip wget curl telnet perl lsof
+        sudo apt -y install sqlite3 lua5.3 zip
 
-        apt -y install git
+        sudo apt -y install git
         git config --global user.name "zero-ljz"
         git config --global user.email "zero-ljz@qq.com"
     fi
@@ -129,10 +129,10 @@ install_python(){
     echo -e "\n\n\n------------------------------安装 Python + pyenv + UV ------------------------------"
     read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-    # apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
+    # sudo apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
 
     # debian编译依赖包集合
-    apt update && sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev uuid-dev -y
+    sudo apt update && sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev uuid-dev -y
     # 安装pyenv
     curl https://pyenv.run | bash
     # 注入环境变量并写入 ~/.bashrc
@@ -156,7 +156,7 @@ install_python(){
     fi
 
     # 已过时
-    # apt install -y pipx
+    # sudo apt install -y pipx
     # pipx ensurepath
 
     # 安装uv
@@ -187,9 +187,9 @@ install_supervisor(){
     echo -e "\n\n\n 使用 Systemd 配置 Supervisor 开机自启"
     SUPERVISOR_BIN=$(which supervisord || echo "/usr/local/bin/supervisord")
     create_service "supervisord" "${SUPERVISOR_BIN} --nodaemon -c /etc/supervisor/supervisord.conf" "/etc/supervisor"
-    systemctl daemon-reload
-    systemctl enable supervisord
-    systemctl start supervisord
+    sudo systemctl daemon-reload
+    sudo systemctl enable supervisord
+    sudo systemctl start supervisord
     log "Supervisor 已通过 Systemd 成功启动并设置开机自启"
 }
 
@@ -276,19 +276,19 @@ install_docker(){
     local host="download.docker.com"
     read -t 5 -p "是否使用中国大陆镜像？ (y): " answer && [ "$answer" == "y" ] && host="mirrors.ustc.edu.cn/docker-ce"
 
-    echo -e "\n\n\n 安装包以允许apt通过HTTPS使用存储库"
-    apt-get update && apt-get -y install ca-certificates curl gnupg
+    echo -e "\n\n\n 安装包以允许sudo apt通过HTTPS使用存储库"
+    sudo apt-get update && sudo apt-get -y install ca-certificates curl gnupg
     
     echo -e "\n\n\n 添加 Docker 的官方 GPG 密钥"
-    mkdir -m 0755 -p /etc/apt/keyrings
-    curl -fsSL https://${host}/linux/${OS_ID}/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    chmod a+r /etc/apt/keyrings/docker.gpg
+    mkdir -m 0755 -p /etc/sudo apt/keyrings
+    curl -fsSL https://${host}/linux/${OS_ID}/gpg | gpg --dearmor -o /etc/sudo apt/keyrings/docker.gpg
+    chmod a+r /etc/sudo apt/keyrings/docker.gpg
     
     echo -e "\n\n\n 设置存储库"
-    echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://${host}/linux/${OS_ID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/sudo apt/keyrings/docker.gpg] https://${host}/linux/${OS_ID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/sudo apt/sources.list.d/docker.list > /dev/null
     
     echo -e "\n\n\n 安装 Docker Engine、containerd 和 Docker Compose"
-    apt-get update && apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    sudo apt-get update && sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
     if read -t 5 -p "是否使用中国大陆注册表？ (y): " answer && [ "$answer" == "y" ]; then
         cat >/etc/docker/daemon.json <<EOF
@@ -306,7 +306,7 @@ install_nodejs(){
     echo -e "\n\n\n------------------------------安装 Nodejs + nvm + pnpm ------------------------------"
     read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
     
-    apt -y install npm
+    sudo apt -y install npm
     # 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
 
@@ -863,8 +863,8 @@ deploy_debian() {
     docker run -d --name debian1 --network host debian:bullseye sleep infinity
 
     local commands=$(cat <<EOF
-apt update && apt -y install --no-install-recommends wget curl nano micro
-rm -rf /var/lib/apt/lists/*
+sudo apt update && sudo apt -y install --no-install-recommends wget curl nano micro
+rm -rf /var/lib/sudo apt/lists/*
 EOF
     )
     docker exec debian1 bash -c "$commands"
@@ -883,7 +883,7 @@ deploy_python_app() {
     local repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
     local commands=$(cat <<EOF
 
-apt update && apt -y install git wget
+sudo apt update && sudo apt -y install git wget
 git clone ${repo_url} .
 # pip config set global.index-url https://pypi.mirrors.ustc.edu.cn/simple/
 python3 -m pip install -r requirements.txt
@@ -913,7 +913,7 @@ deploy_node_app() {
     local repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
     local commands=$(cat <<EOF
 
-apt update && apt -y install git wget
+sudo apt update && sudo apt -y install git wget
 git clone ${repo_url} .
 npm install --production --silent
 ${command}
