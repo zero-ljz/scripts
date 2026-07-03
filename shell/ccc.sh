@@ -6,7 +6,7 @@
 # bash ./ccc.sh
 
 # 获取系统信息
-OS_ID=$(grep '^ID=' /etc/os-release | cut -d= -f2) # debian
+OS_ID=$(grep '^ID=' /etc/os-release | cut -d= -f2 | sed 's/"//g') # debian
 OS_VERSION_ID=$(grep '^VERSION_ID=' /etc/os-release | cut -d= -f2 | sed 's/"//g') # 11
 OS_VERSION_CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d= -f2) # bullseye
 
@@ -281,7 +281,7 @@ install_docker(){
     
     echo -e "\n\n\n 添加 Docker 的官方 GPG 密钥"
     sudo mkdir -m 0755 -p /etc/apt/keyrings
-    curl -fsSL https://${host}/linux/${OS_ID}/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    curl -fsSL https://${host}/linux/${OS_ID}/gpg | sudo gpg --yes --dearmor -o /etc/apt/keyrings/docker.gpg
     sudo chmod a+r /etc/apt/keyrings/docker.gpg
     
     echo -e "\n\n\n 设置存储库"
@@ -1013,11 +1013,161 @@ function auto_mode(){
     create_database ${domain_name}
     create_proxy ${domain_name} ${port}
     create_ssl ${domain_name}
-
+    
     # domain_name=a.iapp.run
     # create_vhost ${domain_name}
     # create_ssl ${domain_name}
     # create_database ${domain_name}
+}
+
+install_fail2ban(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
+    echo -e "\n\n\n------------------------------安装 fail2ban------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    sudo apt update && sudo apt install -y fail2ban
+    sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+    sudo systemctl enable fail2ban
+    sudo systemctl start fail2ban
+    log "fail2ban 安装完成并已启动，默认已对 sshd 启用保护"
+}
+
+install_monitoring_tools(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
+    echo -e "\n\n\n------------------------------安装系统监控工具 (htop, btop, ncdu)------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    sudo apt update && sudo apt install -y htop btop ncdu
+    log "系统监控工具 (htop, btop, ncdu) 安装完成！"
+}
+
+deploy_netdata(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port]"
+        return
+    fi
+
+    echo -e "\n\n\n------------------------------部署 Netdata 监控------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    local port=${1:-19999}
+    sudo docker run -d --name=netdata1 \
+        -p "${port}:19999" \
+        --pid=host \
+        -v netdataconfig:/etc/netdata \
+        -v netdatalib:/var/lib/netdata \
+        -v netdatacache:/var/cache/netdata \
+        -v /etc/passwd:/host/etc/passwd:ro \
+        -v /etc/group:/host/etc/group:ro \
+        -v /proc:/host/proc:ro \
+        -v /sys:/host/sys:ro \
+        -v /etc/os-release:/host/etc/os-release:ro \
+        -v /var/run/docker.sock:/var/run/docker.sock:ro \
+        --restart always \
+        --cap-add SYS_PTRACE \
+        --security-opt apparmor=unconfined \
+        netdata/netdata
+    log "Netdata 部署成功，请访问 http://IP:${port}"
+}
+
+deploy_adminer(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port]"
+        return
+    fi
+
+    echo -e "\n\n\n------------------------------部署 Adminer 数据库管理工具------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    local port=${1:-8080}
+    sudo docker network inspect network1 >/dev/null 2>&1 || sudo docker network create network1
+    sudo docker run -d --name adminer1 \
+        --restart always \
+        --network network1 \
+        -p "${port}:8080" \
+        adminer
+    log "Adminer 部署成功，请访问 http://IP:${port} (可在登录页指定主机为 mysql1 等)"
+}
+
+deploy_redis_commander(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port] [redis_host] [redis_port] [redis_password]"
+        return
+    fi
+
+    echo -e "\n\n\n------------------------------部署 Redis Commander 可视化后台------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    local port=${1:-8081}
+    local redis_host=${2:-"redis1"}
+    local redis_port=${3:-6379}
+    local redis_pass=${4:-"123qweQ!"}
+
+    sudo docker network inspect network1 >/dev/null 2>&1 || sudo docker network create network1
+    sudo docker run -d --name redis-commander1 \
+        --restart always \
+        --network network1 \
+        -p "${port}:8081" \
+        -e REDIS_HOSTS="${redis_host}:${redis_port}:0:${redis_pass}" \
+        rediscommander/redis-commander:latest
+    log "Redis Commander 部署成功，请访问 http://IP:${port}"
+}
+
+deploy_watchtower(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
+    echo -e "\n\n\n------------------------------部署 Watchtower 容器自动更新工具------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    sudo docker run -d --name watchtower1 \
+        --restart always \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        containrrr/watchtower \
+        --cleanup \
+        --schedule "0 0 3 * * *"
+    log "Watchtower 部署成功，每日凌晨 3 点会自动检测并更新所有容器的镜像，并清理旧镜像。"
+}
+
+install_rclone(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
+    echo -e "\n\n\n------------------------------安装 Rclone 备份/同步工具------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    curl https://rclone.org/install.sh | sudo bash
+    log "Rclone 安装完成，请输入 rclone config 配置您的云盘/对象存储"
+}
+
+deploy_filebrowser(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port] [root_dir]"
+        return
+    fi
+
+    echo -e "\n\n\n------------------------------部署 File Browser 网盘与文件管理器------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    local port=${1:-8082}
+    local root_dir=${2:-"/"}
+
+    sudo mkdir -p /docker/filebrowser
+    sudo touch /docker/filebrowser/filebrowser.db
+    sudo chmod 666 /docker/filebrowser/filebrowser.db
+
+    sudo docker run -d --name filebrowser1 \
+        --restart always \
+        -v "${root_dir}:/srv" \
+        -v /docker/filebrowser/filebrowser.db:/database/filebrowser.db \
+        -p "${port}:80" \
+        -e TZ=Asia/Shanghai \
+        filebrowser/filebrowser
+    log "File Browser 部署成功，请访问 http://IP:${port} (默认用户名/密码: admin/admin)"
 }
 
 upgrade()
