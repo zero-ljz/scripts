@@ -17,6 +17,7 @@ log() {
 }
 
 system_init(){
+    # 执行这个函数需用sudo
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 
     echo -e "\n\n\n------------------------------安装必备组件 && 系统配置------------------------------"
@@ -112,7 +113,7 @@ EOF
     echo -e "\n\n\n 安装必备组件"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        apt -y install sudo openssl aptitude unzip wget curl telnet perl lsof
+        apt -y install openssl aptitude unzip wget curl telnet perl lsof
         apt -y install sqlite3 lua5.3 zip
 
         apt -y install git
@@ -136,23 +137,25 @@ install_python(){
     curl https://pyenv.run | bash
     # 注入环境变量并写入 ~/.bashrc
     if ! grep -q "pyenv init" ~/.bashrc; then
+        echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
         echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.bashrc
-        echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+        echo 'eval "$(pyenv init - bash)"' >> ~/.bashrc
         echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
     fi
     # 让当前脚本运行环境中临时生效，以便后续执行 pyenv 命令
     export PATH="$HOME/.pyenv/bin:$PATH"
-    eval "$(pyenv init -)"
+    eval "$(pyenv init - bash)"
     eval "$(pyenv virtualenv-init -)"
     # 执行编译安装
-    # pyenv install 3.10.11
-    pyenv install 3.12.10
-    pyenv global 3.12.10
+    pyenv install 3.10.11
+    # pyenv install 3.12.10
+    pyenv global 3.10.11
 
     if read -t 5 -p "是否使用pypi中国大陆镜像源？ (y): " answer && [ "$answer" == "y" ]; then
         pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
     fi
 
+    # 已过时
     # apt install -y pipx
     # pipx ensurepath
 
