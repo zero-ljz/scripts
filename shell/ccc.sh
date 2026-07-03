@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# encoding=utf-8
+# line ending=\n
+
 # bash ./ccc.sh
 
 # 获取系统信息
@@ -117,41 +120,44 @@ EOF
         git config --global user.email "zero-ljz@qq.com"
     fi
 
-    echo -e "\n\n\n 安装 Python 及配套工具"
-    read -t 5 -p "是否继续？ (y):" answer
-    if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        # apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
+}
 
-        # debian编译依赖包集合
-        apt update && sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev uuid-dev -y
-        # 安装pyenv
-        curl https://pyenv.run | bash
-        # 注入环境变量并写入 ~/.bashrc
-        if ! grep -q "pyenv init" ~/.bashrc; then
-            echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.bashrc
-            echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-            echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
-        fi
-        # 让当前脚本运行环境中临时生效，以便后续执行 pyenv 命令
-        export PATH="$HOME/.pyenv/bin:$PATH"
-        eval "$(pyenv init -)"
-        eval "$(pyenv virtualenv-init -)"
-        # 执行编译安装
-        # pyenv install 3.10.11
-        pyenv install 3.12.10
-        pyenv global 3.12.10
+install_python(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 
-        if read -t 5 -p "是否使用pypi中国大陆镜像源？ (y): " answer && [ "$answer" == "y" ]; then
-            pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
-        fi
+    echo -e "\n\n\n------------------------------安装 Python + pyenv + UV ------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-        # apt install -y pipx
-        # pipx ensurepath
+    # apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
 
-        # 安装uv
-        curl -LsSf https://astral.sh/uv/install.sh | sh
+    # debian编译依赖包集合
+    apt update && sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev uuid-dev -y
+    # 安装pyenv
+    curl https://pyenv.run | bash
+    # 注入环境变量并写入 ~/.bashrc
+    if ! grep -q "pyenv init" ~/.bashrc; then
+        echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.bashrc
+        echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+        echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
+    fi
+    # 让当前脚本运行环境中临时生效，以便后续执行 pyenv 命令
+    export PATH="$HOME/.pyenv/bin:$PATH"
+    eval "$(pyenv init -)"
+    eval "$(pyenv virtualenv-init -)"
+    # 执行编译安装
+    # pyenv install 3.10.11
+    pyenv install 3.12.10
+    pyenv global 3.12.10
+
+    if read -t 5 -p "是否使用pypi中国大陆镜像源？ (y): " answer && [ "$answer" == "y" ]; then
+        pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
     fi
 
+    # apt install -y pipx
+    # pipx ensurepath
+
+    # 安装uv
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 }
 
 install_supervisor(){
@@ -294,7 +300,7 @@ EOF
 install_nodejs(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     
-    echo -e "\n\n\n------------------------------安装 Nodejs------------------------------"
+    echo -e "\n\n\n------------------------------安装 Nodejs + nvm + pnpm ------------------------------"
     read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
     
     apt -y install npm
