@@ -113,7 +113,7 @@ EOF
     echo -e "\n\n\n 安装必备组件"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        sudo apt -y install openssl sudo aptitude unzip wget curl telnet perl lsof
+        sudo apt -y install openssl aptitude unzip wget curl telnet perl lsof
         sudo apt -y install sqlite3 lua5.3 zip
 
         sudo apt -y install git
@@ -339,13 +339,13 @@ create_ssl(){
     # acme_dir=${2:-/var/www/${domain_name}/.well-known/acme-challenge/} 
     local acme_dir="/var/www/challenges/${domain_name}/"
 
-    # 自动在 Crontab 中写入“每天凌晨固定检查”的任务
+    # 自动在 crontab 中写入“每天凌晨固定检查”的任务
     local current_script=$(readlink -f "$0")
     # 确保是通过脚本文件执行，而不是直接在终端粘贴函数
     if [[ "$current_script" != *"bash"* ]] && [ -f "$current_script" ]; then
         local cron_job="15 3 * * * CRON_EXECUTION=1 bash $current_script create_ssl $domain_name"
-        if ! crontab -l 2>/dev/null | grep -q "create_ssl $domain_name"; then
-            (crontab -l 2>/dev/null; echo "$cron_job") | crontab -
+        if ! sudo crontab -l 2>/dev/null | grep -q "create_ssl $domain_name"; then
+            (sudo crontab -l 2>/dev/null; echo "$cron_job") | sudo crontab -
             log "SUCCESS: Daily health-check cron job added."
         fi
     fi
@@ -406,7 +406,7 @@ create_ssl(){
     sudo mkdir -p "$acme_dir"
 
     wget https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py -O "$ACME_TINY" --quiet
-    sudo python3 $ACME_TINY --account-key "$ACCOUNT_KEY" --csr "${DOMAIN_CSR}" --acme-dir "$acme_dir" | sudo tee "$TMP_FULLCHAIN_CRT" > /dev/null
+    sudo /usr/bin/python3 $ACME_TINY --account-key "$ACCOUNT_KEY" --csr "${DOMAIN_CSR}" --acme-dir "$acme_dir" | sudo tee "$TMP_FULLCHAIN_CRT" > /dev/null
 
     if [ $? -eq 0 ] && sudo openssl x509 -in "$TMP_FULLCHAIN_CRT" -noout >/dev/null 2>&1; then
         sudo mv "$TMP_FULLCHAIN_CRT" "$DOMAIN_FULLCHAIN_CRT"
