@@ -169,27 +169,19 @@ install_supervisor(){
     echo -e "\n\n\n------------------------------安装 Supervisor 进程管理器------------------------------"
     read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
     
-    pip3 install supervisor
+    # 使用系统包管理器安装，避免现代操作系统上的 PEP 668 pip 全局安装限制
+    sudo apt update && sudo apt install -y supervisor
     
-    echo -e "\n\n\n 生成配置文件"
-    sudo mkdir /etc/supervisor
-    echo_supervisord_conf | sudo tee /etc/supervisor/supervisord.conf >/dev/null
+    # 确保配置支持 *.ini 后缀，且是幂等的（避免多次运行脚本重复追加）
+    if [ -f "/etc/supervisor/supervisord.conf" ]; then
+        if ! grep -q '\*\.ini' /etc/supervisor/supervisord.conf; then
+            sudo sed -i 's|files = /etc/supervisor/conf.d/\*.conf|files = /etc/supervisor/conf.d/*.conf /etc/supervisor/conf.d/*.ini|g' /etc/supervisor/supervisord.conf
+        fi
+    fi
     
-    echo -e "\n\n\n 编辑配置文件"
-    find '/etc/supervisor/supervisord.conf' | xargs sudo perl -pi -e 's|;\[include\]|\[include\]|g'
-    find '/etc/supervisor/supervisord.conf' | xargs sudo perl -pi -e 's|;files = relative/directory/\*\.ini|files = conf.d/*.ini|g'
-    
-    echo -e "\n\n\n 创建子配置文件夹"
-    sudo mkdir -p /etc/supervisor/conf.d
-
-    # python3 -m http.server -d /home/share
-
-    echo -e "\n\n\n 使用 Systemd 配置 Supervisor 开机自启"
-    SUPERVISOR_BIN=$(which supervisord || echo "/usr/local/bin/supervisord")
-    create_service "supervisord" "${SUPERVISOR_BIN} --nodaemon -c /etc/supervisor/supervisord.conf" "/etc/supervisor"
     sudo systemctl daemon-reload
-    sudo systemctl enable supervisord
-    sudo systemctl start supervisord
+    sudo systemctl enable supervisor
+    sudo systemctl start supervisor
     log "Supervisor 已通过 Systemd 成功启动并设置开机自启"
 }
 
@@ -1184,8 +1176,33 @@ upgrade()
     fi
     local url="https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/ccc.sh"
     log "正在从 ${url} 下载最新版本脚本..."
-    # bash -c "wget --no-cache --no-check-certificate -O /root/ccc.sh ${url}"
-    bash -c "curl -LkO ${url}"
+    
+    local script_path
+    script_path=$(readlink -f "$0")
+    
+    if [ -f "$script_path" ]; then
+        local tmp_file
+        tmp_file=$(mktemp)
+        if curl -LfsS "$url" -o "$tmp_file"; then
+            if [ -s "$tmp_file" ]; then
+                chmod --reference="$script_path" "$tmp_file" 2>/dev/null || chmod +x "$tmp_file"
+                mv -f "$tmp_file" "$script_path"
+                log "脚本更新成功！"
+                exit 0
+            else
+                log "错误：下载的文件为空"
+                rm -f "$tmp_file"
+                return 1
+            fi
+        else
+            log "错误：下载失败"
+            rm -f "$tmp_file"
+            return 1
+        fi
+    else
+        log "错误：无法确定脚本路径，升级失败"
+        return 1
+    fi
 }
 
 # 获取函数名
