@@ -128,6 +128,7 @@ if [ "$backup_databases" = true ]; then
 
   # 备份每个数据库到单独的文件
   for db in $databases; do
+      echo "正在导出数据库: $db -> db_${db}_backup_${DATE}.sql"
       docker exec -i mysql1 mysqldump -u"root" -p"$mysql_root_password" --databases "$db" > "$BACKUP_DIR/db_${db}_backup_${DATE}.sql"
       [ $? -ne 0 ] && echo "备份数据库 $db 失败" && exit 1
 
@@ -144,13 +145,16 @@ if [ "$backup_containers" = true ]; then
       container_name=$(docker inspect --format '{{.Name}}' $container_id | cut -c 2-)
       backup_image="${container_name}-image"
       backup_file="container_${container_name}_backup_${DATE}.tar"
+      echo "正在备份容器: $container_name -> $backup_file"
       # 将容器保存为新镜像
       docker commit "$container_name" "$backup_image"
       # 将镜像保存为压缩文件
       docker save -o "${BACKUP_DIR}/$backup_file" "$backup_image"
+      # 备份前一条命令状态码
+      SAVE_CODE=$?
       # 删除临时镜像
       docker rmi --force "$backup_image"
-      [ $? -ne 0 ] && echo "备份容器 ${container_name} 失败！" && exit 1
+      [ $SAVE_CODE -ne 0 ] && echo "备份容器 ${container_name} 失败！" && exit 1
       # 从保存的压缩文件中载入镜像
       # docker load -i xxx.tar
   done
