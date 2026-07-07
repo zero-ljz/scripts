@@ -290,12 +290,13 @@ Write-Host "安装 快捷在浏览器中打开 HTML 页面工具" -ForegroundCol
 code --install-extension techer.open-in-browser
 
 # === 容器与远程开发 ===
-# Write-Host "安装 Docker 容器管理与支持扩展" -ForegroundColor Cyan
-# code --install-extension ms-azuretools.vscode-docker
-# Write-Host "安装 VS Code 远程开发容器核心支持" -ForegroundColor Cyan
-# code --install-extension ms-azuretools.vscode-containers
-# Write-Host "安装 远程连接与开发容器支持扩展" -ForegroundColor Cyan
+# Write-Host "安装 远程开发扩展包" -ForegroundColor Cyan
+# code --install-extension ms-vscode-remote.remote-wsl
 # code --install-extension ms-vscode-remote.remote-containers
+# code --install-extension ms-vscode-remote.remote-ssh
+# code --install-extension ms-vscode.remote-server
+# Write-Host "安装 创建、管理和调试容器化应用程序 工具" -ForegroundColor Cyan
+code --install-extension ms-azuretools.vscode-docker
 
 # === 配置文件与通用语言支持 ===
 Write-Host "安装 PowerShell 脚本语言支持" -ForegroundColor Cyan

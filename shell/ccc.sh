@@ -1,10 +1,13 @@
 #!/bin/bash
 
+# encoding=utf-8
+# line ending=\n
+
 # bash ./ccc.sh
 
 # 获取系统信息
 ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') # amd64
-OS_ID=$(grep '^ID=' /etc/os-release | cut -d= -f2) # debian
+OS_ID=$(grep '^ID=' /etc/os-release | cut -d= -f2 | sed 's/"//g') # debian
 OS_VERSION_ID=$(grep '^VERSION_ID=' /etc/os-release | cut -d= -f2 | sed 's/"//g') # 11
 OS_VERSION_CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d= -f2) # bullseye
 
@@ -15,6 +18,7 @@ log() {
 }
 
 system_init(){
+    # 执行这个函数需用sudo
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 
     echo -e "\n\n\n------------------------------安装必备组件 && 系统配置------------------------------"
@@ -25,28 +29,28 @@ system_init(){
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
         # dpkg-reconfigure locales
         # 启用一个区域设置
-        sed -i '/^# zh_CN.UTF-8 UTF-8$/s/^#//' /etc/locale.gen
+        sudo sed -i '/^# zh_CN.UTF-8 UTF-8$/s/^#//' /etc/locale.gen
         # 生成区域设置
-        locale-gen
+        sudo locale-gen
         # 设置系统环境的默认区域
-        update-locale LANG=zh_CN.UTF-8
+        sudo update-locale LANG=zh_CN.UTF-8
     fi
 
     echo -e "\n\n\n 配置时区"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
         # dpkg-reconfigure tzdata
-        timedatectl set-timezone Asia/Shanghai
+        sudo timedatectl set-timezone Asia/Shanghai
     fi
 
     echo -e "\n\n\n 设置ssh 120*720=86400 24小时不断开连接"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        cp "/etc/ssh/sshd_config" "/etc/ssh/sshd_config-OLD-$(date +%y%m%d-%H%M%S)"
-        sed -i 's/^#\?TCPKeepAlive.*/TCPKeepAlive yes/' /etc/ssh/sshd_config
-        sed -i 's|#ClientAliveInterval 0|ClientAliveInterval 120|g' /etc/ssh/sshd_config
-        sed -i 's|#ClientAliveCountMax 3|ClientAliveCountMax 720|g' /etc/ssh/sshd_config
-        systemctl restart sshd
+        sudo cp "/etc/ssh/sshd_config" "/etc/ssh/sshd_config-OLD-$(date +%y%m%d-%H%M%S)"
+        sudo sed -i 's/^#\?TCPKeepAlive.*/TCPKeepAlive yes/' /etc/ssh/sshd_config
+        sudo sed -i 's|#ClientAliveInterval 0|ClientAliveInterval 120|g' /etc/ssh/sshd_config
+        sudo sed -i 's|#ClientAliveCountMax 3|ClientAliveCountMax 720|g' /etc/ssh/sshd_config
+        sudo systemctl restart sshd
     fi
 
     if [ ! -f "/swapfile" ]; then
@@ -56,19 +60,19 @@ system_init(){
             total_memory_mb=$(grep MemTotal /proc/meminfo | awk '{print int($2 / 1024)}')
             swapfile_length=$(($total_memory_mb * 2))
             log "正在创建 Swap 文件..."
-            if fallocate -l ${swapfile_length}M /swapfile 2>/dev/null; then
+            if sudo fallocate -l ${swapfile_length}M /swapfile 2>/dev/null; then
                 log "使用 fallocate 预分配空间成功"
             else
                 log "fallocate 失败，正在使用 dd 写入连续块（这可能需要一些时间）..."
-                dd if=/dev/zero of=/swapfile bs=1M count=${swapfile_length} status=none
+                sudo dd if=/dev/zero of=/swapfile bs=1M count=${swapfile_length} status=none
             fi
-            chmod 600 /swapfile
+            sudo chmod 600 /swapfile
             # 格式化为交换分区
-            mkswap /swapfile
+            sudo mkswap /swapfile
             # 将文件添加到系统的/etc/fstab文件中，以便在系统启动时自动挂载
-            echo '/swapfile none swap sw 0 0' | tee -a /etc/fstab
+            echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
             # 启用交换文件
-            swapon /swapfile
+            sudo swapon /swapfile
         fi
     fi
 
@@ -76,17 +80,17 @@ system_init(){
         echo -e "\n\n\n开启 ZRAM 内存压缩 (高并发服务器不建议开启)"
         read -t 5 -p "是否继续？ (y):" answer
         if [[ "$answer" == "y" || $? -eq 142 ]]; then
-            apt update && apt install -y systemd-zram-generator
-            cat <<EOF > /etc/systemd/zram-generator.conf
+            sudo apt update && sudo apt install -y systemd-zram-generator
+            sudo tee /etc/systemd/zram-generator.conf <<EOF >/dev/null
 [zram0]
 zram-size = ram * 0.75
 compression-algorithm = zstd
 swap-priority = 100
 EOF
-            systemctl daemon-reload
-            systemctl start systemd-zram-setup@zram0.service
+            sudo systemctl daemon-reload
+            sudo systemctl start systemd-zram-setup@zram0.service
             echo "ZRAM 配置完成，当前状态："
-            swapon --show
+            sudo swapon --show
         fi
     fi
 
@@ -94,65 +98,70 @@ EOF
         echo -e "\n\n\n启用 Google BBR"
         read -t 5 -p "是否继续？ (y):" answer
         if [[ "$answer" == "y" || $? -eq 142 ]]; then
-            sh -c 'echo net.core.default_qdisc=fq >> /etc/sysctl.conf'
-            sh -c 'echo net.ipv4.tcp_congestion_control=bbr >> /etc/sysctl.conf'
+            sudo sh -c 'echo net.core.default_qdisc=fq >> /etc/sysctl.conf'
+            sudo sh -c 'echo net.ipv4.tcp_congestion_control=bbr >> /etc/sysctl.conf'
             echo -e "\n\n\n从配置文件加载内核参数（需要管理员）"
-            sysctl -p
+            sudo sysctl -p
         fi
     fi
 
-    echo -e "\n\n\n 更新APT包索引"
+    echo -e "\n\n\n 更新sudo apt包索引"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        apt update && apt install -y ca-certificates
+        sudo apt update && sudo apt install -y ca-certificates
     fi
 
     echo -e "\n\n\n 安装必备组件"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        apt -y install sudo openssl aptitude unzip wget curl telnet perl lsof
-        apt -y install sqlite3 lua5.3 zip
+        sudo apt -y install openssl aptitude unzip wget curl telnet perl lsof
+        sudo apt -y install sqlite3 lua5.3 zip
 
-        apt -y install git
+        sudo apt -y install git
         git config --global user.name "zero-ljz"
         git config --global user.email "zero-ljz@qq.com"
     fi
 
-    echo -e "\n\n\n 安装 Python 及配套工具"
-    read -t 5 -p "是否继续？ (y):" answer
-    if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        # apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
+}
 
-        # debian编译依赖包集合
-        apt update && sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev uuid-dev -y
-        # 安装pyenv
-        curl https://pyenv.run | bash
-        # 注入环境变量并写入 ~/.bashrc
-        if ! grep -q "pyenv init" ~/.bashrc; then
-            echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.bashrc
-            echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-            echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
-        fi
-        # 让当前脚本运行环境中临时生效，以便后续执行 pyenv 命令
-        export PATH="$HOME/.pyenv/bin:$PATH"
-        eval "$(pyenv init -)"
-        eval "$(pyenv virtualenv-init -)"
-        # 执行编译安装
-        # pyenv install 3.10.11
-        pyenv install 3.12.10
-        pyenv global 3.12.10
+install_python(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 
-        if read -t 5 -p "是否使用pypi中国大陆镜像源？ (y): " answer && [ "$answer" == "y" ]; then
-            pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
-        fi
+    echo -e "\n\n\n------------------------------安装 Python + pyenv + UV ------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
-        # apt install -y pipx
-        # pipx ensurepath
+    # sudo apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
 
-        # 安装uv
-        curl -LsSf https://astral.sh/uv/install.sh | sh
+    # debian编译依赖包集合
+    sudo apt update && sudo apt install build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev uuid-dev -y
+    # 安装pyenv
+    curl https://pyenv.run | bash
+    # 注入环境变量并写入 ~/.bashrc
+    if ! grep -q "pyenv init" ~/.bashrc; then
+        echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+        echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> ~/.bashrc
+        echo 'eval "$(pyenv init - bash)"' >> ~/.bashrc
+        echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bashrc
+    fi
+    # 让当前脚本运行环境中临时生效，以便后续执行 pyenv 命令
+    export PATH="$HOME/.pyenv/bin:$PATH"
+    eval "$(pyenv init - bash)"
+    eval "$(pyenv virtualenv-init -)"
+    # 执行编译安装
+    pyenv install 3.10.11
+    # pyenv install 3.12.10
+    pyenv global 3.10.11
+
+    if read -t 5 -p "是否使用pypi中国大陆镜像源？ (y): " answer && [ "$answer" == "y" ]; then
+        pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
     fi
 
+    # 已过时
+    # sudo apt install -y pipx
+    # pipx ensurepath
+
+    # 安装uv
+    curl -LsSf https://astral.sh/uv/install.sh | sh
 }
 
 install_supervisor(){
@@ -161,27 +170,19 @@ install_supervisor(){
     echo -e "\n\n\n------------------------------安装 Supervisor 进程管理器------------------------------"
     read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
     
-    pip3 install supervisor
+    # 使用系统包管理器安装，避免现代操作系统上的 PEP 668 pip 全局安装限制
+    sudo apt update && sudo apt install -y supervisor
     
-    echo -e "\n\n\n 生成配置文件"
-    mkdir /etc/supervisor
-    echo_supervisord_conf > /etc/supervisor/supervisord.conf
+    # 确保配置支持 *.ini 后缀，且是幂等的（避免多次运行脚本重复追加）
+    if [ -f "/etc/supervisor/supervisord.conf" ]; then
+        if ! grep -q '\*\.ini' /etc/supervisor/supervisord.conf; then
+            sudo sed -i 's|files = /etc/supervisor/conf.d/\*.conf|files = /etc/supervisor/conf.d/*.conf /etc/supervisor/conf.d/*.ini|g' /etc/supervisor/supervisord.conf
+        fi
+    fi
     
-    echo -e "\n\n\n 编辑配置文件"
-    find '/etc/supervisor/supervisord.conf' | xargs perl -pi -e 's|;\[include\]|\[include\]|g'
-    find '/etc/supervisor/supervisord.conf' | xargs perl -pi -e 's|;files = relative/directory/\*\.ini|files = conf.d/*.ini|g'
-    
-    echo -e "\n\n\n 创建子配置文件夹"
-    mkdir -p /etc/supervisor/conf.d
-
-    # python3 -m http.server -d /home/share
-
-    echo -e "\n\n\n 使用 Systemd 配置 Supervisor 开机自启"
-    SUPERVISOR_BIN=$(which supervisord || echo "/usr/local/bin/supervisord")
-    create_service "supervisord" "${SUPERVISOR_BIN} --nodaemon -c /etc/supervisor/supervisord.conf" "/etc/supervisor"
-    systemctl daemon-reload
-    systemctl enable supervisord
-    systemctl start supervisord
+    sudo systemctl daemon-reload
+    sudo systemctl enable supervisor
+    sudo systemctl start supervisor
     log "Supervisor 已通过 Systemd 成功启动并设置开机自启"
 }
 
@@ -196,7 +197,7 @@ create_supervisor(){
     local command="$2"
     local working_dir="${3:-"/usr/local/bin/"}"
 
-    cat >/etc/supervisor/conf.d/${app_name}.ini <<EOF
+    sudo tee /etc/supervisor/conf.d/${app_name}.ini <<EOF >/dev/null
 [program:${app_name}]
 directory=${working_dir}
 command=${command}
@@ -216,9 +217,9 @@ stdout_logfile=/var/log/${app_name}.log
 EOF
 
     # 重新读取配置文件
-    supervisorctl reread
+    sudo supervisorctl reread
     # 应用更改
-    supervisorctl update
+    sudo supervisorctl update
 
     # supervisorctl restart ${app_name}
     # 重载配置和重启所有进程
@@ -238,9 +239,9 @@ create_service(){
     local command="$2"
     local working_dir="${3:-"/usr/local/bin/"}"
 
-    touch /etc/systemd/system/${app_name}.service
-    chmod 755 /etc/systemd/system/${app_name}.service
-    cat >/etc/systemd/system/${app_name}.service <<EOF
+    sudo touch /etc/systemd/system/${app_name}.service
+    sudo chmod 755 /etc/systemd/system/${app_name}.service
+    sudo tee /etc/systemd/system/${app_name}.service <<EOF >/dev/null
 [Unit]
 Description=${app_name}
 # 确保网络完全在线后再启动（比普通的 network.target 更稳，防止应用启动时因网络未就绪报错）
@@ -279,22 +280,22 @@ install_docker(){
     local host="download.docker.com"
     read -t 5 -p "是否使用中国大陆镜像？ (y): " answer && [ "$answer" == "y" ] && host="mirrors.ustc.edu.cn/docker-ce"
 
-    echo -e "\n\n\n 安装包以允许apt通过HTTPS使用存储库"
-    apt-get update && apt-get -y install ca-certificates curl gnupg
+    echo -e "\n\n\n 安装包以允许sudo apt通过HTTPS使用存储库"
+    sudo apt-get update && sudo apt-get -y install ca-certificates curl gnupg
     
     echo -e "\n\n\n 添加 Docker 的官方 GPG 密钥"
-    mkdir -m 0755 -p /etc/apt/keyrings
-    curl -fsSL https://${host}/linux/${OS_ID}/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    chmod a+r /etc/apt/keyrings/docker.gpg
+    sudo mkdir -m 0755 -p /etc/apt/keyrings
+    curl -fsSL https://${host}/linux/${OS_ID}/gpg | sudo gpg --yes --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
     
     echo -e "\n\n\n 设置存储库"
-    echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://${host}/linux/${OS_ID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://${host}/linux/${OS_ID} "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     
     echo -e "\n\n\n 安装 Docker Engine、containerd 和 Docker Compose"
-    apt-get update && apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    sudo apt-get update && sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
     if read -t 5 -p "是否使用中国大陆注册表？ (y): " answer && [ "$answer" == "y" ]; then
-        cat >/etc/docker/daemon.json <<EOF
+        sudo tee /etc/docker/daemon.json <<EOF >/dev/null
 {
   "registry-mirrors": ["https://p.252525.xyz/https://registry-1.docker.io"]
 }
@@ -306,10 +307,10 @@ EOF
 install_nodejs(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     
-    echo -e "\n\n\n------------------------------安装 Nodejs------------------------------"
+    echo -e "\n\n\n------------------------------安装 Nodejs + nvm + pnpm ------------------------------"
     read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
     
-    apt -y install npm
+    sudo apt -y install npm
     # 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
 
@@ -342,20 +343,20 @@ create_ssl(){
     # acme_dir=${2:-/var/www/${domain_name}/.well-known/acme-challenge/} 
     local acme_dir="/var/www/challenges/${domain_name}/"
 
-    # 自动在 Crontab 中写入“每天凌晨固定检查”的任务
+    # 自动在 crontab 中写入“每天凌晨固定检查”的任务
     local current_script=$(readlink -f "$0")
     # 确保是通过脚本文件执行，而不是直接在终端粘贴函数
     if [[ "$current_script" != *"bash"* ]] && [ -f "$current_script" ]; then
         local cron_job="15 3 * * * CRON_EXECUTION=1 bash $current_script create_ssl $domain_name"
-        if ! crontab -l 2>/dev/null | grep -q "create_ssl $domain_name"; then
-            (crontab -l 2>/dev/null; echo "$cron_job") | crontab -
+        if ! sudo crontab -l 2>/dev/null | grep -q "create_ssl $domain_name"; then
+            (sudo crontab -l 2>/dev/null; echo "$cron_job") | sudo crontab -
             log "SUCCESS: Daily health-check cron job added."
         fi
     fi
 
     local SSL_DIR="/var/ssl"
     if [ ! -d "$SSL_DIR" ]; then
-        mkdir -p "$SSL_DIR"
+        sudo mkdir -p "$SSL_DIR"
     fi
 
     local ACME_TINY="/tmp/acme_tiny.py"
@@ -395,24 +396,24 @@ create_ssl(){
     # 文件不存在时创建 Let's Encrypt 帐户私钥
     if [ ! -f "$ACCOUNT_KEY" ]; then
         log "Generate account key..."
-        openssl genrsa 4096 > "$ACCOUNT_KEY"
+        sudo openssl genrsa -out "$ACCOUNT_KEY" 4096
     fi
 
     if [ ! -f "$DOMAIN_KEY" ]; then
         log "Generate domain key 私钥..."
-        openssl genrsa 2048 > "$DOMAIN_KEY"
+        sudo openssl genrsa -out "$DOMAIN_KEY" 2048
     fi
 
     log "Generate CSR..."
-    openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name}")) > "${DOMAIN_CSR}"
+    sudo openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name}")) -out "${DOMAIN_CSR}"
 
-    mkdir -p "$acme_dir"
+    sudo mkdir -p "$acme_dir"
 
     wget https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py -O "$ACME_TINY" --quiet
-    python3 $ACME_TINY --account-key "$ACCOUNT_KEY" --csr "${DOMAIN_CSR}" --acme-dir "$acme_dir" > "$TMP_FULLCHAIN_CRT"
+    sudo /usr/bin/python3 $ACME_TINY --account-key "$ACCOUNT_KEY" --csr "${DOMAIN_CSR}" --acme-dir "$acme_dir" | sudo tee "$TMP_FULLCHAIN_CRT" > /dev/null
 
-    if [ $? -eq 0 ] && openssl x509 -in "$TMP_FULLCHAIN_CRT" -noout >/dev/null 2>&1; then
-        mv "$TMP_FULLCHAIN_CRT" "$DOMAIN_FULLCHAIN_CRT"
+    if [ $? -eq 0 ] && sudo openssl x509 -in "$TMP_FULLCHAIN_CRT" -noout >/dev/null 2>&1; then
+        sudo mv "$TMP_FULLCHAIN_CRT" "$DOMAIN_FULLCHAIN_CRT"
         cat << EOF
 执行 nano /etc/nginx/conf.d/${domain_name}.conf
 
@@ -425,7 +426,7 @@ create_ssl(){
 EOF
     log "Please restart nginx"
     else
-        rm -f "$TMP_FULLCHAIN_CRT"
+        sudo rm -f "$TMP_FULLCHAIN_CRT"
         log "ERROR: SSL generation failed!"
         return 1
     fi
@@ -523,10 +524,14 @@ EOF
     # EOF
 
     # docker cp ./${domain_name}.conf nginx1:/etc/nginx/conf.d/${domain_name}.conf
-    cp ./${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
+    sudo cp ./${domain_name}.conf /etc/nginx/conf.d/${domain_name}.conf
 
-    nginx -t && nginx -s reload
-    docker exec nginx1 nginx -t && docker exec nginx1 nginx -s reload
+    if command -v nginx >/dev/null 2>&1; then
+        sudo nginx -t && sudo nginx -s reload
+    fi
+    if sudo docker ps --format '{{.Names}}' | grep -q '^nginx1$'; then
+        sudo docker exec nginx1 nginx -t && sudo docker exec nginx1 nginx -s reload
+    fi
 }
 
 deploy_mysql(){
@@ -537,8 +542,8 @@ deploy_mysql(){
     fi
     
     local port=${1:-3306}
-    docker network inspect network1 >/dev/null 2>&1 || docker network create network1
-    docker volume create mysql-data
+    sudo docker network inspect network1 >/dev/null 2>&1 || sudo docker network create network1
+    sudo docker volume create mysql-data
 
     MYSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
     echo "${MYSQL_ROOT_PASSWORD}" > MYSQL_ROOT_PASSWORD.txt
@@ -556,7 +561,7 @@ deploy_mysql(){
     # --character-set-server=utf8mb4 \
     # --collation-server=utf8mb4_unicode_ci
 
-    docker run -dp "${port}:3306" \
+    sudo docker run -dp "${port}:3306" \
         --name mysql1 \
         --restart=always \
         --network network1 \
@@ -577,8 +582,8 @@ deploy_mysql(){
     # docker exec -it mysql1 sed -i -E 's/max_connections(\s*)= [0-9]+/max_connections\1= 1000/g' /etc/mysql/my.cnf
     # docker exec -it mysql1 sed -i -E 's/wait_timeout(\s*)= [0-9]+/wait_timeout\1= 86400/g' /etc/mysql/my.cnf
 
-    docker exec -it mysql1 sed -i -E 's/max_connections(\s*)= [0-9]+/max_connections\1= 1000/g' /etc/mysql/mariadb.conf.d/50-server.cnf
-    docker exec -it mysql1 sed -i -E 's/wait_timeout(\s*)= [0-9]+/wait_timeout\1= 86400/g' /etc/mysql/mariadb.conf.d/50-server.cnf
+    sudo docker exec -it mysql1 sed -i -E 's/max_connections(\s*)= [0-9]+/max_connections\1= 1000/g' /etc/mysql/mariadb.conf.d/50-server.cnf
+    sudo docker exec -it mysql1 sed -i -E 's/wait_timeout(\s*)= [0-9]+/wait_timeout\1= 86400/g' /etc/mysql/mariadb.conf.d/50-server.cnf
 }
 
 create_database(){
@@ -617,12 +622,12 @@ deploy_redis(){
     fi
     
     local port=${1:-6379}
-    docker network inspect network1 >/dev/null 2>&1 || docker network create network1
+    sudo docker network inspect network1 >/dev/null 2>&1 || sudo docker network create network1
 
-    mkdir -p /docker/redis1
-    chmod 777 /docker/redis1
+    sudo mkdir -p /docker/redis1
+    sudo chmod 777 /docker/redis1
     log "安装 Redis" 
-    docker run -dp "${port}:6379" \
+    sudo docker run -dp "${port}:6379" \
         --name redis1 \
         --restart=always \
         --network network1 \
@@ -646,21 +651,21 @@ deploy_postgres(){
     fi
     
     local port=${1:-5432}
-    docker network inspect network1 >/dev/null 2>&1 || docker network create network1
-    docker volume create postgre-data
+    sudo docker network inspect network1 >/dev/null 2>&1 || sudo docker network create network1
+    sudo docker volume create postgre-data
     
     PGSQL_ROOT_PASSWORD=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | cut -c1-12)
     echo "${PGSQL_ROOT_PASSWORD}" > PGSQL_ROOT_PASSWORD.txt
 
     log "安装 PostgreSQL"
-    docker run -dp "${port}:5432" \
+    sudo docker run -dp "${port}:5432" \
         --name postgres1 \
         --restart=always \
         --network network1 \
         --network-alias postgres \
         -e TZ=Asia/Shanghai \
         -e POSTGRES_USER=postgres \
-        -e POSTGRES_PASSWORD="${MYSQL_ROOT_PASSWORD}" \
+        -e POSTGRES_PASSWORD="${PGSQL_ROOT_PASSWORD}" \
         -e POSTGRES_DB=postgres \
         -e POSTGRES_INITDB_ARGS="--encoding=UTF8 --locale=C" \
         -e PGDATA=/var/lib/postgresql/data \
@@ -676,10 +681,10 @@ deploy_rabbitmq(){
     fi
     
     local port=${1:-5672}
-    docker network inspect network1 >/dev/null 2>&1 || docker network create network1
+    sudo docker network inspect network1 >/dev/null 2>&1 || sudo docker network create network1
 
     log "安装 RabbitMQ"
-    docker run -dp "${port}:5672" -p 15672:15672 \
+    sudo docker run -dp "${port}:5672" -p 15672:15672 \
         --name rabbitmq1 \
         --restart=always \
         --network network1 \
@@ -692,10 +697,10 @@ deploy_rabbitmq(){
 
 create_default_vhost(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    mkdir -p /var/www/html
-    touch /var/www/html/index.html
-    chmod 755 /var/www/html/index.html
-    cat >/var/www/html/index.html <<EOF
+    sudo mkdir -p /var/www/html
+    sudo touch /var/www/html/index.html
+    sudo chmod 755 /var/www/html/index.html
+    sudo tee /var/www/html/index.html <<EOF >/dev/null
 <!DOCTYPE html>
 <html lang="zh-Hans">
 <head>
@@ -710,7 +715,7 @@ create_default_vhost(){
 </html>
 EOF
 
-    cat >/etc/nginx/conf.d/default.conf << 'EOF'
+    sudo tee /etc/nginx/conf.d/default.conf << 'EOF' >/dev/null
 server {
   listen 80 default_server;
   listen [::]:80 default_server;
@@ -736,7 +741,7 @@ deploy_nginx(){
         log "错误: 宿主机 80 端口已被占用，请先停止相关服务后再部署 Docker Nginx！"
         return 1
     fi
-    docker run -d \
+    sudo docker run -d \
         --name nginx1 \
         --restart=always \
         --network host \
@@ -747,7 +752,7 @@ deploy_nginx(){
         nginx:stable-bullseye
 
     create_default_vhost
-    docker exec nginx1 nginx -t && docker exec nginx1 nginx -s reload
+    sudo docker exec nginx1 nginx -t && sudo docker exec nginx1 nginx -s reload
 }
 
 deploy_portainer(){
@@ -762,8 +767,8 @@ deploy_portainer(){
 
     local local_port=${1:-9000}
     # https://docs.portainer.io/start/install/server/docker/linux
-    docker volume create portainer_data
-    docker run -d -p "${local_port}:9000" \
+    sudo docker volume create portainer_data
+    sudo docker run -d -p "${local_port}:9000" \
         --name portainer1 \
         --restart=always \
         -v /var/run/docker.sock:/var/run/docker.sock \
@@ -785,9 +790,9 @@ deploy_wordpress(){
     read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
     local local_port=${1:-8000}
-    mkdir -p /docker/wordpress1
-    chmod 777 /docker/wordpress1
-    docker run -dp "127.0.0.1:${local_port}:80" \
+    sudo mkdir -p /docker/wordpress1
+    sudo chmod 777 /docker/wordpress1
+    sudo docker run -dp "127.0.0.1:${local_port}:80" \
         --name wordpress1 \
         --restart=always \
         --network network1 \
@@ -809,7 +814,7 @@ deploy_gitea(){
 
     local local_port=${1:-3000}
     local ssh_port=${2:-222}
-    adduser \
+    sudo adduser \
         --system \
         --shell /bin/bash \
         --gecos 'Git Version Control' \
@@ -818,18 +823,19 @@ deploy_gitea(){
         --home /home/git \
         git
     
-    mkdir -p /docker/gitea
-    chmod 777 /docker/gitea
-    docker run -d \
+    sudo mkdir -p /docker/gitea
+    sudo chmod 777 /docker/gitea
+    sudo docker run -d \
         --name gitea1 \
         --restart=always \
-        -p "127.0.0.1:${local_port}:3000" -p "${ssh_port}:22" \
+        -p "127.0.0.1:${local_port}:3000" -p "${ssh_port}:2222" \
         -e USER_UID=$(id -u git) \
         -e USER_GID=$(id -g git) \
         -v /docker/gitea:/data \
         -v /etc/timezone:/etc/timezone:ro \
         -v /etc/localtime:/etc/localtime:ro \
         gitea/gitea:1-rootless
+    # rootless版默认监听2222, 否则监听22
 
     # 记得配置SSH_PORT=222，SSH_LISTEN_PORT=22
 
@@ -957,28 +963,28 @@ function docker_build_run(){
     # bash /root/fast.sh docker_build_run https://github.com/zero-ljz/iapp.git 777:8000
     # 请在repos目录使用此函数
     local repo=$(echo "$url" | sed 's|.*/\([^/]*\)\.git|\1|')
-    docker rm -f ${repo}1
-    docker image rm ${repo}
+    sudo docker rm -f ${repo}1
+    sudo docker image rm ${repo}
     rm -rf ${repo}
 
     git clone ${url}
-    docker build -t ${repo} ${repo}
-    docker run -p ${p} --name ${repo}1 ${repo}
-    docker exec -it ${repo}1 sh
+    sudo docker build -t ${repo} ${repo}
+    sudo docker run -p ${p} --name ${repo}1 ${repo}
+    sudo docker exec -it ${repo}1 sh
 }
 
 deploy_debian() {
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
 
     # 创建空的 Debian 容器并保持运行
-    docker run -d --name debian1 --network host debian:bullseye sleep infinity
+    sudo docker run -d --name debian1 --network host debian:bullseye sleep infinity
 
     local commands=$(cat <<EOF
-apt update && apt -y install --no-install-recommends wget curl nano micro
+sudo apt update && sudo apt -y install --no-install-recommends wget curl nano micro
 rm -rf /var/lib/apt/lists/*
 EOF
     )
-    docker exec debian1 bash -c "$commands"
+    sudo docker exec debian1 bash -c "$commands"
 }
 
 deploy_python_app() {
@@ -994,21 +1000,21 @@ deploy_python_app() {
     local repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
     local commands=$(cat <<EOF
 
-apt update && apt -y install git wget
-git clone ${repo_url} .
+sudo apt update && sudo apt -y install git wget
+if [ -d .git ]; then git pull; else git clone ${repo_url} .; fi
 # pip config set global.index-url https://pypi.mirrors.ustc.edu.cn/simple/
 python3 -m pip install -r requirements.txt
 ${command}
 EOF
     )
-    docker run -d -p "${http_port}:8000" \
+    sudo docker run -d -p "${http_port}:8000" \
         --name ${repo} \
         --restart=always \
         -v "/docker/${repo}:/usr/src/app" \
         -w /usr/src/app \
         -e TZ=Asia/Shanghai \
         python:3.10.11-slim-bullseye bash -c "$commands"
-    docker logs ${repo}
+    sudo docker logs ${repo}
 }
 
 deploy_node_app() {
@@ -1024,13 +1030,13 @@ deploy_node_app() {
     local repo=$(echo "$repo_url" | sed 's|.*/\([^/]*\)\.git|\1|')
     local commands=$(cat <<EOF
 
-apt update && apt -y install git wget
-git clone ${repo_url} .
+sudo apt update && sudo apt -y install git wget
+if [ -d .git ]; then git pull; else git clone ${repo_url} .; fi
 npm install --production --silent
 ${command}
 EOF
 )
-    docker run -d -p "${http_port}:3000" \
+    sudo docker run -d -p "${http_port}:3000" \
         --name ${repo} \
         --restart=always \
         -v "/docker/${repo}:/usr/src/app" \
@@ -1038,7 +1044,7 @@ EOF
         -e TZ=Asia/Shanghai \
         -e NODE_ENV=production \
         node:lts-bullseye-slim bash -c "$commands"
-    docker logs ${repo}
+    sudo docker logs ${repo}
 }
 
 deploy_php_app() {
@@ -1050,12 +1056,12 @@ deploy_php_app() {
 
     local app_name="$1"
     local http_port="$2"
-    docker run -d -p "${http_port}:80" --name ${app_name} -v "/docker/${app_name}:/var/www/html" php:7.4-apache
+    sudo docker run -d -p "${http_port}:80" --name ${app_name} -v "/docker/${app_name}:/var/www/html" php:7.4-apache
     # 容器内站点配置文件 /etc/apache2/sites-available/000-default.conf
     # 在php官方docker镜像中安装扩展
-    docker exec -t ${app_name} curl -sSL https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions -o - | sh -s gd xdebug pdo_mysql
+    sudo docker exec -t ${app_name} curl -sSL https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions -o - | sh -s gd xdebug pdo_mysql
     #docker exec -t ${app_name} chmod -R 755 /var/www/html
-    download_php_apps /docker/${app_name}
+    # download_php_apps /docker/${app_name}
 }
 
 docker_run_app(){
@@ -1072,25 +1078,25 @@ docker_run_app(){
     if [ "$interpreter" = "python3" ]; then
         command=${@:-"python3 -m pip install -r requirements.txt && python3 app.py"}
         # 3.11-alpine3.17
-        docker run -it --rm -p 8000:8000 --name py1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp python:3.10.11-slim-bullseye bash -c "${command}"
+        sudo docker run -it --rm -p 8000:8000 --name py1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp python:3.10.11-slim-bullseye bash -c "${command}"
     elif [ "$interpreter" = "python" ]; then
         command=${@:-"python -m pip install -r requirements.txt && python app.py"}
-        docker run -it --rm -p 8000:8000 --name py1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp python:2.7.18-slim-buster bash -c "${command}"
+        sudo docker run -it --rm -p 8000:8000 --name py1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp python:2.7.18-slim-buster bash -c "${command}"
     elif [ "$interpreter" = "php" ]; then
         command=${@:-""}
-        docker run -it --rm -p 8000:80 --name php-httpd1 -v "$PWD":/var/www/html php:7.4-apache ${command}
+        sudo docker run -it --rm -p 8000:80 --name php-httpd1 -v "$PWD":/var/www/html php:7.4-apache ${command}
     elif [ "$interpreter" = "php-cli" ]; then
         command=${@:-"php app.php"}
-        docker run -it --rm -p 8000:8000 --name php-cli1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli ${command}
+        sudo docker run -it --rm -p 8000:8000 --name php-cli1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp php:7.4-cli ${command}
     elif [ "$interpreter" = "node" ]; then
         command=${@:-"node app.js"}
-        docker run -it --rm -p 8000:8000 --name node1 -v "$PWD":/usr/src/app -w /usr/src/app node:18-bullseye-slim ${command}
+        sudo docker run -it --rm -p 8000:8000 --name node1 -v "$PWD":/usr/src/app -w /usr/src/app node:18-bullseye-slim ${command}
     elif [ "$interpreter" = "ruby" ]; then
         command=${@:-"ruby app.rb"}
-        docker run -it --rm -p 8000:8000 --name ruby1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp ruby:2.7.2-bullseye ${command}
+        sudo docker run -it --rm -p 8000:8000 --name ruby1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp ruby:2.7.2-bullseye ${command}
     elif [ "$interpreter" = "perl" ]; then
         command=${@:-"perl app.pl"}
-        docker run -it --rm --name perl1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp perl:5.34.0-bullseye ${command}
+        sudo docker run -it --rm --name perl1 -v "$PWD":/usr/src/myapp -w /usr/src/myapp perl:5.34.0-bullseye ${command}
     fi
 }
 
@@ -1131,6 +1137,156 @@ function auto_mode(){
     # create_database ${domain_name}
 }
 
+install_fail2ban(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
+    echo -e "\n\n\n------------------------------安装 fail2ban------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    sudo apt update && sudo apt install -y fail2ban
+    sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+    sudo systemctl enable fail2ban
+    sudo systemctl start fail2ban
+    log "fail2ban 安装完成并已启动，默认已对 sshd 启用保护"
+}
+
+install_monitoring_tools(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
+    echo -e "\n\n\n------------------------------安装系统监控工具 (htop, btop, ncdu)------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    sudo apt update && sudo apt install -y htop btop ncdu
+    log "系统监控工具 (htop, btop, ncdu) 安装完成！"
+}
+
+deploy_netdata(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port]"
+        return
+    fi
+
+    echo -e "\n\n\n------------------------------部署 Netdata 监控------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    local port=${1:-19999}
+    sudo docker run -d --name=netdata1 \
+        -p "${port}:19999" \
+        --pid=host \
+        -v netdataconfig:/etc/netdata \
+        -v netdatalib:/var/lib/netdata \
+        -v netdatacache:/var/cache/netdata \
+        -v /etc/passwd:/host/etc/passwd:ro \
+        -v /etc/group:/host/etc/group:ro \
+        -v /proc:/host/proc:ro \
+        -v /sys:/host/sys:ro \
+        -v /etc/os-release:/host/etc/os-release:ro \
+        -v /var/run/docker.sock:/var/run/docker.sock:ro \
+        --restart always \
+        --cap-add SYS_PTRACE \
+        --security-opt apparmor=unconfined \
+        netdata/netdata
+    log "Netdata 部署成功，请访问 http://IP:${port}"
+}
+
+deploy_adminer(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port]"
+        return
+    fi
+
+    echo -e "\n\n\n------------------------------部署 Adminer 数据库管理工具------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    local port=${1:-8080}
+    sudo docker network inspect network1 >/dev/null 2>&1 || sudo docker network create network1
+    sudo docker run -d --name adminer1 \
+        --restart always \
+        --network network1 \
+        -p "${port}:8080" \
+        adminer
+    log "Adminer 部署成功，请访问 http://IP:${port} (可在登录页指定主机为 mysql1 等)"
+}
+
+deploy_redis_commander(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port] [redis_host] [redis_port] [redis_password]"
+        return
+    fi
+
+    echo -e "\n\n\n------------------------------部署 Redis Commander 可视化后台------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    local port=${1:-8081}
+    local redis_host=${2:-"redis1"}
+    local redis_port=${3:-6379}
+    local redis_pass=${4:-"123qweQ!"}
+
+    sudo docker network inspect network1 >/dev/null 2>&1 || sudo docker network create network1
+    sudo docker run -d --name redis-commander1 \
+        --restart always \
+        --network network1 \
+        -p "${port}:8081" \
+        -e REDIS_HOSTS="${redis_host}:${redis_port}:0:${redis_pass}" \
+        rediscommander/redis-commander:latest
+    log "Redis Commander 部署成功，请访问 http://IP:${port}"
+}
+
+deploy_watchtower(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
+    echo -e "\n\n\n------------------------------部署 Watchtower 容器自动更新工具------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    sudo docker run -d --name watchtower1 \
+        --restart always \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        containrrr/watchtower \
+        --cleanup \
+        --schedule "0 0 3 * * *"
+    log "Watchtower 部署成功，每日凌晨 3 点会自动检测并更新所有容器的镜像，并清理旧镜像。"
+}
+
+install_rclone(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
+    echo -e "\n\n\n------------------------------安装 Rclone 备份/同步工具------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    curl https://rclone.org/install.sh | sudo bash
+    log "Rclone 安装完成，请输入 rclone config 配置您的云盘/对象存储"
+}
+
+deploy_filebrowser(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [port] [root_dir]"
+        return
+    fi
+
+    echo -e "\n\n\n------------------------------部署 File Browser 网盘与文件管理器------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    local port=${1:-8082}
+    local root_dir=${2:-"/"}
+
+    sudo mkdir -p /docker/filebrowser
+    sudo touch /docker/filebrowser/filebrowser.db
+    sudo chmod 666 /docker/filebrowser/filebrowser.db
+
+    sudo docker run -d --name filebrowser1 \
+        --restart always \
+        -v "${root_dir}:/srv" \
+        -v /docker/filebrowser/filebrowser.db:/database/filebrowser.db \
+        -p "${port}:80" \
+        -e TZ=Asia/Shanghai \
+        filebrowser/filebrowser
+    log "File Browser 部署成功，请访问 http://IP:${port} (默认用户名/密码: admin/admin)"
+}
+
 upgrade()
 {
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -1140,8 +1296,39 @@ upgrade()
     fi
     local url="https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/ccc.sh"
     log "正在从 ${url} 下载最新版本脚本..."
-    # bash -c "wget --no-cache --no-check-certificate -O /root/ccc.sh ${url}"
-    bash -c "curl -LkO ${url}"
+    
+    local script_path
+    script_path=$(readlink -f "$0")
+    
+    if [ -f "$script_path" ]; then
+        local tmp_file
+        tmp_file=$(mktemp)
+        if curl -LfsS "$url" -o "$tmp_file"; then
+            if [ -s "$tmp_file" ]; then
+                chmod --reference="$script_path" "$tmp_file" 2>/dev/null || chmod +x "$tmp_file"
+                mv -f "$tmp_file" "$script_path"
+                log "脚本更新成功！"
+                exit 0
+            else
+                log "错误：下载的文件为空"
+                rm -f "$tmp_file"
+                return 1
+            fi
+        else
+            log "错误：下载失败"
+            rm -f "$tmp_file"
+            return 1
+        fi
+    else
+        log "错误：无法确定脚本路径，升级失败"
+        return 1
+    fi
+}
+
+systeminfo()
+{
+    apt -y install lsb-release curl
+    uname -a && lsb_release -a && lscpu && cat /etc/os-release && hostnamectl && df -h && free -h && timedatectl && curl ipinfo.io
 }
 
 systeminfo()
