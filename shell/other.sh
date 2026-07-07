@@ -76,55 +76,9 @@ docker exec -t php-fpm1 sh -c "sed -i -E 's#(https?://)#${proxy}\1#g' /etc/apt/s
 # sed -i -E 's#(https?://)#${proxy}\1#g' /etc/apt/sources.list
 
 
-install_aria2(){
-    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    echo -e "\n\n\n------------------------------安装 Aria2------------------------------"
-    echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
-    apt -y install aria2
-    mkdir /etc/aria2/
-    touch /etc/aria2/aria2.session
-    wget -O /etc/aria2/aria2.conf https://1fxdpq.dm.files.1drv.com/y4mIiwJL9lNeIdO8lXxaVlJ8CgaezUd3kIe7r8ZcAFytG78pUdSN0RprxwsYBW87AwMyXDAtEc3mLeTYBWHf_D4ngSWtjlCGvsoyA9YVs5Vs2X5taFFJmyl-5VgrMoj4EIKg0PsNXX-U6WC5INaaAK8fCrltwvj0lM0cRW0CuHSfxyAJZ0HaNph3kBqMCrtTwO5M_XR22RkpTRzolxlli3TxQ
 
-    echo -e "\n\n\n 使用 systemd 守护 Aria2c RPC Server 进程"
-    create_service aria2c "aria2c --conf-path=/etc/aria2/aria2.conf" /etc/aria2/
-    systemctl enable aria2c
-    systemctl restart aria2c
-    # 防火墙需要放行6800
 
-}
 
-install_frp(){
-    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-    echo -e "\n\n\n------------------------------安装 Frp------------------------------"
-    echo -e "\n\n\n下载 Frp 二进制包"
-    wget --no-check-certificate -O frp_0.58.0_linux_amd64.tar.gz https://github.com/fatedier/frp/releases/download/v0.58.0/frp_0.58.0_linux_amd64.tar.gz
-    tar xzvf frp_0.58.0_linux_amd64.tar.gz -C /usr/local/bin/
-    mv /usr/local/bin/frp_0.58.0_linux_amd64 /usr/local/bin/frp
-
-    cat <<EOF > /usr/local/bin/frp/frps.ini
-[common]
-bind_addr = 0.0.0.0
-bind_port = 7000
-
-vhost_http_port = 8080
-
-dashboard_port = 7500
-dashboard_user = admin
-dashboard_pwd = admin
-
-EOF
-
-}
-
-install_frps()
-{
-    install_frp
-
-    echo -e "\n\n\n 使用 systemd 守护 Frps 进程"
-    create_service frps "/usr/local/bin/frp/frps -c /usr/local/bin/frp/frps.ini" /usr/local/bin/frp
-    systemctl enable frps
-    systemctl restart frps
-}
 
 start_frpc()
 {
@@ -137,7 +91,7 @@ start_frpc()
     # 重新生成配置文件
     cat > $file << EOF
 [common]
-server_addr = 42.193.229.54
+server_addr = 111.111.111.111
 server_port = 7000
 
 EOF
@@ -224,11 +178,7 @@ install_ssh(){
 
 
 
-systeminfo()
-{
-    apt -y install lsb-release curl
-    uname -a && lsb_release -a && lscpu && cat /etc/os-release && hostnamectl && df -h && free -h && timedatectl && curl ipinfo.io
-}
+
 
 
 
