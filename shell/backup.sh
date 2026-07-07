@@ -116,7 +116,7 @@ if [ "$backup_files" = true ]; then
 fi
 
 echo "记录软件列表..."
-dpkg --get- selections > "$BACKUP_DIR/packages_$DATE.txt"
+dpkg --get-selections > "$BACKUP_DIR/packages_$DATE.txt"
 
 if [ "$backup_databases" = true ]; then
   echo "备份数据库..."
@@ -144,14 +144,12 @@ if [ "$backup_containers" = true ]; then
       container_name=$(docker inspect --format '{{.Name}}' $container_id | cut -c 2-)
       backup_image="${container_name}-image"
       backup_file="container_${container_name}_backup_${DATE}.tar"
-
-      if [ -n "$(docker images -q "$backup_image")" ]; then
-          docker rmi --force "$backup_image"
-      fi
       # 将容器保存为新镜像
       docker commit "$container_name" "$backup_image"
       # 将镜像保存为压缩文件
       docker save -o "${BACKUP_DIR}/$backup_file" "$backup_image"
+      # 删除临时镜像
+      docker rmi --force "$backup_image"
       [ $? -ne 0 ] && echo "备份容器 ${container_name} 失败！" && exit 1
       # 从保存的压缩文件中载入镜像
       # docker load -i xxx.tar
