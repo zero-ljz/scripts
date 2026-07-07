@@ -104,7 +104,7 @@ if [ "$backup_files" = true ]; then
         echo "提示: 目录 $dir 不存在，已自动跳过。"
         continue
       fi
-      safe_name=$(echo "$dir" | sed 's|^/||; s|/$||; s|/|_|g')
+      safe_name=$(echo "$dir" | sed 's|^/||; s|/$||; s|/|-|g')
       echo "正在打包: $dir -> dir_${safe_name}_backup_${DATE}.tar.gz"
       tar -czf "${BACKUP_DIR}/dir_${safe_name}_backup_${DATE}.tar.gz" "$dir"
       EXIT_CODE=$?
