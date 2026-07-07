@@ -3,6 +3,7 @@
 # bash ./ccc.sh
 
 # 获取系统信息
+ARCH=$(uname -m | sed -e 's/x86_64/amd64/' -e 's/aarch64/arm64/') # amd64
 OS_ID=$(grep '^ID=' /etc/os-release | cut -d= -f2) # debian
 OS_VERSION_ID=$(grep '^VERSION_ID=' /etc/os-release | cut -d= -f2 | sed 's/"//g') # 11
 OS_VERSION_CODENAME=$(grep '^VERSION_CODENAME=' /etc/os-release | cut -d= -f2) # bullseye
@@ -241,17 +242,28 @@ create_service(){
     chmod 755 /etc/systemd/system/${app_name}.service
     cat >/etc/systemd/system/${app_name}.service <<EOF
 [Unit]
-Description = ${app_name}
-After = network.target syslog.target
-Wants = network.target
+Description=${app_name}
+# 确保网络完全在线后再启动（比普通的 network.target 更稳，防止应用启动时因网络未就绪报错）
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-Type = simple
-ExecStart = $command
+Type=simple
+# 建议：如果应用不需要特殊系统权限，将 root 改为低权限用户（如 nobody）
+User=root
 WorkingDirectory=$working_dir
+ExecStart=$command
+
+# 核心续命三件套
+Restart=always
+RestartSec=5
+# 防止程序死循环崩溃时无限重启把 CPU 飙满，如果 60 秒内重启超过 5 次则彻底停止
+StartLimitIntervalSec=60
+StartLimitBurst=5
 
 [Install]
-WantedBy = multi-user.target
+WantedBy=multi-user.target
+
 EOF
 }
 
@@ -824,6 +836,114 @@ deploy_gitea(){
     # ssh://git@git.iapp.run:222/zero-ljz/repo.git
 }
 
+
+install_aria2(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    echo -e "\n\n\n------------------------------安装 Aria2------------------------------"
+    echo "是否继续？ (y)" && read -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    apt -y install aria2
+    mkdir /etc/aria2/
+    touch /etc/aria2/aria2.session
+    wget -O /etc/aria2/aria2.conf https://1fxdpq.dm.files.1drv.com/y4mIiwJL9lNeIdO8lXxaVlJ8CgaezUd3kIe7r8ZcAFytG78pUdSN0RprxwsYBW87AwMyXDAtEc3mLeTYBWHf_D4ngSWtjlCGvsoyA9YVs5Vs2X5taFFJmyl-5VgrMoj4EIKg0PsNXX-U6WC5INaaAK8fCrltwvj0lM0cRW0CuHSfxyAJZ0HaNph3kBqMCrtTwO5M_XR22RkpTRzolxlli3TxQ
+
+    echo -e "\n\n\n 使用 systemd 守护 Aria2c RPC Server 进程"
+    create_service aria2c "aria2c --conf-path=/etc/aria2/aria2.conf" /etc/aria2/
+    systemctl enable aria2c
+    systemctl restart aria2c
+    # 防火墙需要放行6800
+
+}
+
+
+install_frp(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    echo -e "\n\n\n------------------------------安装 Frp------------------------------"
+    echo -e "\n\n\n下载 Frp 二进制包"
+    wget --no-check-certificate -O frp_0.58.0_linux_${ARCH}.tar.gz https://github.com/fatedier/frp/releases/download/v0.58.0/frp_0.58.0_linux_${ARCH}.tar.gz
+    tar xzvf frp_0.58.0_linux_${ARCH}.tar.gz -C /usr/local/bin/
+    mv /usr/local/bin/frp_0.58.0_linux_${ARCH} /usr/local/bin/frp
+
+    cat <<EOF > /usr/local/bin/frp/frps.ini
+[common]
+bind_addr = 0.0.0.0
+bind_port = 7000
+
+vhost_http_port = 8080
+
+dashboard_port = 7500
+dashboard_user = admin
+dashboard_pwd = admin
+
+EOF
+
+}
+
+install_frps()
+{
+    install_frp
+
+    echo -e "\n\n\n 使用 systemd 守护 Frps 进程"
+    create_service frps "/usr/local/bin/frp/frps -c /usr/local/bin/frp/frps.ini" /usr/local/bin/frp
+    systemctl enable frps
+    systemctl restart frps
+}
+
+
+install_gost(){
+    if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+
+    echo -e "\n\n\n------------------------------安装 Gost 隧道工具------------------------------"
+    read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+    
+    # 更新系统并安装解压工具
+    sudo apt update && sudo apt install -y wget gzip
+
+    # 下载最新的 gost 2.11.5 版本（这是最经典的稳定版本）
+    wget https://github.com/ginuerzh/gost/releases/download/v2.11.5/gost-linux-${ARCH}-2.11.5.gz
+
+    # 解压并重命名
+    gzip -d gost-linux-${ARCH}-2.11.5.gz
+    mv gost-linux-${ARCH}-2.11.5 gost
+
+    # 赋予执行权限并移动到系统目录
+    chmod +x gost
+    sudo mv gost /usr/local/bin/
+    
+    echo -e "\n\n\n 生成配置文件"
+    mkdir /etc/gost
+    
+    cat >/etc/gost/config.json << 'EOF'
+{
+"Debug": true,
+"Retries": 3,
+"ServeNodes": [
+    "tcp://:9999/111.111.111.111:8888",
+    "udp://:9999/111.111.111.111:8888",
+
+    "tcp://:7777/111.111.111.111:5555",
+    "udp://:7777/111.111.111.111:5555"
+]
+}
+EOF
+
+    # 在中转机上执行，把本地的 9999 端口流量转发到高延迟机的 8888 端口
+    # /usr/local/bin/gost -L tcp://:9999/111.111.111.111:8888 -L udp://:9999/111.111.111.111:8888
+
+    echo -e "\n\n\n 使用 Systemd 配置 Gost 开机自启"
+    GOST_BIN=$(which gost || echo "/usr/local/bin/gost")
+    create_service "gost" "${GOST_BIN} -C /etc/gost/config.json" "/etc/gost"
+    systemctl daemon-reload
+    systemctl enable gost
+    systemctl start gost
+    log "Gost 已通过 Systemd 成功启动并设置开机自启"
+}
+
+
+
+
+
+
+
 function docker_build_run(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
@@ -1022,6 +1142,12 @@ upgrade()
     log "正在从 ${url} 下载最新版本脚本..."
     # bash -c "wget --no-cache --no-check-certificate -O /root/ccc.sh ${url}"
     bash -c "curl -LkO ${url}"
+}
+
+systeminfo()
+{
+    apt -y install lsb-release curl
+    uname -a && lsb_release -a && lscpu && cat /etc/os-release && hostnamectl && df -h && free -h && timedatectl && curl ipinfo.io
 }
 
 # 获取函数名
