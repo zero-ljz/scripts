@@ -1,6 +1,7 @@
 #!/bin/bash
 # https://github.com/zero-ljz/scripts/raw/main/shell/backup.sh
 # 0 */12 * * * /root/backup.sh
+# 提前在远程服务器上执行 apt install -y rsync
 
 # 定义帮助文本
 usage() {
@@ -116,7 +117,9 @@ if [ "$backup_containers" = true ]; then
       backup_image="${container_name}-image"
       backup_file="${container_name}_image_backup_$(date +\%Y\%m\%d_\%H\%M\%S).tar"
 
-      docker rmi --force "$backup_image"
+      if [ -n "$(docker images -q "$backup_image")" ]; then
+          docker rmi --force "$backup_image"
+      fi
       # 将容器保存为新镜像
       docker commit "$container_name" "$backup_image"
       # 将镜像保存为压缩文件
