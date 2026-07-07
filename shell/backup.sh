@@ -168,6 +168,6 @@ if [ -n "$remote_server" ] && [ -n "$remote_password" ]; then
   echo "开始同步备份文件到远程服务器"
   # 如果不加-o StrictHostKeyChecking=no，就一定要先用ssh命令登录一次目标服务器，并输入yes将远程服务器地址永久添加到known hosts list（已知主机列表）
   # 使用rsync上传备份文件到远程服务器（使用密码认证）
-  rsync -avvvz -e "/usr/bin/sshpass -p $remote_password ssh -o StrictHostKeyChecking=no" "$BACKUP_DIR" "$remote_server:$remote_dir"
+  rsync -avvvz --inplace -e "/usr/bin/sshpass -p $remote_password ssh -o StrictHostKeyChecking=no" "$BACKUP_DIR" "$remote_server:$remote_dir"
   [ $? -ne 0 ] && echo "备份文件上传失败！"
 fi
