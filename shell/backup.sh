@@ -72,35 +72,63 @@ done
 
 
 apt -y install rsync sshpass
-save_dir="/backup"
-mkdir -p $save_dir
+
+SYS_HOSTNAME=$(hostname)
+OS_ID=$(grep '^ID=' /etc/os-release | cut -d= -f2 | sed 's/"//g')
+OS_ID=${OS_ID:-"unknown_os"}
+BACKUP_DIR="/backup"
+DATE=$(date +%Y%m%d_%H%M%S)
+BACKUP_NAME="${SYS_HOSTNAME}_${OS_ID}_backup_${DATE}.tar.gz"
+
+mkdir -p $BACKUP_DIR
 
 # 根据选项执行相应的备份操作
 if [ "$backup_files" = true ]; then
   echo "备份文件目录..."
   # 指定要备份的文件目录
   backup_dirs=(
-      "/docker"
-      "/var/www"
+      "/etc/"
+      "/var/www/"
+      "/opt/"
+      "/home/"
+      "/root/"
+      "/var/spool/cron/crontabs/"
+      "/usr/local/bin/"
+      "/usr/local/sbin/"
+      "/usr/local/etc/"
+      "/docker/"
+      "/var/lib/docker/volumes/"
   )
   for dir in "${backup_dirs[@]}"; do
-      dir_name=$(basename "$dir")
-      tar -czvf "${save_dir}/${dir_name}_dir_backup_$(date +\%Y\%m\%d_\%H\%M\%S).tar.gz" "$dir"
-      [ $? -ne 0 ] && echo "备份目录 $dir 失败" && exit 1
+      if [ ! -d "$dir" ]; then
+        echo "提示: 目录 $dir 不存在，已自动跳过。"
+        continue
+      fi
+      safe_name=$(echo "$dir" | sed 's|^/||; s|/$||; s|/|_|g')
+      echo "正在打包: $dir -> dir_${safe_name}_backup_${DATE}.tar.gz"
+      tar -czf "${BACKUP_DIR}/dir_${safe_name}_backup_${DATE}.tar.gz" "$dir"
+      EXIT_CODE=$?
+      if [ $EXIT_CODE -ne 0 ] && [ $EXIT_CODE -ne 1 ]; then
+          echo "❌ 严重错误: 备份目录 $dir 失败，退出码: $EXIT_CODE"
+          exit 1
+      fi
   done
 fi
+
+echo "记录软件列表..."
+dpkg --get- selections > "$BACKUP_DIR/packages_$DATE.txt"
 
 if [ "$backup_databases" = true ]; then
   echo "备份数据库..."
   mysql_root_password=$(cat MYSQL_ROOT_PASSWORD.txt)
   # echo "备份MySQL容器中的所有数据库到一个sql文件"
-  # docker exec -i mysql1 mysqldump -u root -p"$mysql_root_password" --all-databases > "$save_dir/mysql_backup_$(date +\%Y\%m\%d_\%H\%M\%S).sql"
+  # docker exec -i mysql1 mysqldump -u root -p"$mysql_root_password" --all-databases > "$BACKUP_DIR/mysql_backup_${DATE}.sql"
   # 获取所有数据库的列表
   databases=$(docker exec -i mysql1 mysql -u"root" -p"$mysql_root_password" -e "SHOW DATABASES;" | grep -Ev "(Database|information_schema|performance_schema|mysql)")
 
   # 备份每个数据库到单独的文件
   for db in $databases; do
-      docker exec -i mysql1 mysqldump -u"root" -p"$mysql_root_password" --databases "$db" > "$save_dir/${db}_backup_$(date +\%Y\%m\%d_\%H\%M\%S).sql"
+      docker exec -i mysql1 mysqldump -u"root" -p"$mysql_root_password" --databases "$db" > "$BACKUP_DIR/db_${db}_backup_${DATE}.sql"
       [ $? -ne 0 ] && echo "备份数据库 $db 失败" && exit 1
 
     # 在mysql容器中选择指定数据库执行容器外面的mysql脚本文件
@@ -115,7 +143,7 @@ if [ "$backup_containers" = true ]; then
   for container_id in $containers; do
       container_name=$(docker inspect --format '{{.Name}}' $container_id | cut -c 2-)
       backup_image="${container_name}-image"
-      backup_file="${container_name}_image_backup_$(date +\%Y\%m\%d_\%H\%M\%S).tar"
+      backup_file="container_${container_name}_backup_${DATE}.tar"
 
       if [ -n "$(docker images -q "$backup_image")" ]; then
           docker rmi --force "$backup_image"
@@ -123,7 +151,7 @@ if [ "$backup_containers" = true ]; then
       # 将容器保存为新镜像
       docker commit "$container_name" "$backup_image"
       # 将镜像保存为压缩文件
-      docker save -o "${save_dir}/$backup_file" "$backup_image"
+      docker save -o "${BACKUP_DIR}/$backup_file" "$backup_image"
       [ $? -ne 0 ] && echo "备份容器 ${container_name} 失败！" && exit 1
       # 从保存的压缩文件中载入镜像
       # docker load -i xxx.tar
@@ -138,6 +166,6 @@ if [ -n "$remote_server" ] && [ -n "$remote_password" ]; then
   echo "开始同步备份文件到远程服务器"
   # 如果不加-o StrictHostKeyChecking=no，就一定要先用ssh命令登录一次目标服务器，并输入yes将远程服务器地址永久添加到known hosts list（已知主机列表）
   # 使用rsync上传备份文件到远程服务器（使用密码认证）
-  rsync -avvvz -e "/usr/bin/sshpass -p $remote_password ssh -o StrictHostKeyChecking=no" "$save_dir" "$remote_server:$remote_dir"
+  rsync -avvvz -e "/usr/bin/sshpass -p $remote_password ssh -o StrictHostKeyChecking=no" "$BACKUP_DIR" "$remote_server:$remote_dir"
   [ $? -ne 0 ] && echo "备份文件上传失败！"
 fi
