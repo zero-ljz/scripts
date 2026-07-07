@@ -120,7 +120,7 @@ dpkg --get-selections > "$BACKUP_DIR/packages_$DATE.txt"
 
 if [ "$backup_databases" = true ]; then
   echo "备份数据库..."
-  mysql_root_password=$(cat MYSQL_ROOT_PASSWORD.txt)
+  mysql_root_password=$(cat /root/MYSQL_ROOT_PASSWORD.txt)
   # echo "备份MySQL容器中的所有数据库到一个sql文件"
   # docker exec -i mysql1 mysqldump -u root -p"$mysql_root_password" --all-databases > "$BACKUP_DIR/mysql_backup_${DATE}.sql"
   # 获取所有数据库的列表
