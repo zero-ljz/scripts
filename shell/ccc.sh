@@ -110,12 +110,23 @@ EOF
     echo -e "\n\n\n 安装必备组件"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        sudo apt -y install ca-certificates openssl aptitude unzip wget curl telnet perl lsof
-        sudo apt -y install sqlite3 lua5.3 zip
-
-        sudo apt -y install git
-        git config --global user.name "zero-ljz"
-        git config --global user.email "zero-ljz@qq.com"
+        sudo apt -y install openssl aptitude telnet perl lsof
+        sudo apt -y install sqlite3 lua5.3
+        sudo apt install -y \
+        curl \
+        wget \
+        git \
+        vim \
+        nano \
+        htop \
+        tmux \
+        tree \
+        unzip \
+        zip \
+        net-tools \
+        dnsutils \
+        ca-certificates \
+        gnupg
     fi
 
 }
