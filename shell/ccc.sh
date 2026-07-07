@@ -3,6 +3,8 @@
 # encoding=utf-8
 # line ending=\n
 
+# wget https://raw.githubusercontent.com/zero-ljz/scripts/main/shell/ccc.sh
+# apt insall sudo
 # bash ./ccc.sh
 
 # 获取系统信息
@@ -105,16 +107,10 @@ EOF
         fi
     fi
 
-    echo -e "\n\n\n 更新sudo apt包索引"
-    read -t 5 -p "是否继续？ (y):" answer
-    if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        sudo apt update && sudo apt install -y ca-certificates
-    fi
-
     echo -e "\n\n\n 安装必备组件"
     read -t 5 -p "是否继续？ (y):" answer
     if [[ "$answer" == "y" || $? -eq 142 ]]; then
-        sudo apt -y install openssl aptitude unzip wget curl telnet perl lsof
+        sudo apt -y install ca-certificates openssl aptitude unzip wget curl telnet perl lsof
         sudo apt -y install sqlite3 lua5.3 zip
 
         sudo apt -y install git
@@ -405,7 +401,7 @@ create_ssl(){
     fi
 
     log "Generate CSR..."
-    sudo openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name}")) -out "${DOMAIN_CSR}"
+    openssl req -new -sha256 -key "$DOMAIN_KEY" -subj "/" -reqexts SAN -config <(cat /etc/ssl/openssl.cnf <(printf "[SAN]\nsubjectAltName=%s" "DNS:${domain_name}")) -out "${DOMAIN_CSR}"
 
     sudo mkdir -p "$acme_dir"
 
