@@ -1331,12 +1331,6 @@ systeminfo()
     uname -a && lsb_release -a && lscpu && cat /etc/os-release && hostnamectl && df -h && free -h && timedatectl && curl ipinfo.io
 }
 
-systeminfo()
-{
-    apt -y install lsb-release curl
-    uname -a && lsb_release -a && lscpu && cat /etc/os-release && hostnamectl && df -h && free -h && timedatectl && curl ipinfo.io
-}
-
 # 获取函数名
 function_name=${1:-default}
 shift  # 移除第一个参数，剩下的参数会被传递给函数
