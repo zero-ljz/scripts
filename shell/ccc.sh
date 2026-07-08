@@ -133,9 +133,15 @@ EOF
 
 install_python(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
-
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [version]"
+        return
+    fi
+    
     echo -e "\n\n\n------------------------------安装 Python + pyenv + UV ------------------------------"
     read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    local version=${1:-3.10.11} # 3.12.10
 
     # sudo apt -y install python3 python3-pip python3-venv python3-dev python3-setuptools
 
@@ -155,9 +161,8 @@ install_python(){
     eval "$(pyenv init - bash)"
     eval "$(pyenv virtualenv-init -)"
     # 执行编译安装
-    pyenv install 3.10.11
-    # pyenv install 3.12.10
-    pyenv global 3.10.11
+    pyenv install ${version}
+    pyenv global ${version}
 
     if read -t 5 -p "是否使用pypi中国大陆镜像源？ (y): " answer && [ "$answer" == "y" ]; then
         pip config set global.index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
@@ -313,9 +318,15 @@ EOF
 
 install_nodejs(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        log "Usage: ${FUNCNAME} [version]"
+        return
+    fi
     
     echo -e "\n\n\n------------------------------安装 Nodejs + nvm + pnpm ------------------------------"
     read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
+
+    local version=${1:-24} # 22
     
     sudo apt -y install npm
     # 使用版本管理器安装nodejs https://learn.microsoft.com/zh-cn/windows/dev-environment/javascript/nodejs-on-wsl?source=recommendations
@@ -326,7 +337,8 @@ install_nodejs(){
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
     # 安装Nodejs 24 LTS
-    nvm install 24
+    nvm install ${version}
+    nvm use ${version}
 
     # npm install -g yarn
     npm install -g pnpm
