@@ -109,59 +109,92 @@ INDEX_HTML = r'''<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Web Shell</title>
 <style>
-body { margin: 8px; }
-main { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
-section { min-width: 300px; }
-fieldset { margin: 0 0 6px; }
-table { border-collapse: collapse; }
-td { padding: 2px 4px 2px 0; vertical-align: middle; }
-.args td:first-child { text-align: right; }
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  line-height: 1.45;
+}
+.page { width: min(1120px, 100%); margin: 0 auto; }
+.page-header { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+h1 { margin: 0; font-size: 1.35rem; }
+.page-header nav { display: flex; flex-wrap: wrap; gap: 12px; }
+main { display: grid; grid-template-columns: minmax(280px, 0.85fr) minmax(360px, 1.15fr); gap: 12px; align-items: start; }
+section, fieldset { min-width: 0; }
+fieldset { margin: 0 0 12px; padding: 10px 12px 12px; }
+.form-grid { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 10px 12px; align-items: center; }
+.form-grid > label, .field-label { text-align: right; }
+.full-row { grid-column: 1 / -1; }
+.control-row, .option-row, .action-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-width: 0; }
+.control-row > input { flex: 1 1 12rem; min-width: 0; }
+.option-row label { white-space: nowrap; }
+input, select, button, textarea { font: inherit; }
+input[type="text"], select, textarea { max-width: 100%; min-height: 2.25rem; }
+#cwd, #preview { width: 100%; }
+textarea { resize: vertical; }
+.args { display: grid; gap: 8px; }
+.arg-row { display: grid; grid-template-columns: 2.25rem minmax(0, 1fr); gap: 8px; align-items: center; }
+.arg-number { text-align: right; }
+.arg-control { display: flex; gap: 8px; min-width: 0; }
+.arg-control input { flex: 1 1 auto; min-width: 0; }
+#modeNote { margin-top: 10px; }
+#status { min-height: 1.45em; }
+@media (max-width: 760px) {
+  main { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 520px) {
+  body { padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
+  .page-header { align-items: flex-start; }
+  .form-grid { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .form-grid > label, .field-label { text-align: left; }
+  .full-row { grid-column: auto; }
+  .action-row button { flex: 1 1 5.5rem; }
+  .action-row #status { flex-basis: 100%; }
+}
 </style>
 </head>
 <body>
-<h3>Web Shell <small>v1.0.0</small></h3>
-<p><a href="/tasks">任务列表</a></p>
+<div class="page">
+<header class="page-header">
+  <h1>Web Shell <small>v1.0.0</small></h1>
+  <nav aria-label="页面导航"><a href="/tasks">任务列表</a></nav>
+</header>
 
 <main>
   <section>
     <fieldset>
       <legend>环境</legend>
-      <table>
-        <tr>
-          <td><label for="cwd">工作目录</label></td>
-          <td><input id="cwd" type="text" placeholder="默认用户目录"></td>
-        </tr>
-        <tr>
-          <td colspan="2">
-            <label><input id="shell" type="checkbox"> Shell Mode</label>
-            <label><input id="capture" type="checkbox" checked> Capture Output</label>
-            <label><input id="encode" type="checkbox"> URI Component Encoding</label>
-          </td>
-        </tr>
-      </table>
+      <div class="form-grid">
+        <label for="cwd">工作目录</label>
+        <input id="cwd" type="text" placeholder="默认用户目录" autocomplete="off">
+        <span class="field-label">选项</span>
+        <div class="option-row">
+          <label><input id="shell" type="checkbox"> Shell Mode</label>
+          <label><input id="capture" type="checkbox" checked> Capture Output</label>
+          <label><input id="encode" type="checkbox"> URI Component Encoding</label>
+        </div>
+      </div>
     </fieldset>
 
     <fieldset>
       <legend>命令</legend>
-      <table>
-        <tr>
-          <td><label for="command">主命令</label></td>
-          <td>
-            <input id="command" type="text" list="commands" placeholder="例如 python3、node、ls" autocomplete="off">
-            <button id="clearCommand" type="button">清空</button>
-          </td>
-        </tr>
-        <tr>
-          <td>参数</td>
-          <td>
-            <button id="addArg" type="button">添加参数</button>
-            <button id="removeArg" type="button">移除末项</button>
-          </td>
-        </tr>
-      </table>
+      <div class="form-grid">
+        <label for="command">主命令</label>
+        <div class="control-row">
+          <input id="command" type="text" list="commands" placeholder="例如 python3、node、ls" autocomplete="off">
+          <button id="clearCommand" type="button">清空</button>
+        </div>
+        <span class="field-label">参数</span>
+        <div class="control-row">
+          <button id="addArg" type="button">添加参数</button>
+          <button id="removeArg" type="button">移除末项</button>
+        </div>
+        <div id="args" class="args full-row" aria-label="命令参数"></div>
+      </div>
 
       <datalist id="commands">
         <option value="python">
@@ -174,51 +207,39 @@ td { padding: 2px 4px 2px 0; vertical-align: middle; }
         <option value="ping">
       </datalist>
 
-      <table id="args" class="args"></table>
     </fieldset>
   </section>
 
   <section>
     <fieldset>
       <legend>执行</legend>
-      <table>
-        <tr>
-          <td><label for="runMode">执行模式</label></td>
-          <td>
-            <select id="runMode">
-              <option value="sync">同步执行</option>
-              <option value="task">后台任务</option>
-              <option value="interactive">交互任务（管道模式）</option>
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td><label for="mode">URL 模式</label></td>
-          <td>
-            <select id="mode">
-              <option value="1">Query (?cmd=...)</option>
-              <option value="2">Path (/cmd/...)</option>
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td><label for="preview">URL 预览</label></td>
-          <td><textarea id="preview" rows="8" cols="40" readonly></textarea></td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>
-            <button id="copy" type="button">复制</button>
-            <button id="run" type="button">执行</button>
-            <button id="reset" type="button">重置</button>
-            <span id="status"></span>
-          </td>
-        </tr>
-      </table>
-      <div id="modeNote"></div>
+      <div class="form-grid">
+        <label for="runMode">执行模式</label>
+        <select id="runMode">
+          <option value="sync">同步执行</option>
+          <option value="task">后台任务</option>
+          <option value="interactive">交互任务（管道模式）</option>
+        </select>
+        <label for="mode">URL 模式</label>
+        <select id="mode">
+          <option value="1">Query (?cmd=...)</option>
+          <option value="2">Path (/cmd/...)</option>
+        </select>
+        <label for="preview">URL 预览</label>
+        <textarea id="preview" rows="8" readonly spellcheck="false"></textarea>
+        <span class="field-label" aria-hidden="true"></span>
+        <div class="action-row">
+          <button id="copy" type="button">复制</button>
+          <button id="run" type="button">执行</button>
+          <button id="reset" type="button">重置</button>
+          <span id="status" role="status" aria-live="polite"></span>
+        </div>
+      </div>
+      <div id="modeNote" role="note"></div>
     </fieldset>
   </section>
 </main>
+</div>
 
 <script>
 'use strict';
@@ -278,18 +299,23 @@ function renderArgs() {
   container.replaceChildren();
 
   args.forEach((value, index) => {
-    const row = document.createElement('tr');
-    const numberCell = document.createElement('td');
-    const inputCell = document.createElement('td');
+    const row = document.createElement('div');
+    const numberCell = document.createElement('span');
+    const inputCell = document.createElement('div');
     const input = document.createElement('input');
     const remove = document.createElement('button');
 
+    row.className = 'arg-row';
+    numberCell.className = 'arg-number';
+    inputCell.className = 'arg-control';
     numberCell.textContent = `${index + 1}.`;
     input.type = 'text';
     input.value = value;
     input.placeholder = `参数 ${index + 1}`;
+    input.setAttribute('aria-label', `参数 ${index + 1}`);
     remove.type = 'button';
     remove.textContent = '删除';
+    remove.setAttribute('aria-label', `删除参数 ${index + 1}`);
 
     input.addEventListener('input', () => {
       args[index] = input.value;
@@ -306,7 +332,7 @@ function renderArgs() {
       updatePreview();
     });
 
-    inputCell.append(input, document.createTextNode(' '), remove);
+    inputCell.append(input, remove);
     row.append(numberCell, inputCell);
     container.append(row);
   });
@@ -460,46 +486,94 @@ TASK_PAGE_HTML = r'''<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>任务控制台</title>
 <style>
-body { margin: 8px; }
-pre { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 240px; max-height: 65vh; overflow: auto; }
-textarea { width: min(900px, 95vw); }
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  line-height: 1.45;
+}
+.page { width: min(1120px, 100%); margin: 0 auto; }
+.page-header { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+h1 { margin: 0; font-size: 1.35rem; }
+.page-header nav { display: flex; flex-wrap: wrap; gap: 12px; }
+.task-meta { margin: 0 0 12px; }
+.task-meta > div { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: 10px; padding: 3px 0; }
+.task-meta dt { font-weight: 600; }
+.task-meta dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+fieldset { min-width: 0; margin: 0 0 12px; padding: 10px 12px 12px; }
+pre {
+  width: 100%;
+  min-height: 240px;
+  max-height: 62vh;
+  margin: 0 0 10px;
+  padding: 8px;
+  border: 1px solid;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+textarea { width: 100%; min-height: 6rem; resize: vertical; }
+input, textarea, button { font: inherit; }
+textarea, button { min-height: 2.25rem; }
+.control-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.control-row label { margin-right: auto; }
+#inputStatus { min-height: 1.45em; }
+@media (max-width: 520px) {
+  body { padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
+  .page-header { align-items: flex-start; }
+  .task-meta > div { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 5px 0; }
+  pre { min-height: 40vh; max-height: 58vh; }
+  .task-actions button { flex: 1 1 8rem; }
+  #inputStatus { flex-basis: 100%; }
+}
 </style>
 </head>
 <body>
-<h3>任务控制台</h3>
-<p><a href="/">返回首页</a> | <a href="/tasks">任务列表</a></p>
-<table>
-<tr><td>任务 ID</td><td><code id="taskId"></code></td></tr>
-<tr><td>状态</td><td id="taskStatus">正在连接</td></tr>
-<tr><td>PID</td><td id="taskPid"></td></tr>
-<tr><td>退出码</td><td id="taskReturncode"></td></tr>
-<tr><td>命令</td><td><code id="taskCommand"></code></td></tr>
-<tr><td>工作目录</td><td><code id="taskCwd"></code></td></tr>
-</table>
+<div class="page">
+<header class="page-header">
+  <h1>任务控制台</h1>
+  <nav aria-label="页面导航"><a href="/">返回首页</a><a href="/tasks">任务列表</a></nav>
+</header>
+<dl class="task-meta">
+  <div><dt>任务 ID</dt><dd><code id="taskId"></code></dd></div>
+  <div><dt>状态</dt><dd id="taskStatus" role="status" aria-live="polite">正在连接</dd></div>
+  <div><dt>PID</dt><dd id="taskPid"></dd></div>
+  <div><dt>退出码</dt><dd id="taskReturncode"></dd></div>
+  <div><dt>命令</dt><dd><code id="taskCommand"></code></dd></div>
+  <div><dt>工作目录</dt><dd><code id="taskCwd"></code></dd></div>
+</dl>
 
 <fieldset>
-<legend>输出</legend>
-<pre id="output"></pre>
-<button id="clearOutput" type="button">清空页面输出</button>
-<label><input id="autoScroll" type="checkbox" checked> 自动滚动</label>
+  <legend>输出</legend>
+  <pre id="output" tabindex="0" aria-label="任务输出"></pre>
+  <div class="control-row">
+    <button id="clearOutput" type="button">清空页面输出</button>
+    <label><input id="autoScroll" type="checkbox" checked> 自动滚动</label>
+  </div>
 </fieldset>
 
 <fieldset id="inputBox">
-<legend>标准输入（管道交互）</legend>
-<textarea id="input" rows="4" placeholder="输入发送给进程 stdin 的内容"></textarea><br>
-<label><input id="appendNewline" type="checkbox" checked> 末尾添加换行</label>
-<button id="sendInput" type="button">发送</button>
-<span id="inputStatus"></span>
+  <legend>标准输入（管道交互）</legend>
+  <label for="input">发送给进程 stdin 的内容</label>
+  <textarea id="input" rows="4" placeholder="输入内容；Ctrl+Enter 发送"></textarea>
+  <div class="control-row">
+    <label><input id="appendNewline" type="checkbox" checked> 末尾添加换行</label>
+    <button id="sendInput" type="button">发送</button>
+    <span id="inputStatus" role="status" aria-live="polite"></span>
+  </div>
 </fieldset>
 
-<p>
+<div class="control-row task-actions">
 <button id="interrupt" type="button">中断 Ctrl+C</button>
 <button id="terminate" type="button">终止任务</button>
 <button id="refresh" type="button">刷新状态</button>
-</p>
+</div>
+</div>
 
 <script>
 'use strict';
@@ -1339,36 +1413,67 @@ def tasks_list_html(tasks: list[CommandTask]) -> str:
         task_url = "/tasks/" + quote(task.task_id)
         rows.append(
             "<tr>"
-            f"<td><a href=\"{task_url}\">{html.escape(task.task_id[:12])}</a></td>"
-            f"<td>{html.escape(task.status)}</td>"
-            f"<td>{task.pid}</td>"
-            f"<td>{html.escape(created)}</td>"
-            f"<td><code>{html.escape(task.command_display)}</code></td>"
+            f"<td data-label=\"任务 ID\"><a href=\"{task_url}\">{html.escape(task.task_id[:12])}</a></td>"
+            f"<td data-label=\"状态\">{html.escape(task.status)}</td>"
+            f"<td data-label=\"PID\">{task.pid}</td>"
+            f"<td data-label=\"创建时间\">{html.escape(created)}</td>"
+            f"<td data-label=\"命令\"><code>{html.escape(task.command_display)}</code></td>"
             "</tr>"
         )
 
     if not rows:
-        rows.append('<tr><td colspan="5">暂无任务</td></tr>')
+        rows.append('<tr class="empty-row"><td colspan="5">暂无任务</td></tr>')
 
     return f'''<!doctype html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>任务列表</title>
 <style>
-body {{ margin: 8px; }}
-table {{ border-collapse: collapse; }}
-th, td {{ border: 1px solid; padding: 4px; text-align: left; }}
+:root {{ color-scheme: light dark; }}
+* {{ box-sizing: border-box; }}
+body {{
+  margin: 0;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  line-height: 1.45;
+}}
+.page {{ width: min(1120px, 100%); margin: 0 auto; }}
+.page-header {{ display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }}
+h1 {{ margin: 0; font-size: 1.35rem; }}
+.page-header nav {{ display: flex; flex-wrap: wrap; gap: 12px; }}
+.table-wrap {{ width: 100%; overflow-x: auto; }}
+table {{ width: 100%; border-collapse: collapse; }}
+th, td {{ border: 1px solid; padding: 6px 8px; text-align: left; vertical-align: top; }}
+code {{ overflow-wrap: anywhere; }}
+@media (max-width: 640px) {{
+  body {{ padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }}
+  .page-header {{ align-items: flex-start; }}
+  .table-wrap {{ overflow: visible; }}
+  thead {{ position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }}
+  table, tbody, tr, td {{ display: block; width: 100%; }}
+  table, td {{ border: 0; }}
+  tr {{ border: 1px solid; margin-bottom: 10px; padding: 5px 8px; }}
+  td {{ display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: 8px; padding: 4px 0; }}
+  td::before {{ content: attr(data-label); font-weight: 600; }}
+  .empty-row td {{ display: block; }}
+  .empty-row td::before {{ content: none; }}
+}}
 </style>
 </head>
 <body>
-<h3>任务列表</h3>
-<p><a href="/">返回首页</a> | <a href="/tasks">刷新</a></p>
+<div class="page">
+<header class="page-header">
+  <h1>任务列表</h1>
+  <nav aria-label="页面导航"><a href="/">返回首页</a><a href="/tasks">刷新</a></nav>
+</header>
+<div class="table-wrap">
 <table>
 <thead><tr><th>任务 ID</th><th>状态</th><th>PID</th><th>创建时间</th><th>命令</th></tr></thead>
 <tbody>{''.join(rows)}</tbody>
 </table>
+</div>
+</div>
 </body>
 </html>'''
 
