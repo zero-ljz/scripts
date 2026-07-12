@@ -340,7 +340,7 @@ function updatePreview() {
   } else if (state.runMode === 'task') {
     $('modeNote').textContent = '后台任务会立即返回任务页面，输出可持续查看，刷新页面不会重复启动任务。';
   } else {
-    $('modeNote').textContent = '同步执行保持原来的 URL 和返回方式。';
+    $('modeNote').textContent = '同步执行会等待任务完成后，在当前页面一次性返回完整输出。';
   }
 
   $('preview').value = genURL(state.urlMode, state.encoding);
