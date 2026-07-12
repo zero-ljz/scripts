@@ -25,6 +25,7 @@ import sys
 import threading
 import time
 import uuid
+import ctypes
 from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 
@@ -55,11 +56,35 @@ TASK_OUTPUT_LIMIT = int(os.environ.get("TASK_OUTPUT_LIMIT", str(4 * 1024 * 1024)
 TASK_RETENTION_SECONDS = int(os.environ.get("TASK_RETENTION_SECONDS", "3600"))
 MAX_TASK_HISTORY = int(os.environ.get("MAX_TASK_HISTORY", "100"))
 TASK_TERMINATE_GRACE = float(os.environ.get("TASK_TERMINATE_GRACE", "3"))
-COMMAND_ENCODING = (
-    os.environ.get("COMMAND_ENCODING", "").strip()
-    or locale.getpreferredencoding(False)
-    or "utf-8"
-)
+def get_default_command_encoding() -> str:
+    configured_encoding = os.environ.get("COMMAND_ENCODING", "").strip()
+
+    if configured_encoding:
+        return configured_encoding
+
+    if os.name == "nt":
+        try:
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
+            # 优先获取当前控制台输出代码页。
+            code_page = kernel32.GetConsoleOutputCP()
+
+            # 服务以后台方式启动、没有控制台时，退回系统 OEM 代码页。
+            if not code_page:
+                code_page = kernel32.GetOEMCP()
+
+            if code_page:
+                return f"cp{code_page}"
+        except (AttributeError, OSError):
+            pass
+
+        # 中文 Windows 通常对应 cp936；mbcs 作为最后兜底。
+        return "mbcs"
+
+    return locale.getpreferredencoding(False) or "utf-8"
+
+
+COMMAND_ENCODING = get_default_command_encoding()
 
 
 INDEX_HTML = r'''<!doctype html>
@@ -769,6 +794,9 @@ class TaskManager:
         task_id = uuid.uuid4().hex
         environment = os.environ.copy()
         environment.setdefault("PYTHONUNBUFFERED", "1")
+
+        # 让 Python 子进程的 stdout/stderr 编码与服务器解码编码一致。
+        environment.setdefault("PYTHONIOENCODING", encoding)
 
         popen_options: dict[str, object] = {}
         if os.name == "nt":
