@@ -64,6 +64,36 @@ if ($LASTEXITCODE -eq 1) {
 Write-Host "`n`n`n 安装 常用软件" -ForegroundColor Cyan
 choice /T 5 /D y /M "是否继续？"
 if ($LASTEXITCODE -eq 1) {
+
+# Write-Host "安装 微软系统内部套件并创建常用工具开始菜单快捷方式" -ForegroundColor Cyan
+winget install --id Microsoft.Sysinternals.Suite -e
+$folder = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Sysinternals"
+New-Item -ItemType Directory -Path $folder -Force | Out-Null
+
+$apps = @{
+    "Process Explorer" = "procexp.exe"
+    "Process Monitor"  = "procmon.exe"
+    "Autoruns"         = "autoruns.exe"
+    "TCPView"          = "tcpview.exe"
+    "RAMMap"           = "rammap.exe"
+    "ZoomIt"           = "zoomit.exe"
+}
+
+$shell = New-Object -ComObject WScript.Shell
+
+foreach ($name in $apps.Keys) {
+    $target = (Get-Command $apps[$name] -ErrorAction Stop).Source
+    $shortcut = $shell.CreateShortcut((Join-Path $folder "$name.lnk"))
+    $shortcut.TargetPath = $target
+    $shortcut.WorkingDirectory = Split-Path $target
+    $shortcut.IconLocation = "$target,0"
+    $shortcut.Save()
+}
+
+
+winget install --id WinMerge.WinMerge -e
+
+
 # Write-Host "安装 AutoHotkey (v1.1)" -ForegroundColor Cyan
 # winget install -e --id AutoHotkey.AutoHotkey --version 1.1.37.02
 

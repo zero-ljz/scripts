@@ -1,0 +1,5 @@
+﻿Windows Registry Editor Version 5.00
+
+; 禁用 svsvc 服务以临时隐藏激活水印
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\svsvc]
+"Start"=dword:00000004
