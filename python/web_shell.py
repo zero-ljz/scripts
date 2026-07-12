@@ -203,7 +203,7 @@ td { padding: 2px 4px 2px 0; vertical-align: middle; }
         </tr>
         <tr>
           <td><label for="preview">URL 预览</label></td>
-          <td><textarea id="preview" rows="8" cols="60" readonly></textarea></td>
+          <td><textarea id="preview" rows="8" cols="40" readonly></textarea></td>
         </tr>
         <tr>
           <td></td>
@@ -1199,6 +1199,25 @@ def first_nonempty(*values: str) -> str:
     return ""
 
 
+def original_command_headers(command: str) -> dict[str, str]:
+    """Return a directly readable response header containing the command."""
+    safe_command = "".join(
+        character
+        if ord(character) >= 32 and ord(character) != 127
+        else " "
+        for character in command
+    )
+
+    # BaseHTTPRequestHandler serializes header values as Latin-1. Mapping the
+    # UTF-8 bytes through Latin-1 keeps those bytes unchanged on the wire, so
+    # clients such as browsers and curl can display and copy the original text.
+    header_value = safe_command.encode("utf-8").decode("latin-1")
+
+    return {
+        "X-Original-Command": header_value,
+    }
+
+
 def parse_bool(value: object, default: bool = False) -> bool:
     if isinstance(value, bool):
         return value
@@ -1499,7 +1518,12 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
                     )
                     return
 
-                self.send_json(task.snapshot(), status=202, send_body=send_body)
+                self.send_json(
+                    task.snapshot(),
+                    status=202,
+                    extra_headers=original_command_headers(task.command_display),
+                    send_body=send_body,
+                )
                 return
 
             self.send_text("Method Not Allowed", status=405, send_body=send_body)
@@ -1687,10 +1711,12 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
             get_last_value(query_values, "cmd"),
             get_last_value(form_values, "cmd"),
         )
+        original_command = command
         shell_command: str | None = None
 
         if command:
             command = command.replace("%26", "&")
+            original_command = command
             params = split_with_quotes(command, sep=" ", allow_empty=False)
             shell_command = command
         else:
@@ -1706,6 +1732,7 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
                 encoding="utf-8",
                 errors="replace",
             )
+            original_command = decoded_path
             params = split_with_quotes(
                 decoded_path,
                 sep="/",
@@ -1722,6 +1749,8 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
         if not params or not params[0]:
             self.send_text("No command specified", send_body=send_body)
             return
+
+        response_headers = original_command_headers(original_command)
 
         process_command = prepare_process_command(
             params,
@@ -1756,6 +1785,7 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
                 self.send_text(
                     "HEAD cannot start a background task",
                     status=405,
+                    extra_headers=response_headers,
                     send_body=False,
                 )
                 return
@@ -1776,6 +1806,7 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
                 self.send_text(
                     "Exception: " + str(exception),
                     status=500,
+                    extra_headers=response_headers,
                     send_body=send_body,
                 )
                 return
@@ -1790,9 +1821,18 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
             )
 
             if wants_json:
-                self.send_json(task.snapshot(), status=202, send_body=send_body)
+                self.send_json(
+                    task.snapshot(),
+                    status=202,
+                    extra_headers=response_headers,
+                    send_body=send_body,
+                )
             else:
-                self.send_redirect("/tasks/" + quote(task.task_id), status=303)
+                self.send_redirect(
+                    "/tasks/" + quote(task.task_id),
+                    status=303,
+                    extra_headers=response_headers,
+                )
             return
 
         try:
@@ -1814,6 +1854,7 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
             self.send_text(
                 "Exception: " + str(exception),
                 status=500,
+                extra_headers=response_headers,
                 send_body=send_body,
             )
             return
@@ -1855,15 +1896,28 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
             output,
             status=status,
             content_type="text/plain; charset=UTF-8",
-            extra_headers={"X-Task-ID": task.task_id},
+            extra_headers={
+                **response_headers,
+                "X-Task-ID": task.task_id,
+            },
             send_body=send_body,
         )
 
-    def send_redirect(self, location: str, status: int = 303) -> None:
+    def send_redirect(
+        self,
+        location: str,
+        status: int = 303,
+        extra_headers: dict[str, str] | None = None,
+    ) -> None:
         self.send_response(status)
         self.send_header("Location", location)
         self.send_header("Content-Length", "0")
         self.send_header("Cache-Control", "no-store")
+
+        if extra_headers:
+            for name, value in extra_headers.items():
+                self.send_header(name, value)
+
         self.end_headers()
 
     def send_html(self, html_text: str, send_body: bool = True) -> None:
@@ -1884,6 +1938,7 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
         self,
         value: object,
         status: int = 200,
+        extra_headers: dict[str, str] | None = None,
         send_body: bool = True,
     ) -> None:
         body = json.dumps(
@@ -1895,6 +1950,11 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=UTF-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+
+        if extra_headers:
+            for name, header_value in extra_headers.items():
+                self.send_header(name, header_value)
+
         self.end_headers()
 
         if send_body:
