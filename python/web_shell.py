@@ -26,6 +26,7 @@ import threading
 import time
 import uuid
 import ctypes
+import hashlib
 from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 
@@ -83,6 +84,23 @@ def get_default_command_encoding() -> str:
 
     return locale.getpreferredencoding(False) or "utf-8"
 
+
+MAX_COMMAND_LOG_LENGTH = 1000
+
+def shorten_log_text(
+    value: str,
+    limit: int = MAX_COMMAND_LOG_LENGTH,
+) -> str:
+    if len(value) <= limit:
+        return value
+
+    omitted = len(value) - limit
+
+    return (
+        value[:limit]
+        + f"... <省略 {omitted} 个字符>"
+    )
+    
 
 COMMAND_ENCODING = get_default_command_encoding()
 
@@ -808,7 +826,11 @@ class TaskManager:
             process_command,
             cwd=cwd,
             shell=shell,
-            stdin=subprocess.PIPE,
+            stdin=(
+                subprocess.PIPE
+                if interactive
+                else subprocess.DEVNULL
+            ),
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=0,
@@ -853,7 +875,7 @@ class TaskManager:
             task.pid,
             task.cwd,
             task.shell,
-            task.command_display,
+            shorten_log_text(task.command_display),
         )
         return task
 
@@ -1906,6 +1928,17 @@ class CommandRequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(body)
             except (BrokenPipeError, ConnectionResetError):
                 pass
+    
+    def log_message(
+        self,
+        format_string: str,
+        *args: object,
+    ) -> None:
+        logging.info(
+            "%s - %s",
+            self.client_address[0],
+            format_string % args,
+        )
 
 
 class CommandHTTPServer(ThreadingHTTPServer):

@@ -71,23 +71,34 @@ $folder = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs\Sysinter
 New-Item -ItemType Directory -Path $folder -Force | Out-Null
 
 $apps = @{
-    "Process Explorer" = "procexp.exe"
-    "Process Monitor"  = "procmon.exe"
-    "Autoruns"         = "autoruns.exe"
-    "TCPView"          = "tcpview.exe"
-    "RAMMap"           = "rammap.exe"
-    "ZoomIt"           = "zoomit.exe"
+    "Process Explorer" = "procexp64.exe"
+    "Process Monitor"  = "Procmon64.exe"
+    "Autoruns"         = "Autoruns64.exe"
+    "TCPView"          = "tcpview64.exe"
+    "RAMMap"           = "RAMMap.exe"
+    "ZoomIt"           = "ZoomIt64.exe"
 }
 
 $shell = New-Object -ComObject WScript.Shell
 
+# 获取 Winget 释放 Sysinternals Suite 的绝对物理根目录
+$wingetBase = Join-Path $env:LocalAppdata "Microsoft\WinGet\Packages\Microsoft.Sysinternals.Suite_Microsoft.Winget.Source_*"
+$suiteFolder = (Get-Item $wingetBase -ErrorAction SilentlyContinue | Select-Object -First 1).FullName
+
 foreach ($name in $apps.Keys) {
-    $target = (Get-Command $apps[$name] -ErrorAction Stop).Source
-    $shortcut = $shell.CreateShortcut((Join-Path $folder "$name.lnk"))
-    $shortcut.TargetPath = $target
-    $shortcut.WorkingDirectory = Split-Path $target
-    $shortcut.IconLocation = "$target,0"
-    $shortcut.Save()
+    # 直接在物理路径下拼接 64 位文件名，完美避开环境变量未刷新的问题
+    $target = Join-Path $suiteFolder $apps[$name]
+    
+    if (Test-Path $target) {
+        $shortcut = $shell.CreateShortcut((Join-Path $folder "$name.lnk"))
+        $shortcut.TargetPath = $target
+        $shortcut.WorkingDirectory = $suiteFolder
+        $shortcut.IconLocation = "$target,0"
+        $shortcut.Save()
+        Write-Host "已成功创建快捷方式: $name" -ForegroundColor Green
+    } else {
+        Write-Warning "未找到文件: $target"
+    }
 }
 
 
