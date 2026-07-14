@@ -756,8 +756,9 @@ deploy_nginx(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
     
     log "安装 Nginx"
-    if lsof -i :80 >/dev/null 2>&1; then
-        log "错误: 宿主机 80 端口已被占用，请先停止相关服务后再部署 Docker Nginx！"
+    # 修改后的检测逻辑
+    if sudo ss -tulpn | grep -q ':80 '; then
+        log "错误: 宿主机 80 端口已被监听（占用），请先停止相关服务后再部署！"
         return 1
     fi
     sudo docker run -d \
