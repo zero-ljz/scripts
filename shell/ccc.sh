@@ -309,7 +309,12 @@ install_docker(){
     if read -t 5 -p "是否使用中国大陆注册表？ (y): " answer && [ "$answer" == "y" ]; then
         sudo tee /etc/docker/daemon.json <<EOF >/dev/null
 {
-  "registry-mirrors": ["https://p.252525.xyz/https://registry-1.docker.io"]
+  "registry-mirrors": [
+    "https://docker.1panel.live",
+    "https://docker.1panel.dev",
+    "https://docker.1ms.run",
+    "https://docker.m.daocloud.io"
+  ]
 }
 EOF
         # 备用 http://mirrors.ustc.edu.cn http://hub.daocloud.io
