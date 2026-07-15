@@ -730,13 +730,13 @@ create_default_vhost(){
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="data:,">
-    <title>404 未找到站点</title>
+    <title>404 Not Found</title>
 </head>
 <body>
     <center><h1>404 未找到站点</h1></center><hr>
     <center><p>抱歉，您访问的站点不存在。</p></center>
+    <hr><center>nginx</center>
 </body>
-</html>
 EOF
 
     sudo tee /etc/nginx/conf.d/default.conf << 'EOF' >/dev/null
