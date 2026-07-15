@@ -101,7 +101,7 @@ foreach ($name in $apps.Keys) {
     }
 }
 
-
+winget install --id LocalSend.LocalSend -e
 winget install --id WinMerge.WinMerge -e
 
 
