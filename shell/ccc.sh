@@ -648,15 +648,15 @@ deploy_redis(){
     local port=${1:-6379}
     sudo docker network inspect network1 >/dev/null 2>&1 || sudo docker network create network1
 
-    sudo mkdir -p /docker/redis1
-    sudo chmod 777 /docker/redis1
+    sudo mkdir -p /opt/redis1
+    sudo chmod 777 /opt/redis1
     log "安装 Redis" 
     sudo docker run -dp "${port}:6379" \
         --name redis1 \
         --restart=always \
         --network network1 \
         --network-alias redis \
-        -v /docker/redis1:/data \
+        -v /opt/redis1:/data \
         -e TZ=Asia/Shanghai \
         redis:7.2-bookworm \
         redis-server --save 60 1 --loglevel warning --requirepass "123qweQ!"
@@ -815,13 +815,13 @@ deploy_wordpress(){
     read -p "是否继续？ (y)" -t 5 answer && [ ! $? -eq 142 ] && [ "$answer" != "y" ] && return
 
     local local_port=${1:-8000}
-    sudo mkdir -p /docker/wordpress1
-    sudo chmod 777 /docker/wordpress1
+    sudo mkdir -p /opt/wordpress1
+    sudo chmod 777 /opt/wordpress1
     sudo docker run -dp "127.0.0.1:${local_port}:80" \
         --name wordpress1 \
         --restart=always \
         --network network1 \
-        -v /docker/wordpress1:/var/www/html \
+        -v /opt/wordpress1:/var/www/html \
         -e TZ=Asia/Shanghai \
         -e WORDPRESS_CONFIG_EXTRA="define( 'FORCE_SSL_ADMIN', true ); if( strpos( \$_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false ) { \$_SERVER['HTTPS'] = 'on'; }" \
         wordpress
@@ -848,15 +848,15 @@ deploy_gitea(){
         --home /home/git \
         git
     
-    sudo mkdir -p /docker/gitea
-    sudo chmod 777 /docker/gitea
+    sudo mkdir -p /opt/gitea
+    sudo chmod 777 /opt/gitea
     sudo docker run -d \
         --name gitea1 \
         --restart=always \
         -p "127.0.0.1:${local_port}:3000" -p "${ssh_port}:2222" \
         -e USER_UID=$(id -u git) \
         -e USER_GID=$(id -g git) \
-        -v /docker/gitea:/data \
+        -v /opt/gitea:/data \
         -v /etc/timezone:/etc/timezone:ro \
         -v /etc/localtime:/etc/localtime:ro \
         gitea/gitea:1-rootless
@@ -1035,7 +1035,7 @@ EOF
     sudo docker run -d -p "${http_port}:8000" \
         --name ${repo} \
         --restart=always \
-        -v "/docker/${repo}:/usr/src/app" \
+        -v "/opt/${repo}:/usr/src/app" \
         -w /usr/src/app \
         -e TZ=Asia/Shanghai \
         python:3.10.11-slim-bullseye bash -c "$commands"
@@ -1064,7 +1064,7 @@ EOF
     sudo docker run -d -p "${http_port}:3000" \
         --name ${repo} \
         --restart=always \
-        -v "/docker/${repo}:/usr/src/app" \
+        -v "/opt/${repo}:/usr/src/app" \
         -w /usr/src/app \
         -e TZ=Asia/Shanghai \
         -e NODE_ENV=production \
@@ -1081,12 +1081,12 @@ deploy_php_app() {
 
     local app_name="$1"
     local http_port="$2"
-    sudo docker run -d -p "${http_port}:80" --name ${app_name} -v "/docker/${app_name}:/var/www/html" php:7.4-apache
+    sudo docker run -d -p "${http_port}:80" --name ${app_name} -v "/opt/${app_name}:/var/www/html" php:7.4-apache
     # 容器内站点配置文件 /etc/apache2/sites-available/000-default.conf
     # 在php官方docker镜像中安装扩展
     sudo docker exec -t ${app_name} curl -sSL https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions -o - | sh -s gd xdebug pdo_mysql
     #docker exec -t ${app_name} chmod -R 755 /var/www/html
-    # download_php_apps /docker/${app_name}
+    # download_php_apps /opt/${app_name}
 }
 
 docker_run_app(){
@@ -1126,7 +1126,7 @@ docker_run_app(){
 }
 
 # nginx 部署静态网站
-# docker run -dp 8080:80 --name web1 --restart=always -v /docker/web1:/usr/share/nginx/html nginx:stable-alpine-slim
+# docker run -dp 8080:80 --name web1 --restart=always -v /opt/web1:/usr/share/nginx/html nginx:stable-alpine-slim
 
 function auto_mode(){
     if [ "$1" = "-d" ] || [ "$1" = "--declare" ]; then declare -f ${FUNCNAME}; return; fi
@@ -1298,14 +1298,14 @@ deploy_filebrowser(){
     local port=${1:-8082}
     local root_dir=${2:-"/"}
 
-    sudo mkdir -p /docker/filebrowser
-    sudo touch /docker/filebrowser/filebrowser.db
-    sudo chmod 666 /docker/filebrowser/filebrowser.db
+    sudo mkdir -p /opt/filebrowser
+    sudo touch /opt/filebrowser/filebrowser.db
+    sudo chmod 666 /opt/filebrowser/filebrowser.db
 
     sudo docker run -d --name filebrowser1 \
         --restart always \
         -v "${root_dir}:/srv" \
-        -v /docker/filebrowser/filebrowser.db:/database/filebrowser.db \
+        -v /opt/filebrowser/filebrowser.db:/database/filebrowser.db \
         -p "${port}:80" \
         -e TZ=Asia/Shanghai \
         filebrowser/filebrowser
