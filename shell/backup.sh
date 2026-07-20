@@ -87,16 +87,15 @@ if [ "$backup_files" = true ]; then
   echo "备份文件目录..."
   # 指定要备份的文件目录
   backup_dirs=(
-      "/etc/"
       "/var/www/"
       "/opt/"
       "/home/"
       "/root/"
+      "/etc/"
       "/var/spool/cron/crontabs/"
       "/usr/local/bin/"
       "/usr/local/sbin/"
       "/usr/local/etc/"
-      "/docker/"
       "/var/lib/docker/volumes/"
   )
   for dir in "${backup_dirs[@]}"; do
