@@ -137,6 +137,9 @@ addEventListener("fetch", (event) => {
           <input type="text" id="url" name="url" placeholder="Resource url for proxy access" value="http://" required />
           <input type="submit" value="GO" />
       </form>
+      <footer>
+        <small>For development and testing only. Unlawful use and abuse are strictly prohibited.</small>
+      </footer>
   </body>
   
   </html>
