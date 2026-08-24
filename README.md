@@ -13,13 +13,14 @@
 | --- | --- | --- |
 | [`autohotkey/`](autohotkey/) | AutoHotkey | 面向 Windows 的自动化脚本语言，适合编写快捷键、键鼠操作和桌面工具。 |
 | [`autojs/`](autojs/) | JavaScript（Auto.js） | 在 Android 上运行的 JavaScript 自动化脚本，可用于界面操作和设备任务。 |
-| [`batchfile/`](batchfile/) | Batch、Registry | Batch 是 Windows 命令行批处理语言；Registry 文件用于导入和修改注册表配置。 |
+| [`batch/`](batch/) | Batch | Windows 命令行批处理脚本。 |
 | [`cfworkers/`](cfworkers/) | JavaScript | 运行在 Cloudflare Workers 边缘环境中的 JavaScript 脚本。 |
 | [`jscript/`](jscript/) | JScript、VBScript、HTA | Windows Script Host 脚本及基于 HTML 的 Windows 桌面应用。 |
 | [`nodejs/`](nodejs/) | JavaScript（Node.js） | 运行在 Node.js 服务端环境中的 JavaScript，适合网络服务和命令行工具。 |
 | [`php/`](php/) | PHP | 常用于服务端 Web 开发的脚本语言，可处理请求、文件和动态页面。 |
 | [`powershell/`](powershell/) | PowerShell | 基于对象管道的 Windows 命令行与自动化脚本语言。 |
 | [`python/`](python/) | Python | 通用脚本语言，适合自动化、数据处理、Web 开发和工具编写。 |
+| [`registry/`](registry/) | Registry | 用于导入和修改 Windows 注册表配置的文件。 |
 | [`shell/`](shell/) | Bash | Linux 和 Unix 环境常用的 Shell 脚本语言，适合系统管理与任务自动化。 |
 | [`tampermonkey/`](tampermonkey/) | JavaScript | 运行在浏览器用户脚本管理器中的 JavaScript，用于修改网页行为。 |
 
